@@ -8,6 +8,9 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 @interface AppleMapView : RCTViewComponentView
+
+- (MKMapView *)mapView;
+
 @end
 
 NS_ASSUME_NONNULL_END

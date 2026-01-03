@@ -1,4 +1,5 @@
 #import "GoogleMapView.h"
+#import "MapMarkerView.h"
 
 #import <react/renderer/components/RNMapsSpec/ComponentDescriptors.h>
 #import <react/renderer/components/RNMapsSpec/EventEmitters.h>
@@ -17,6 +18,7 @@ using namespace facebook::react;
 
 @implementation GoogleMapView {
     GoogleMapViewContent *_mapView;
+    NSMutableDictionary<NSNumber *, GMSMarker *> *_markers;
 }
 
 + (ComponentDescriptorProvider)componentDescriptorProvider
@@ -40,11 +42,17 @@ using namespace facebook::react;
 
         _mapView = [[GoogleMapViewContent alloc] initWithOptions:options];
         _mapView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+        _markers = [NSMutableDictionary new];
 
         self.contentView = _mapView;
     }
 
     return self;
+}
+
+- (GMSMapView *)mapView
+{
+    return _mapView;
 }
 
 - (void)updateProps:(Props::Shared const &)props oldProps:(Props::Shared const &)oldProps
@@ -89,6 +97,33 @@ using namespace facebook::react;
     }
 
     [super updateProps:props oldProps:oldProps];
+}
+
+- (void)mountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index
+{
+    if ([childComponentView isKindOfClass:[MapMarkerView class]]) {
+        MapMarkerView *markerView = (MapMarkerView *)childComponentView;
+        GMSMarker *marker = [[GMSMarker alloc] init];
+        marker.position = markerView.coordinate;
+        marker.title = markerView.title;
+        marker.snippet = markerView.markerDescription;
+        marker.map = _mapView;
+
+        NSNumber *key = @((NSUInteger)childComponentView);
+        _markers[key] = marker;
+    }
+}
+
+- (void)unmountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index
+{
+    if ([childComponentView isKindOfClass:[MapMarkerView class]]) {
+        NSNumber *key = @((NSUInteger)childComponentView);
+        GMSMarker *marker = _markers[key];
+        if (marker) {
+            marker.map = nil;
+            [_markers removeObjectForKey:key];
+        }
+    }
 }
 
 Class<RCTComponentViewProtocol> GoogleMapViewCls(void)

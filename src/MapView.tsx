@@ -22,6 +22,7 @@ export class MapView extends React.Component<MapViewProps> {
       scrollEnabled,
       rotateEnabled,
       pitchEnabled,
+      children,
     } = this.props;
 
     const NativeMapView =
@@ -37,7 +38,9 @@ export class MapView extends React.Component<MapViewProps> {
         scrollEnabled={scrollEnabled}
         rotateEnabled={rotateEnabled}
         pitchEnabled={pitchEnabled}
-      />
+      >
+        {children}
+      </NativeMapView>
     );
   }
 }

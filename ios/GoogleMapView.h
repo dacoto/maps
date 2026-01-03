@@ -8,6 +8,9 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 @interface GoogleMapView : RCTViewComponentView
+
+- (GMSMapView *)mapView;
+
 @end
 
 NS_ASSUME_NONNULL_END

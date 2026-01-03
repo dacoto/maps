@@ -1,6 +1,7 @@
 package com.luggmaps
 
 import android.content.Context
+import android.view.View
 import android.widget.FrameLayout
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -8,10 +9,14 @@ import com.google.android.gms.maps.MapView as GoogleMapView
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.Marker
+import com.google.android.gms.maps.model.MarkerOptions
 
 class MapView(context: Context) : FrameLayout(context), OnMapReadyCallback {
     private val mapView: GoogleMapView = GoogleMapView(context)
     private var googleMap: GoogleMap? = null
+    private val markerMap: MutableMap<MapMarkerView, Marker> = mutableMapOf()
+    private val pendingMarkers: MutableList<MapMarkerView> = mutableListOf()
 
     private var initialLatitude: Double = 37.7749
     private var initialLongitude: Double = -122.4194
@@ -31,6 +36,9 @@ class MapView(context: Context) : FrameLayout(context), OnMapReadyCallback {
         googleMap = map
         updateMapSettings()
         updateCamera()
+
+        pendingMarkers.forEach { addMarkerToMap(it) }
+        pendingMarkers.clear()
     }
 
     fun setInitialRegion(latitude: Double, longitude: Double, latitudeDelta: Double, longitudeDelta: Double) {
@@ -100,5 +108,42 @@ class MapView(context: Context) : FrameLayout(context), OnMapReadyCallback {
 
     fun onLowMemory() {
         mapView.onLowMemory()
+    }
+
+    override fun addView(child: View?, index: Int) {
+        if (child is MapMarkerView) {
+            val map = googleMap
+            if (map != null) {
+                addMarkerToMap(child)
+            } else {
+                pendingMarkers.add(child)
+            }
+        } else {
+            super.addView(child, index)
+        }
+    }
+
+    override fun removeView(child: View?) {
+        if (child is MapMarkerView) {
+            markerMap[child]?.remove()
+            markerMap.remove(child)
+            pendingMarkers.remove(child)
+        } else {
+            super.removeView(child)
+        }
+    }
+
+    private fun addMarkerToMap(mapMarker: MapMarkerView) {
+        googleMap?.let { map ->
+            val markerOptions = MarkerOptions()
+                .position(LatLng(mapMarker.latitude, mapMarker.longitude))
+                .title(mapMarker.markerTitle)
+                .snippet(mapMarker.markerDescription)
+
+            val marker = map.addMarker(markerOptions)
+            if (marker != null) {
+                markerMap[mapMarker] = marker
+            }
+        }
     }
 }

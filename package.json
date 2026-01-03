@@ -119,7 +119,8 @@
     "ios": {
       "componentProvider": {
         "GoogleMapView": "GoogleMapView",
-        "AppleMapView": "AppleMapView"
+        "AppleMapView": "AppleMapView",
+        "MapMarkerView": "MapMarkerView"
       }
     }
   },
