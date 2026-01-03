@@ -1,2 +1,2 @@
 export { MapView } from './MapView';
-export type { MapViewProps, Region } from './MapView.types';
+export type { MapViewProps, MapProvider, Region } from './MapView.types';

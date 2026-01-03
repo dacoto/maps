@@ -4,10 +4,10 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface MapViewContent : GMSMapView
+@interface GoogleMapViewContent : GMSMapView
 @end
 
-@interface MapView : RCTViewComponentView
+@interface GoogleMapView : RCTViewComponentView
 @end
 
 NS_ASSUME_NONNULL_END

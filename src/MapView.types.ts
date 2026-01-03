@@ -1,5 +1,7 @@
 import type { StyleProp, ViewStyle } from 'react-native';
 
+export type MapProvider = 'google' | 'apple';
+
 export interface Region {
   latitude: number;
   longitude: number;
@@ -9,6 +11,7 @@ export interface Region {
 
 export interface MapViewProps {
   style?: StyleProp<ViewStyle>;
+  provider?: MapProvider;
   initialRegion?: Region;
   zoomEnabled?: boolean;
   scrollEnabled?: boolean;

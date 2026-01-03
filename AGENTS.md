@@ -13,7 +13,6 @@ React Native Fabric (New Architecture) maps library for iOS and Android.
 
 - **Fabric** - No bridge, direct C++ communication
 - **Codegen** - Auto-generates native interfaces from TypeScript specs
-- **C++ Shared Code** - State and shadow nodes shared between platforms
 
 ### Creating a Pull Request
 

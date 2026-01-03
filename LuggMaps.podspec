@@ -17,6 +17,7 @@ Pod::Spec.new do |s|
   s.private_header_files = "ios/**/*.h"
 
   s.dependency "GoogleMaps"
+  s.frameworks = "MapKit"
 
   install_modules_dependencies(s)
 end

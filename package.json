@@ -110,7 +110,7 @@
     ]
   },
   "codegenConfig": {
-    "name": "MapViewSpec",
+    "name": "RNMapsSpec",
     "type": "all",
     "jsSrcsDir": "src/fabric",
     "android": {
@@ -118,7 +118,8 @@
     },
     "ios": {
       "componentProvider": {
-        "MapView": "MapView"
+        "GoogleMapView": "GoogleMapView",
+        "AppleMapView": "AppleMapView"
       }
     }
   },

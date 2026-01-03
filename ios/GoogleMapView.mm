@@ -1,33 +1,33 @@
-#import "MapView.h"
+#import "GoogleMapView.h"
 
-#import <react/renderer/components/MapViewSpec/ComponentDescriptors.h>
-#import <react/renderer/components/MapViewSpec/EventEmitters.h>
-#import <react/renderer/components/MapViewSpec/Props.h>
-#import <react/renderer/components/MapViewSpec/RCTComponentViewHelpers.h>
+#import <react/renderer/components/RNMapsSpec/ComponentDescriptors.h>
+#import <react/renderer/components/RNMapsSpec/EventEmitters.h>
+#import <react/renderer/components/RNMapsSpec/Props.h>
+#import <react/renderer/components/RNMapsSpec/RCTComponentViewHelpers.h>
 
 #import "RCTFabricComponentsPlugins.h"
 
 using namespace facebook::react;
 
-@implementation MapViewContent
+@implementation GoogleMapViewContent
 @end
 
-@interface MapView () <RCTMapViewViewProtocol>
+@interface GoogleMapView () <RCTGoogleMapViewViewProtocol>
 @end
 
-@implementation MapView {
-    MapViewContent *_mapView;
+@implementation GoogleMapView {
+    GoogleMapViewContent *_mapView;
 }
 
 + (ComponentDescriptorProvider)componentDescriptorProvider
 {
-    return concreteComponentDescriptorProvider<MapViewComponentDescriptor>();
+    return concreteComponentDescriptorProvider<GoogleMapViewComponentDescriptor>();
 }
 
 - (instancetype)initWithFrame:(CGRect)frame
 {
     if (self = [super initWithFrame:frame]) {
-        static const auto defaultProps = std::make_shared<const MapViewProps>();
+        static const auto defaultProps = std::make_shared<const GoogleMapViewProps>();
         _props = defaultProps;
 
         GMSCameraPosition *camera = [GMSCameraPosition cameraWithLatitude:37.7749
@@ -38,7 +38,7 @@ using namespace facebook::react;
         options.frame = self.bounds;
         options.camera = camera;
 
-        _mapView = [[MapViewContent alloc] initWithOptions:options];
+        _mapView = [[GoogleMapViewContent alloc] initWithOptions:options];
         _mapView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
 
         self.contentView = _mapView;
@@ -49,8 +49,8 @@ using namespace facebook::react;
 
 - (void)updateProps:(Props::Shared const &)props oldProps:(Props::Shared const &)oldProps
 {
-    const auto &oldViewProps = *std::static_pointer_cast<MapViewProps const>(_props);
-    const auto &newViewProps = *std::static_pointer_cast<MapViewProps const>(props);
+    const auto &oldViewProps = *std::static_pointer_cast<GoogleMapViewProps const>(_props);
+    const auto &newViewProps = *std::static_pointer_cast<GoogleMapViewProps const>(props);
 
     if (newViewProps.initialRegion.latitude != oldViewProps.initialRegion.latitude ||
         newViewProps.initialRegion.longitude != oldViewProps.initialRegion.longitude ||
@@ -91,9 +91,9 @@ using namespace facebook::react;
     [super updateProps:props oldProps:oldProps];
 }
 
-Class<RCTComponentViewProtocol> MapViewCls(void)
+Class<RCTComponentViewProtocol> GoogleMapViewCls(void)
 {
-    return MapView.class;
+    return GoogleMapView.class;
 }
 
 @end
