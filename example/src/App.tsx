@@ -1,23 +1,22 @@
-import { View, StyleSheet } from 'react-native';
-import { LuggMapsView } from 'lugg-maps';
+import { StyleSheet } from 'react-native';
+import { MapView } from '@lugg/maps';
 
 export default function App() {
   return (
-    <View style={styles.container}>
-      <LuggMapsView color="#32a852" style={styles.box} />
-    </View>
+    <MapView
+      style={styles.map}
+      initialRegion={{
+        latitude: 37.7749,
+        longitude: -122.4194,
+        latitudeDelta: 0.0922,
+        longitudeDelta: 0.0421,
+      }}
+    />
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  map: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  box: {
-    width: 60,
-    height: 60,
-    marginVertical: 20,
   },
 });

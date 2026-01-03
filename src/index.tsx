@@ -1,2 +1,2 @@
-export { default as LuggMapsView } from './LuggMapsViewNativeComponent';
-export * from './LuggMapsViewNativeComponent';
+export { MapView } from './MapView';
+export type { MapViewProps, Region } from './MapView.types';

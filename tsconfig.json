@@ -2,7 +2,7 @@
   "compilerOptions": {
     "rootDir": ".",
     "paths": {
-      "lugg-maps": ["./src/index"]
+      "@lugg/maps": ["./src/index"]
     },
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,

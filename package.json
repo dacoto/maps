@@ -1,7 +1,7 @@
 {
-  "name": "lugg-maps",
+  "name": "@lugg/maps",
   "version": "0.1.0",
-  "description": "Maps for all platforms 🗺️",
+  "description": "Universal maps for React Native.",
   "main": "./lib/module/index.js",
   "types": "./lib/typescript/src/index.d.ts",
   "exports": {
@@ -32,7 +32,7 @@
     "!**/.*"
   ],
   "scripts": {
-    "example": "yarn workspace lugg-maps-example",
+    "example": "yarn workspace @lugg/maps-example",
     "clean": "del-cli android/build example/android/build example/android/app/build example/ios/build lib",
     "prepare": "bob build",
     "typecheck": "tsc",
@@ -110,15 +110,15 @@
     ]
   },
   "codegenConfig": {
-    "name": "LuggMapsViewSpec",
+    "name": "MapViewSpec",
     "type": "all",
-    "jsSrcsDir": "src",
+    "jsSrcsDir": "src/fabric",
     "android": {
       "javaPackageName": "com.luggmaps"
     },
     "ios": {
       "componentProvider": {
-        "LuggMapsView": "LuggMapsView"
+        "MapView": "MapView"
       }
     }
   },
