@@ -6,7 +6,7 @@
   "types": "./lib/typescript/src/index.d.ts",
   "exports": {
     ".": {
-      "source": "./src/index.tsx",
+      "source": "./src/index.ts",
       "types": "./lib/typescript/src/index.d.ts",
       "default": "./lib/module/index.js"
     },
@@ -33,12 +33,14 @@
   ],
   "scripts": {
     "example": "yarn workspace @lugg/maps-example",
-    "clean": "del-cli android/build example/android/build example/android/app/build example/ios/build lib",
-    "prepare": "bob build",
-    "typecheck": "tsc",
     "test": "jest",
-    "release": "release-it --only-version",
-    "lint": "eslint \"**/*.{js,ts,tsx}\""
+    "typecheck": "tsc",
+    "lint": "eslint --fix \"**/*.{ts,tsx}\"",
+    "format": "prettier --write \"**/*.{ts,tsx}\"",
+    "tidy": "yarn typecheck && yarn lint && yarn format && scripts/objclint.sh && scripts/ktlint.sh",
+    "clean": "scripts/clean.sh",
+    "prepare": "bob build",
+    "release": "release-it --only-version"
   },
   "keywords": [
     "react-native",

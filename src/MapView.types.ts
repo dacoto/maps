@@ -1,19 +1,12 @@
 import type { ReactNode } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
-
-export type MapProvider = 'google' | 'apple';
-
-export interface Region {
-  latitude: number;
-  longitude: number;
-  latitudeDelta: number;
-  longitudeDelta: number;
-}
+import type { MapProvider, Coordinate } from './types';
 
 export interface MapViewProps {
   style?: StyleProp<ViewStyle>;
   provider?: MapProvider;
-  initialRegion?: Region;
+  initialCoordinate?: Coordinate;
+  initialZoom?: number;
   zoomEnabled?: boolean;
   scrollEnabled?: boolean;
   rotateEnabled?: boolean;

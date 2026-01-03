@@ -7,6 +7,7 @@ import type { MapViewProps } from './MapView.types';
 export class MapView extends React.Component<MapViewProps> {
   static defaultProps: Partial<MapViewProps> = {
     provider: Platform.OS === 'ios' ? 'apple' : 'google',
+    initialZoom: 10,
     zoomEnabled: true,
     scrollEnabled: true,
     rotateEnabled: true,
@@ -17,7 +18,8 @@ export class MapView extends React.Component<MapViewProps> {
     const {
       style,
       provider,
-      initialRegion,
+      initialCoordinate,
+      initialZoom,
       zoomEnabled,
       scrollEnabled,
       rotateEnabled,
@@ -33,7 +35,8 @@ export class MapView extends React.Component<MapViewProps> {
     return (
       <NativeMapView
         style={style}
-        initialRegion={initialRegion}
+        initialCoordinate={initialCoordinate}
+        initialZoom={initialZoom}
         zoomEnabled={zoomEnabled}
         scrollEnabled={scrollEnabled}
         rotateEnabled={rotateEnabled}

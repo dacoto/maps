@@ -6,11 +6,8 @@ import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.uimanager.ViewManager
 
 class MapViewPackage : ReactPackage {
-    override fun createViewManagers(reactContext: ReactApplicationContext): List<ViewManager<*, *>> {
-        return listOf(MapViewManager(), MapMarkerManager())
-    }
+  override fun createViewManagers(reactContext: ReactApplicationContext): List<ViewManager<*, *>> =
+    listOf(GoogleMapViewManager(), MapMarkerManager())
 
-    override fun createNativeModules(reactContext: ReactApplicationContext): List<NativeModule> {
-        return emptyList()
-    }
+  override fun createNativeModules(reactContext: ReactApplicationContext): List<NativeModule> = emptyList()
 }

@@ -7,10 +7,16 @@ export interface Coordinate {
   longitude: Double;
 }
 
+export interface Point {
+  x: Double;
+  y: Double;
+}
+
 export interface NativeProps extends ViewProps {
   coordinate: Coordinate;
   title?: string;
   description?: string;
+  anchor?: Point;
 }
 
 export default codegenNativeComponent<NativeProps>(
