@@ -1,162 +1,105 @@
 package com.luggmaps
 
 import android.content.Context
-import android.view.View
-import android.widget.FrameLayout
+import android.util.Log
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.GoogleMapOptions
-import com.google.android.gms.maps.MapView as GmsMapView
+import com.google.android.gms.maps.MapView
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.model.AdvancedMarkerOptions
-import com.google.android.gms.maps.model.AdvancedMarkerOptions.CollisionBehavior
-import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 
-class GoogleMapView(context: Context) :
-  FrameLayout(context),
-  OnMapReadyCallback {
-  private var mapView: GmsMapView? = null
+class GoogleMapView(context: Context, options: GoogleMapOptions) :
+  MapView(context, options),
+  OnMapReadyCallback,
+  MapMarkerViewDelegate {
   private var googleMap: GoogleMap? = null
+  private var isMapReady = false
   private val markerMap: MutableMap<MapMarkerView, Marker> = mutableMapOf()
   private val pendingMarkers: MutableList<MapMarkerView> = mutableListOf()
 
-  private var currentMapId: String? = null
   private var initialLatitude: Double = 37.7749
   private var initialLongitude: Double = -122.4194
-  private var initialLatitudeDelta: Double = 0.0922
-  private var zoomEnabled: Boolean = true
-  private var scrollEnabled: Boolean = true
-  private var rotateEnabled: Boolean = true
-  private var pitchEnabled: Boolean = true
+  private var initialZoom: Double = 10.0
 
-  companion object {
-    const val DEMO_MAP_ID = "DEMO_MAP_ID"
+  constructor(context: Context) : this(context, GoogleMapOptions())
+
+  init {
+    onCreate(null)
+    getMapAsync(this)
   }
 
-  fun setMapId(mapId: String?) {
-    val newMapId = mapId ?: DEMO_MAP_ID
-    if (newMapId == currentMapId) return
-
-    currentMapId = newMapId
-    setupMapView(newMapId)
-  }
-
-  private fun setupMapView(mapId: String) {
-    mapView?.let {
-      it.onDestroy()
-      removeView(it)
+  override fun requestLayout() {
+    super.requestLayout()
+    if (isMapReady && width > 0 && height > 0) {
+      measure(
+        MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY),
+        MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY)
+      )
+      layout(left, top, right, bottom)
     }
-
-    googleMap = null
-    markerMap.clear()
-
-    val options = GoogleMapOptions().mapId(mapId)
-    mapView =
-      GmsMapView(context, options).also {
-        addView(it, 0, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
-        it.onCreate(null)
-        it.getMapAsync(this)
-      }
   }
 
   override fun onMapReady(map: GoogleMap) {
     googleMap = map
-    updateMapSettings()
-    updateCamera()
+    isMapReady = true
+    map.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(initialLatitude, initialLongitude), initialZoom.toFloat()))
 
     pendingMarkers.forEach { addMarkerToMap(it) }
     pendingMarkers.clear()
   }
 
-  fun setInitialRegion(latitude: Double, longitude: Double, latitudeDelta: Double, longitudeDelta: Double) {
+  fun setMapId(mapId: String?) {
+    // mapId must be set via GoogleMapOptions in constructor
+  }
+
+  fun setInitialCoordinate(latitude: Double, longitude: Double) {
     initialLatitude = latitude
     initialLongitude = longitude
-    initialLatitudeDelta = latitudeDelta
-    updateCamera()
+  }
+
+  fun setInitialZoom(zoom: Double) {
+    initialZoom = zoom
   }
 
   fun setZoomEnabled(enabled: Boolean) {
-    zoomEnabled = enabled
-    updateMapSettings()
+    googleMap?.uiSettings?.isZoomGesturesEnabled = enabled
   }
 
   fun setScrollEnabled(enabled: Boolean) {
-    scrollEnabled = enabled
-    updateMapSettings()
+    googleMap?.uiSettings?.isScrollGesturesEnabled = enabled
   }
 
   fun setRotateEnabled(enabled: Boolean) {
-    rotateEnabled = enabled
-    updateMapSettings()
+    googleMap?.uiSettings?.isRotateGesturesEnabled = enabled
   }
 
   fun setPitchEnabled(enabled: Boolean) {
-    pitchEnabled = enabled
-    updateMapSettings()
+    googleMap?.uiSettings?.isTiltGesturesEnabled = enabled
   }
 
-  private fun updateMapSettings() {
-    googleMap?.uiSettings?.apply {
-      isZoomGesturesEnabled = zoomEnabled
-      isScrollGesturesEnabled = scrollEnabled
-      isRotateGesturesEnabled = rotateEnabled
-      isTiltGesturesEnabled = pitchEnabled
-    }
-  }
-
-  private fun updateCamera() {
-    googleMap?.let { map ->
-      val zoom =
-        if (initialLatitudeDelta > 0) {
-          (Math.log(360.0 / initialLatitudeDelta) / Math.log(2.0)).toFloat()
-        } else {
-          10f
-        }
-
-      val cameraPosition =
-        CameraPosition
-          .Builder()
-          .target(LatLng(initialLatitude, initialLongitude))
-          .zoom(zoom)
-          .build()
-
-      map.moveCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
-    }
-  }
-
-  fun onResume() {
-    mapView?.onResume()
-  }
-
-  fun onPause() {
-    mapView?.onPause()
-  }
-
-  fun onDestroy() {
-    mapView?.onDestroy()
-  }
-
-  fun onLowMemory() {
-    mapView?.onLowMemory()
-  }
-
-  override fun addView(child: View?, index: Int) {
+  override fun addView(child: android.view.View?, index: Int) {
     if (child is MapMarkerView) {
-      val map = googleMap
-      if (map != null) {
-        addMarkerToMap(child)
-      } else {
-        pendingMarkers.add(child)
+      child.delegate = this
+      if (!child.hasCustomView) {
+        // Regular markers can be added immediately
+        if (googleMap != null) {
+          addMarkerToMap(child)
+        } else {
+          pendingMarkers.add(child)
+        }
       }
+      // Custom view markers will be added in markerViewDidUpdateLayout after layout
     } else {
       super.addView(child, index)
     }
   }
 
-  override fun removeView(child: View?) {
+  override fun removeView(child: android.view.View?) {
     if (child is MapMarkerView) {
+      child.delegate = null
       markerMap[child]?.remove()
       markerMap.remove(child)
       pendingMarkers.remove(child)
@@ -165,22 +108,42 @@ class GoogleMapView(context: Context) :
     }
   }
 
-  private fun addMarkerToMap(mapMarkerView: MapMarkerView) {
-    googleMap?.let { map ->
-      val markerOptions =
-        AdvancedMarkerOptions()
-          .position(LatLng(mapMarkerView.latitude, mapMarkerView.longitude))
-          .title(mapMarkerView.markerTitle)
-          .snippet(mapMarkerView.markerDescription)
-          .collisionBehavior(CollisionBehavior.REQUIRED)
+  override fun markerViewDidUpdateProps(markerView: MapMarkerView) {
+    markerMap[markerView]?.position = LatLng(markerView.latitude, markerView.longitude)
+  }
 
-      if (mapMarkerView.hasCustomView) {
-        markerOptions.iconView(mapMarkerView.iconView)
+  override fun markerViewDidUpdateLayout(markerView: MapMarkerView) {
+    Log.d(TAG, "markerViewDidUpdateLayout - googleMap: ${googleMap != null}, hasCustomView: ${markerView.hasCustomView}, inMap: ${markerMap.containsKey(markerView)}")
+    if (googleMap == null) {
+      if (!pendingMarkers.contains(markerView)) {
+        Log.d(TAG, "adding to pendingMarkers")
+        pendingMarkers.add(markerView)
+      }
+      return
+    }
+
+    if (!markerMap.containsKey(markerView)) {
+      Log.d(TAG, "adding marker to map")
+      addMarkerToMap(markerView)
+    }
+    // Marker already on map - iconView updates automatically
+  }
+
+  companion object {
+    const val TAG = "GoogleMapView"
+  }
+
+  private fun addMarkerToMap(markerView: MapMarkerView) {
+    googleMap?.let { map ->
+      val options = AdvancedMarkerOptions()
+        .position(LatLng(markerView.latitude, markerView.longitude))
+
+      if (markerView.hasCustomView) {
+        options.iconView(markerView)
       }
 
-      val marker = map.addMarker(markerOptions)
-      if (marker != null) {
-        markerMap[mapMarkerView] = marker
+      map.addMarker(options)?.let { marker ->
+        markerMap[markerView] = marker
       }
     }
   }

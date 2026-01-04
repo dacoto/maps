@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { StyleSheet, View, Text, Image, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, Text, Image, TouchableOpacity, Platform } from 'react-native';
 import { MapView, MapMarker, type MapProvider } from '@lugg/maps';
 import Svg, { Path, Circle } from 'react-native-svg';
 
@@ -16,7 +16,7 @@ function MarkerIcon() {
 }
 
 export default function App() {
-  const [provider, setProvider] = useState<MapProvider>('apple');
+  const [provider, setProvider] = useState<MapProvider>('google');
 
   const toggleProvider = () => {
     setProvider((prev) => (prev === 'google' ? 'apple' : 'google'));
@@ -64,11 +64,13 @@ export default function App() {
         </MapMarker>
       </MapView>
 
-      <TouchableOpacity style={styles.toggleButton} onPress={toggleProvider}>
-        <Text style={styles.toggleButtonText}>
-          {provider === 'google' ? 'Google Maps' : 'Apple Maps'}
-        </Text>
-      </TouchableOpacity>
+      {Platform.OS === 'ios' && (
+        <TouchableOpacity style={styles.toggleButton} onPress={toggleProvider}>
+          <Text style={styles.toggleButtonText}>
+            {provider === 'google' ? 'Google Maps' : 'Apple Maps'}
+          </Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
@@ -85,7 +87,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 4,
-    width: 100,
+    width: 120,
     alignItems: 'center',
   },
   customMarkerText: {
@@ -94,8 +96,8 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   markerImage: {
-    width: 50,
-    height: 50,
+    width: 80,
+    height: 80,
   },
   toggleButton: {
     position: 'absolute',

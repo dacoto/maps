@@ -2,16 +2,17 @@ package com.luggmaps
 
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.module.annotations.ReactModule
-import com.facebook.react.uimanager.SimpleViewManager
 import com.facebook.react.uimanager.ThemedReactContext
+import com.facebook.react.uimanager.ViewGroupManager
 import com.facebook.react.uimanager.ViewManagerDelegate
 import com.facebook.react.uimanager.annotations.ReactProp
 import com.facebook.react.viewmanagers.GoogleMapViewManagerDelegate
 import com.facebook.react.viewmanagers.GoogleMapViewManagerInterface
+import com.google.android.gms.maps.GoogleMapOptions
 
 @ReactModule(name = GoogleMapViewManager.NAME)
 class GoogleMapViewManager :
-  SimpleViewManager<GoogleMapView>(),
+  ViewGroupManager<GoogleMapView>(),
   GoogleMapViewManagerInterface<GoogleMapView> {
   private val delegate: ViewManagerDelegate<GoogleMapView> = GoogleMapViewManagerDelegate(this)
 
@@ -19,22 +20,28 @@ class GoogleMapViewManager :
 
   override fun getName(): String = NAME
 
-  override fun createViewInstance(context: ThemedReactContext): GoogleMapView = GoogleMapView(context)
+  override fun createViewInstance(context: ThemedReactContext): GoogleMapView {
+    val options = GoogleMapOptions().mapId(DEMO_MAP_ID)
+    return GoogleMapView(context, options)
+  }
 
   @ReactProp(name = "mapId")
   override fun setMapId(view: GoogleMapView, value: String?) {
     view.setMapId(value)
   }
 
-  @ReactProp(name = "initialRegion")
-  override fun setInitialRegion(view: GoogleMapView, value: ReadableMap?) {
+  @ReactProp(name = "initialCoordinate")
+  override fun setInitialCoordinate(view: GoogleMapView, value: ReadableMap?) {
     value?.let {
       val latitude = if (it.hasKey("latitude")) it.getDouble("latitude") else 0.0
       val longitude = if (it.hasKey("longitude")) it.getDouble("longitude") else 0.0
-      val latitudeDelta = if (it.hasKey("latitudeDelta")) it.getDouble("latitudeDelta") else 0.0
-      val longitudeDelta = if (it.hasKey("longitudeDelta")) it.getDouble("longitudeDelta") else 0.0
-      view.setInitialRegion(latitude, longitude, latitudeDelta, longitudeDelta)
+      view.setInitialCoordinate(latitude, longitude)
     }
+  }
+
+  @ReactProp(name = "initialZoom", defaultDouble = 10.0)
+  override fun setInitialZoom(view: GoogleMapView, value: Double) {
+    view.setInitialZoom(value)
   }
 
   @ReactProp(name = "zoomEnabled", defaultBoolean = true)
@@ -59,5 +66,6 @@ class GoogleMapViewManager :
 
   companion object {
     const val NAME = "GoogleMapView"
+    const val DEMO_MAP_ID = "DEMO_MAP_ID"
   }
 }
