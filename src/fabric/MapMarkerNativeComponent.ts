@@ -13,6 +13,7 @@ export interface Point {
 }
 
 export interface NativeProps extends ViewProps {
+  name?: string;
   coordinate: Coordinate;
   title?: string;
   description?: string;

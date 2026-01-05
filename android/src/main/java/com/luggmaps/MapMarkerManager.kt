@@ -1,5 +1,6 @@
 package com.luggmaps
 
+import android.util.Log
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.module.annotations.ReactModule
 import com.facebook.react.uimanager.ThemedReactContext
@@ -16,10 +17,18 @@ class MapMarkerManager :
   private val delegate: ViewManagerDelegate<MapMarkerView> = MapMarkerViewManagerDelegate(this)
 
   override fun getDelegate(): ViewManagerDelegate<MapMarkerView> = delegate
-
   override fun getName(): String = NAME
-
   override fun createViewInstance(context: ThemedReactContext): MapMarkerView = MapMarkerView(context)
+
+  override fun onDropViewInstance(view: MapMarkerView) {
+    super.onDropViewInstance(view)
+    view.onDropViewInstance()
+  }
+
+  override fun onAfterUpdateTransaction(view: MapMarkerView) {
+    super.onAfterUpdateTransaction(view)
+    view.onAfterUpdateTransaction()
+  }
 
   @ReactProp(name = "coordinate")
   override fun setCoordinate(view: MapMarkerView, value: ReadableMap?) {
@@ -28,6 +37,11 @@ class MapMarkerManager :
       val longitude = if (it.hasKey("longitude")) it.getDouble("longitude") else 0.0
       view.setCoordinate(latitude, longitude)
     }
+  }
+
+  @ReactProp(name = "name")
+  override fun setName(view: MapMarkerView, value: String?) {
+    view.setName(value)
   }
 
   @ReactProp(name = "title")

@@ -1,5 +1,6 @@
 package com.luggmaps
 
+import android.util.Log
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.module.annotations.ReactModule
 import com.facebook.react.uimanager.ThemedReactContext
@@ -8,7 +9,6 @@ import com.facebook.react.uimanager.ViewManagerDelegate
 import com.facebook.react.uimanager.annotations.ReactProp
 import com.facebook.react.viewmanagers.GoogleMapViewManagerDelegate
 import com.facebook.react.viewmanagers.GoogleMapViewManagerInterface
-import com.google.android.gms.maps.GoogleMapOptions
 
 @ReactModule(name = GoogleMapViewManager.NAME)
 class GoogleMapViewManager :
@@ -20,10 +20,7 @@ class GoogleMapViewManager :
 
   override fun getName(): String = NAME
 
-  override fun createViewInstance(context: ThemedReactContext): GoogleMapView {
-    val options = GoogleMapOptions().mapId(DEMO_MAP_ID)
-    return GoogleMapView(context, options)
-  }
+  override fun createViewInstance(context: ThemedReactContext): GoogleMapView = GoogleMapView(context)
 
   @ReactProp(name = "mapId")
   override fun setMapId(view: GoogleMapView, value: String?) {
@@ -64,8 +61,12 @@ class GoogleMapViewManager :
     view.setPitchEnabled(value)
   }
 
+  override fun onDropViewInstance(view: GoogleMapView) {
+    super.onDropViewInstance(view)
+    view.onDropViewInstance()
+  }
+
   companion object {
     const val NAME = "GoogleMapView"
-    const val DEMO_MAP_ID = "DEMO_MAP_ID"
   }
 }

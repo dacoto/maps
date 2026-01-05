@@ -81,10 +81,10 @@ clean_example() {
   npx pod-install example
 }
 
-step "Installing dependencies" "Dependencies installed" install
-step "Cleaning watchman" "Watchman cache cleared" clean_watchman
-step "Cleaning up simulator cache" "Simulator cache cleared" rm -rf ~/Library/Developer/CoreSimulator/Caches
+# step "Installing dependencies" "Dependencies installed" install
+# step "Cleaning watchman" "Watchman cache cleared" clean_watchman
+# step "Cleaning up simulator cache" "Simulator cache cleared" rm -rf ~/Library/Developer/CoreSimulator/Caches
 step "Cleaning example" "Example cleaned" clean_example
-step "Building with bob" "Build complete" bob build
+# step "Building with bob" "Build complete" bob build
 
 echo -e "${GREEN}${BOLD}All done!${NC}"

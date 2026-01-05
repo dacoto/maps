@@ -1,7 +1,8 @@
 import React from 'react';
-import { Platform } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 import NativeGoogleMapView from './fabric/GoogleMapViewNativeComponent';
 import NativeAppleMapView from './fabric/AppleMapViewNativeComponent';
+import NativeMapWrapperView from './fabric/MapWrapperViewNativeComponent';
 import type { MapViewProps } from './MapView.types';
 
 export class MapView extends React.Component<MapViewProps> {
@@ -18,6 +19,7 @@ export class MapView extends React.Component<MapViewProps> {
     const {
       style,
       provider,
+      mapId,
       initialCoordinate,
       initialZoom,
       zoomEnabled,
@@ -32,9 +34,12 @@ export class MapView extends React.Component<MapViewProps> {
         ? NativeAppleMapView
         : NativeGoogleMapView;
 
+    const isAndroid = Platform.OS === 'android';
+
     return (
       <NativeMapView
         style={style}
+        mapId={mapId}
         initialCoordinate={initialCoordinate}
         initialZoom={initialZoom}
         zoomEnabled={zoomEnabled}
@@ -42,8 +47,15 @@ export class MapView extends React.Component<MapViewProps> {
         rotateEnabled={rotateEnabled}
         pitchEnabled={pitchEnabled}
       >
+        <NativeMapWrapperView style={styles.wrapper} />
         {children}
       </NativeMapView>
     );
   }
 }
+
+const styles = StyleSheet.create({
+  wrapper: {
+    ...StyleSheet.absoluteFillObject,
+  },
+});

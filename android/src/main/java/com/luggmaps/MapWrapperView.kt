@@ -1,0 +1,33 @@
+package com.luggmaps
+
+import android.annotation.SuppressLint
+import com.facebook.react.uimanager.ThemedReactContext
+import com.facebook.react.views.view.ReactViewGroup
+
+@SuppressLint("ViewConstructor")
+class MapWrapperView(context: ThemedReactContext) : ReactViewGroup(context) {
+
+  override fun requestLayout() {
+    super.requestLayout()
+    getChildAt(0)?.let {
+      it.measure(
+        MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY),
+        MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY)
+      )
+      it.layout(0, 0, width, height)
+    }
+  }
+
+  override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
+    super.onLayout(changed, left, top, right, bottom)
+    val width = right - left
+    val height = bottom - top
+    getChildAt(0)?.let {
+      it.measure(
+        MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY),
+        MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY)
+      )
+      it.layout(0, 0, width, height)
+    }
+  }
+}

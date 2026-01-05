@@ -7,7 +7,7 @@ import com.facebook.react.uimanager.ViewManager
 
 class LuggMapsPackage : ReactPackage {
   override fun createViewManagers(reactContext: ReactApplicationContext): List<ViewManager<*, *>> =
-    listOf(GoogleMapViewManager(), MapMarkerManager())
+    listOf(GoogleMapViewManager(), MapMarkerManager(), MapWrapperViewManager())
 
   override fun createNativeModules(reactContext: ReactApplicationContext): List<NativeModule> = emptyList()
 }

@@ -1,150 +1,224 @@
 package com.luggmaps
 
-import android.content.Context
+import android.annotation.SuppressLint
 import android.util.Log
+import android.view.View
+import android.view.ViewGroup
+import com.facebook.react.uimanager.ThemedReactContext
+import com.facebook.react.views.view.ReactViewGroup
+import com.facebook.react.util.RNLog
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.GoogleMapOptions
 import com.google.android.gms.maps.MapView
 import com.google.android.gms.maps.OnMapReadyCallback
+import com.google.android.gms.maps.model.AdvancedMarker
 import com.google.android.gms.maps.model.AdvancedMarkerOptions
+import com.google.android.gms.maps.model.AdvancedMarkerOptions.CollisionBehavior
 import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.Marker
 
-class GoogleMapView(context: Context, options: GoogleMapOptions) :
-  MapView(context, options),
+@SuppressLint("ViewConstructor")
+class GoogleMapView(private val reactContext: ThemedReactContext) :
+  ReactViewGroup(reactContext),
   OnMapReadyCallback,
-  MapMarkerViewDelegate {
+  MapMarkerDelegate {
+  private var mapView: MapView? = null
+  private var mapWrapperView: MapWrapperView? = null
   private var googleMap: GoogleMap? = null
   private var isMapReady = false
-  private val markerMap: MutableMap<MapMarkerView, Marker> = mutableMapOf()
-  private val pendingMarkers: MutableList<MapMarkerView> = mutableListOf()
+  private var mapId: String = DEMO_MAP_ID
+  private val pendingMarkerViews = mutableListOf<MapMarkerView>()
 
-  private var initialLatitude: Double = 37.7749
-  private var initialLongitude: Double = -122.4194
-  private var initialZoom: Double = 10.0
+  override fun addView(child: View?, index: Int) {
+    super.addView(child, index)
+    if (child is MapWrapperView) {
+      mapWrapperView = child
+    }
 
-  constructor(context: Context) : this(context, GoogleMapOptions())
-
-  init {
-    onCreate(null)
-    getMapAsync(this)
+    if (child is MapMarkerView) {
+      child.delegate = this
+    }
   }
 
-  override fun requestLayout() {
-    super.requestLayout()
-    if (isMapReady && width > 0 && height > 0) {
-      measure(
-        MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY),
-        MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY)
-      )
-      layout(left, top, right, bottom)
+  override fun removeViewAt(index: Int) {
+    val view = getChildAt(index)
+    if (view is MapMarkerView) {
+      Log.d(TAG, "removing markerView: ${view.name}")
+      view.marker?.iconView = null
+      view.marker?.remove()
+      view.marker = null
+    }
+    super.removeViewAt(index)
+  }
+
+  override fun markerViewDidLayout(markerView: MapMarkerView) {
+    if (googleMap == null) {
+      // Queue pending markers until map becomes available
+      if (!pendingMarkerViews.contains(markerView)) {
+        Log.d(TAG, "markerViewDidLayout: ${markerView.name} - added to pending markers ${markerView.marker}")
+        pendingMarkerViews.add(markerView)
+      }
+      return
+    }
+
+    // Add directly to the map if no marker is attached to the view
+    if (markerView.marker == null) {
+      Log.d(TAG, "markerViewDidLayout ${markerView.name} - adding to map")
+      addMarkerViewToMap(markerView)
+      return
+    }
+
+    Log.d(TAG, "markerViewDidLayout ${markerView.name} ${markerView}")
+
+    markerView.marker?.position = LatLng(markerView.latitude, markerView.longitude)
+    markerView.marker?.title = markerView.title
+    markerView.marker?.snippet = markerView.description
+    markerView.marker?.setAnchor(markerView.anchorX, markerView.anchorY)
+
+    markerView.marker?.iconView = null
+    if (markerView.hasCustomView) {
+      (markerView.iconView.parent as? ViewGroup)?.removeView(markerView.iconView)
+      markerView.marker?.iconView = markerView.iconView
+    }
+  }
+
+  override fun markerViewDidUpdate(markerView: MapMarkerView) {
+    if (googleMap == null) {
+      // Queue pending markers until map becomes available
+      if (!pendingMarkerViews.contains(markerView)) {
+        Log.d(TAG, "markerViewDidUpdate: ${markerView.name} - added to pending markers ${markerView.marker}")
+        pendingMarkerViews.add(markerView)
+      }
+      return
+    }
+
+    // Add directly to the map if no marker is attached to the view
+    if (markerView.marker == null) {
+      Log.d(TAG, "markerViewDidUpdate ${markerView.name} - adding to map")
+      addMarkerViewToMap(markerView)
+      return
+    }
+
+    Log.d(TAG, "markerViewDidUpdate ${markerView.name} ${markerView}")
+
+    markerView.marker?.position = LatLng(markerView.latitude, markerView.longitude)
+    markerView.marker?.title = markerView.title
+    markerView.marker?.snippet = markerView.description
+    markerView.marker?.setAnchor(markerView.anchorX, markerView.anchorY)
+
+    markerView.marker?.iconView = null
+    if (markerView.hasCustomView) {
+      (markerView.iconView.parent as? ViewGroup)?.removeView(markerView.iconView)
+      markerView.marker?.iconView = markerView.iconView
+    }
+  }
+
+  override fun onAttachedToWindow() {
+    super.onAttachedToWindow()
+    if (mapView == null && mapWrapperView != null) {
+      initializeMap()
+    }
+  }
+
+  fun onDropViewInstance() {
+    pendingMarkerViews.clear()
+    mapView?.onPause()
+    mapView?.onDestroy()
+    mapView = null
+    mapWrapperView = null
+    googleMap = null
+    isMapReady = false
+  }
+
+  private fun initializeMap() {
+    if (mapView != null || mapWrapperView == null) return
+
+    val options = GoogleMapOptions().mapId(mapId)
+
+    mapView = MapView(context, options).also {
+      it.onCreate(null)
+      it.onResume()
+      it.getMapAsync(this)
+
+      mapWrapperView?.addView(it, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
     }
   }
 
   override fun onMapReady(map: GoogleMap) {
     googleMap = map
     isMapReady = true
-    map.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(initialLatitude, initialLongitude), initialZoom.toFloat()))
 
-    pendingMarkers.forEach { addMarkerToMap(it) }
-    pendingMarkers.clear()
+    val position = LatLng(37.78, -122.43)
+    map.moveCamera(CameraUpdateFactory.newLatLngZoom(position, 12f))
+    processPendingMarkers()
   }
 
-  fun setMapId(mapId: String?) {
-    // mapId must be set via GoogleMapOptions in constructor
-  }
+  fun processPendingMarkers() {
+    if (googleMap == null) return
 
-  fun setInitialCoordinate(latitude: Double, longitude: Double) {
-    initialLatitude = latitude
-    initialLongitude = longitude
-  }
+    Log.d(TAG, "processing pending markers ${pendingMarkerViews.size}")
 
-  fun setInitialZoom(zoom: Double) {
-    initialZoom = zoom
-  }
-
-  fun setZoomEnabled(enabled: Boolean) {
-    googleMap?.uiSettings?.isZoomGesturesEnabled = enabled
-  }
-
-  fun setScrollEnabled(enabled: Boolean) {
-    googleMap?.uiSettings?.isScrollGesturesEnabled = enabled
-  }
-
-  fun setRotateEnabled(enabled: Boolean) {
-    googleMap?.uiSettings?.isRotateGesturesEnabled = enabled
-  }
-
-  fun setPitchEnabled(enabled: Boolean) {
-    googleMap?.uiSettings?.isTiltGesturesEnabled = enabled
-  }
-
-  override fun addView(child: android.view.View?, index: Int) {
-    if (child is MapMarkerView) {
-      child.delegate = this
-      if (!child.hasCustomView) {
-        // Regular markers can be added immediately
-        if (googleMap != null) {
-          addMarkerToMap(child)
-        } else {
-          pendingMarkers.add(child)
-        }
-      }
-      // Custom view markers will be added in markerViewDidUpdateLayout after layout
-    } else {
-      super.addView(child, index)
+    for (markerView in pendingMarkerViews) {
+      addMarkerViewToMap(markerView)
     }
+
+    pendingMarkerViews.clear()
   }
 
-  override fun removeView(child: android.view.View?) {
-    if (child is MapMarkerView) {
-      child.delegate = null
-      markerMap[child]?.remove()
-      markerMap.remove(child)
-      pendingMarkers.remove(child)
-    } else {
-      super.removeView(child)
-    }
-  }
-
-  override fun markerViewDidUpdateProps(markerView: MapMarkerView) {
-    markerMap[markerView]?.position = LatLng(markerView.latitude, markerView.longitude)
-  }
-
-  override fun markerViewDidUpdateLayout(markerView: MapMarkerView) {
-    Log.d(TAG, "markerViewDidUpdateLayout - googleMap: ${googleMap != null}, hasCustomView: ${markerView.hasCustomView}, inMap: ${markerMap.containsKey(markerView)}")
+  fun addMarkerViewToMap(markerView: MapMarkerView) {
     if (googleMap == null) {
-      if (!pendingMarkers.contains(markerView)) {
-        Log.d(TAG, "adding to pendingMarkers")
-        pendingMarkers.add(markerView)
-      }
+      RNLog.w(reactContext, "LuggMaps: addMarkerViewToMap called without a map")
       return
     }
 
-    if (!markerMap.containsKey(markerView)) {
-      Log.d(TAG, "adding marker to map")
-      addMarkerToMap(markerView)
+    val position = LatLng(markerView.latitude, markerView.longitude)
+    val options = AdvancedMarkerOptions()
+      .position(position)
+      .title(markerView.title)
+      .snippet(markerView.description)
+      .anchor(markerView.anchorX, markerView.anchorY)
+      .collisionBehavior(CollisionBehavior.REQUIRED)
+
+    Log.d(TAG, "adding marker: ${markerView.name} customview: ${markerView.hasCustomView} ${markerView}")
+    if (markerView.hasCustomView) {
+      (markerView.iconView.parent as? ViewGroup)?.removeView(markerView.iconView)
+      options.iconView(markerView.iconView)
     }
-    // Marker already on map - iconView updates automatically
+
+    markerView.marker = googleMap?.addMarker(options) as? AdvancedMarker
+  }
+
+  fun setMapId(value: String?) {
+    if (value.isNullOrEmpty()) return
+
+    if (mapView != null) {
+      RNLog.w(reactContext, "LuggMaps: mapId cannot be changed after map is initialized")
+      return
+    }
+
+    mapId = value
   }
 
   companion object {
-    const val TAG = "GoogleMapView"
+    private const val TAG = "LuggMaps"
+    const val DEMO_MAP_ID = "DEMO_MAP_ID"
   }
 
-  private fun addMarkerToMap(markerView: MapMarkerView) {
-    googleMap?.let { map ->
-      val options = AdvancedMarkerOptions()
-        .position(LatLng(markerView.latitude, markerView.longitude))
+  fun setInitialCoordinate(latitude: Double, longitude: Double) {
+  }
 
-      if (markerView.hasCustomView) {
-        options.iconView(markerView)
-      }
+  fun setInitialZoom(zoom: Double) {
+  }
 
-      map.addMarker(options)?.let { marker ->
-        markerMap[markerView] = marker
-      }
-    }
+  fun setZoomEnabled(enabled: Boolean) {
+  }
+
+  fun setScrollEnabled(enabled: Boolean) {
+  }
+
+  fun setRotateEnabled(enabled: Boolean) {
+  }
+
+  fun setPitchEnabled(enabled: Boolean) {
   }
 }

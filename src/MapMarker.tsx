@@ -1,18 +1,17 @@
 import React from 'react';
 import NativeMapMarker from './fabric/MapMarkerNativeComponent';
 import type { MapMarkerProps } from './MapMarker.types';
+import { StyleSheet } from 'react-native';
 
 export class MapMarker extends React.Component<MapMarkerProps> {
-  private static keyCounter = 0;
-
   render() {
-    const { style, coordinate, title, description, anchor, children } =
+    const { name, coordinate, title, description, anchor, children } =
       this.props;
 
     return (
       <NativeMapMarker
-        style={style}
-        key={`marker-${MapMarker.keyCounter++}`}
+        style={styles.marker}
+        name={name}
         coordinate={coordinate}
         title={title}
         description={description}
@@ -23,3 +22,9 @@ export class MapMarker extends React.Component<MapMarkerProps> {
     );
   }
 }
+
+const styles = StyleSheet.create({
+  marker: {
+    position: 'absolute',
+  },
+});
