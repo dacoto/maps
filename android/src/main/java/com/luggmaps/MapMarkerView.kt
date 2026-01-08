@@ -1,8 +1,6 @@
 package com.luggmaps
 
 import android.content.Context
-import android.nfc.Tag
-import android.util.Log
 import android.view.View
 import androidx.core.view.isNotEmpty
 import com.facebook.react.views.view.ReactViewGroup
@@ -55,17 +53,23 @@ class MapMarkerView(context: Context) : ReactViewGroup(context) {
     }
   }
 
+  init {
+    visibility = GONE
+  }
+
   override fun addView(child: View, index: Int) {
     iconView.addView(child, index)
+    didLayout = false
   }
 
   override fun removeView(child: View) {
     iconView.removeView(child)
-
+    didLayout = false
   }
 
   override fun removeViewAt(index: Int) {
     iconView.removeViewAt(index)
+    didLayout = false
   }
 
   override fun getChildCount(): Int = iconView.childCount

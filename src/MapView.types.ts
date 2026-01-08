@@ -1,9 +1,8 @@
 import type { ReactNode } from 'react';
-import type { StyleProp, ViewStyle } from 'react-native';
+import type { ViewProps } from 'react-native';
 import type { MapProvider, Coordinate } from './types';
 
-export interface MapViewProps {
-  style?: StyleProp<ViewStyle>;
+export interface MapViewProps extends ViewProps {
   provider?: MapProvider;
   mapId?: string;
   initialCoordinate?: Coordinate;

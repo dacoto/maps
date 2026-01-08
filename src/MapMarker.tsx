@@ -26,5 +26,6 @@ export class MapMarker extends React.Component<MapMarkerProps> {
 const styles = StyleSheet.create({
   marker: {
     position: 'absolute',
+    pointerEvents: 'box-none',
   },
 });

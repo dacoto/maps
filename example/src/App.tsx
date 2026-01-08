@@ -20,7 +20,14 @@ interface Marker {
   imageUrl?: string;
 }
 
-const MARKER_COLORS = ['#EA4335', '#4285F4', '#34A853', '#FBBC05', '#9C27B0', '#FF5722'];
+const MARKER_COLORS = [
+  '#EA4335',
+  '#4285F4',
+  '#34A853',
+  '#FBBC05',
+  '#9C27B0',
+  '#FF5722',
+];
 const AVATAR_URLS = [
   'https://i.pravatar.cc/100?img=1',
   'https://i.pravatar.cc/100?img=2',
@@ -85,10 +92,14 @@ export default function App() {
 
   const addRandomMarker = () => {
     const types: MarkerType[] = ['basic', 'icon', 'text', 'image', 'custom'];
-    const randomType = types[Math.floor(Math.random() * types.length)];
-    const randomColor = MARKER_COLORS[Math.floor(Math.random() * MARKER_COLORS.length)];
-    const randomAvatar = AVATAR_URLS[Math.floor(Math.random() * AVATAR_URLS.length)];
-    const randomLetter = String.fromCharCode(65 + Math.floor(Math.random() * 26));
+    const randomType = types[Math.floor(Math.random() * types.length)]!;
+    const randomColor =
+      MARKER_COLORS[Math.floor(Math.random() * MARKER_COLORS.length)];
+    const randomAvatar =
+      AVATAR_URLS[Math.floor(Math.random() * AVATAR_URLS.length)];
+    const randomLetter = String.fromCharCode(
+      65 + Math.floor(Math.random() * 26)
+    );
 
     // Random coordinate around San Francisco
     const latitude = 37.77 + Math.random() * 0.03;
@@ -156,7 +167,14 @@ export default function App() {
                     coordinate={marker.coordinate}
                     anchor={marker.anchor}
                   >
-                    <View style={{ backgroundColor: marker.color, height: 40, width: 40, borderRadius: 8 }} />
+                    <View
+                      style={{
+                        backgroundColor: marker.color,
+                        height: 40,
+                        width: 40,
+                        borderRadius: 8,
+                      }}
+                    />
                   </MapMarker>
                 );
               default:
@@ -194,12 +212,19 @@ export default function App() {
           />
           <MapMarker
             name="marker-simple"
-            coordinate={{ latitude: 37.782, longitude: -122.42 }}
+            coordinate={{ latitude: 37.784, longitude: -122.423 }}
             anchor={{ x: 0.5, y: 1 }}
           >
-            <View style={{ backgroundColor: 'red', height: 40, width: 40 }} />
+            <View style={{ backgroundColor: 'red', height: 30, width: 30 }} />
           </MapMarker>
-          <View style={{ zIndex: 10, backgroundColor: 'blue', height: 40, width: 40 }} />
+          <View
+            style={{
+              zIndex: 10,
+              backgroundColor: 'blue',
+              height: 40,
+              width: 40,
+            }}
+          />
         </MapView>
       )}
 

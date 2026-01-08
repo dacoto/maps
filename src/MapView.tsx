@@ -17,7 +17,6 @@ export class MapView extends React.Component<MapViewProps> {
 
   render() {
     const {
-      style,
       provider,
       mapId,
       initialCoordinate,
@@ -27,6 +26,7 @@ export class MapView extends React.Component<MapViewProps> {
       rotateEnabled,
       pitchEnabled,
       children,
+      ...rest
     } = this.props;
 
     const NativeMapView =
@@ -34,11 +34,9 @@ export class MapView extends React.Component<MapViewProps> {
         ? NativeAppleMapView
         : NativeGoogleMapView;
 
-    const isAndroid = Platform.OS === 'android';
-
     return (
       <NativeMapView
-        style={style}
+        {...rest}
         mapId={mapId}
         initialCoordinate={initialCoordinate}
         initialZoom={initialZoom}
@@ -47,15 +45,9 @@ export class MapView extends React.Component<MapViewProps> {
         rotateEnabled={rotateEnabled}
         pitchEnabled={pitchEnabled}
       >
-        <NativeMapWrapperView style={styles.wrapper} />
+        <NativeMapWrapperView style={StyleSheet.absoluteFill} />
         {children}
       </NativeMapView>
     );
   }
 }
-
-const styles = StyleSheet.create({
-  wrapper: {
-    ...StyleSheet.absoluteFillObject,
-  },
-});
