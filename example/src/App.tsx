@@ -213,9 +213,9 @@ export default function App() {
           <MapMarker
             name="marker-simple"
             coordinate={{ latitude: 37.784, longitude: -122.423 }}
-            anchor={{ x: 0.5, y: 1 }}
+            anchor={{ x: 0.5, y: 0.5 }}
           >
-            <View style={{ backgroundColor: 'red', height: 30, width: 30 }} />
+            <View style={{ backgroundColor: 'red', height: 125, width: 125 }} />
           </MapMarker>
           <View
             style={{

@@ -44,7 +44,6 @@ class GoogleMapView(private val reactContext: ThemedReactContext) :
     val view = getChildAt(index)
     if (view is MapMarkerView) {
       Log.d(TAG, "removing markerView: ${view.name}")
-      view.marker?.iconView = null
       view.marker?.remove()
       view.marker = null
     }
@@ -59,13 +58,15 @@ class GoogleMapView(private val reactContext: ThemedReactContext) :
   }
 
   fun onDropViewInstance() {
+    Log.d(TAG, "dropping mapView instance")
     pendingMarkerViews.clear()
+    googleMap?.clear()
+    googleMap = null
+    isMapReady = false
     mapView?.onPause()
     mapView?.onDestroy()
     mapView = null
     mapWrapperView = null
-    googleMap = null
-    isMapReady = false
   }
 
   // endregion
@@ -101,11 +102,7 @@ class GoogleMapView(private val reactContext: ThemedReactContext) :
   // region MapMarkerDelegate
 
   override fun markerViewDidLayout(markerView: MapMarkerView) {
-    if (markerView.hasCustomView && markerView.marker != null) {
-      updateMarkerViewOnMap(markerView)
-    } else {
-      syncMarkerView(markerView, "markerViewDidLayout")
-    }
+    syncMarkerView(markerView, "markerViewDidLayout")
   }
 
   override fun markerViewDidUpdate(markerView: MapMarkerView) {
@@ -131,12 +128,21 @@ class GoogleMapView(private val reactContext: ThemedReactContext) :
       return
     }
 
-    Log.d(TAG, "$caller: ${markerView.name}")
+    Log.d(TAG, "$caller: ${markerView.name} hasCustomView: ${markerView.hasCustomView}")
+
+    // Recreate the marker when it has a custom view
+    if (markerView.hasCustomView) {
+      markerView.marker?.remove()
+      addMarkerViewToMap(markerView)
+      return
+    }
+
     markerView.marker?.apply {
       position = LatLng(markerView.latitude, markerView.longitude)
       title = markerView.title
       snippet = markerView.description
       setAnchor(markerView.anchorX, markerView.anchorY)
+      iconView = null
     }
   }
 
@@ -163,7 +169,6 @@ class GoogleMapView(private val reactContext: ThemedReactContext) :
       .position(position)
       .title(markerView.title)
       .snippet(markerView.description)
-      .anchor(markerView.anchorX, markerView.anchorY)
       .collisionBehavior(CollisionBehavior.REQUIRED)
 
     Log.d(TAG, "adding marker: ${markerView.name} customview: ${markerView.hasCustomView}")
@@ -171,20 +176,10 @@ class GoogleMapView(private val reactContext: ThemedReactContext) :
       options.iconView(iconView)
     }
 
-    markerView.marker = map.addMarker(options) as? AdvancedMarker
-  }
+    val marker = map.addMarker(options) as AdvancedMarker
+    marker.setAnchor(markerView.anchorX, markerView.anchorY)
 
-  private fun updateMarkerViewOnMap(markerView: MapMarkerView) {
-    if (googleMap == null) {
-      RNLog.w(reactContext, "LuggMaps: updateMarkerViewOnMap called without a map")
-      return
-    }
-
-    markerView.marker?.iconView = null
-    markerView.marker?.remove()
-    markerView.marker = null
-
-    addMarkerViewToMap(markerView)
+    markerView.marker = marker
   }
 
   // endregion

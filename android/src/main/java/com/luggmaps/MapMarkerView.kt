@@ -1,6 +1,7 @@
 package com.luggmaps
 
 import android.content.Context
+import android.util.Log
 import android.view.View
 import androidx.core.view.isNotEmpty
 import com.facebook.react.views.view.ReactViewGroup
@@ -37,7 +38,7 @@ class MapMarkerView(context: Context) : ReactViewGroup(context) {
     private set
 
   val hasCustomView: Boolean
-    get() = isNotEmpty()
+    get() = iconView.isNotEmpty()
 
   val iconView: ReactViewGroup = object : ReactViewGroup(context) {
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
