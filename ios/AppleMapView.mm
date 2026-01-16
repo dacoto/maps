@@ -1,5 +1,6 @@
 #import "AppleMapView.h"
 #import "MapMarkerView.h"
+#import "MapWrapperView.h"
 #import "extensions/MKMapView+Zoom.h"
 
 #import <react/renderer/components/RNMapsSpec/ComponentDescriptors.h>
@@ -31,6 +32,7 @@ using namespace facebook::react;
 
 @implementation AppleMapView {
   AppleMapViewContent *_mapView;
+  MapWrapperView *_mapWrapperView;
 }
 
 + (ComponentDescriptorProvider)componentDescriptorProvider {
@@ -42,22 +44,110 @@ using namespace facebook::react;
     static const auto defaultProps =
         std::make_shared<const AppleMapViewProps>();
     _props = defaultProps;
-
-    _mapView = [[AppleMapViewContent alloc] init];
-    _mapView.autoresizingMask =
-        UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-    _mapView.delegate = self;
-
-    // Set default camera
-    [self setCameraWithLatitude:37.7749
-                      longitude:-122.4194
-                           zoom:10
-                       animated:NO];
-
-    self.contentView = _mapView;
   }
 
   return self;
+}
+
+#pragma mark - View Lifecycle
+
+- (void)mountChildComponentView:
+            (UIView<RCTComponentViewProtocol> *)childComponentView
+                          index:(NSInteger)index {
+  [super mountChildComponentView:childComponentView index:index];
+
+  if ([childComponentView isKindOfClass:[MapWrapperView class]]) {
+    _mapWrapperView = (MapWrapperView *)childComponentView;
+  } else if ([childComponentView isKindOfClass:[MapMarkerView class]]) {
+    MapMarkerView *markerView = (MapMarkerView *)childComponentView;
+    markerView.delegate = self;
+
+    AppleMapMarkerAnnotation *annotation =
+        [[AppleMapMarkerAnnotation alloc] init];
+    annotation.markerView = markerView;
+    markerView.marker = annotation;
+
+    if (_mapView) {
+      [_mapView addAnnotation:annotation];
+    }
+
+    [self markerViewDidUpdate:markerView];
+  }
+}
+
+- (void)unmountChildComponentView:
+            (UIView<RCTComponentViewProtocol> *)childComponentView
+                            index:(NSInteger)index {
+  if ([childComponentView isKindOfClass:[MapMarkerView class]]) {
+    MapMarkerView *markerView = (MapMarkerView *)childComponentView;
+    markerView.delegate = nil;
+
+    AppleMapMarkerAnnotation *annotation =
+        (AppleMapMarkerAnnotation *)markerView.marker;
+
+    if (annotation) {
+      annotation.markerView = nil;
+      annotation.annotationView = nil;
+      [_mapView removeAnnotation:annotation];
+      markerView.marker = nil;
+    }
+  }
+
+  [super unmountChildComponentView:childComponentView index:index];
+}
+
+- (void)didMoveToWindow {
+  [super didMoveToWindow];
+  if (self.window && !_mapView && _mapWrapperView) {
+    [self initializeMap];
+  }
+}
+
+- (void)prepareForRecycle {
+  [super prepareForRecycle];
+
+  [_mapView removeFromSuperview];
+  _mapView = nil;
+  _mapWrapperView = nil;
+}
+
+#pragma mark - Map Initialization
+
+- (void)initializeMap {
+  if (_mapView || !_mapWrapperView) {
+    return;
+  }
+
+  const auto &viewProps =
+      *std::static_pointer_cast<AppleMapViewProps const>(_props);
+
+  _mapView = [[AppleMapViewContent alloc] initWithFrame:_mapWrapperView.bounds];
+  _mapView.autoresizingMask =
+      UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+  _mapView.delegate = self;
+  _mapView.zoomEnabled = viewProps.zoomEnabled;
+  _mapView.scrollEnabled = viewProps.scrollEnabled;
+  _mapView.rotateEnabled = viewProps.rotateEnabled;
+  _mapView.pitchEnabled = viewProps.pitchEnabled;
+
+  [_mapWrapperView addSubview:_mapView];
+
+  [self setCameraWithLatitude:viewProps.initialCoordinate.latitude
+                    longitude:viewProps.initialCoordinate.longitude
+                         zoom:viewProps.initialZoom
+                     animated:NO];
+
+  // Add annotations for any markers that were mounted before map was ready
+  for (UIView *subview in self.subviews) {
+    if ([subview isKindOfClass:[MapMarkerView class]]) {
+      MapMarkerView *markerView = (MapMarkerView *)subview;
+      AppleMapMarkerAnnotation *annotation =
+          (AppleMapMarkerAnnotation *)markerView.marker;
+      if (annotation) {
+        [_mapView addAnnotation:annotation];
+      }
+    }
+  }
 }
 
 - (void)setCameraWithLatitude:(double)latitude
@@ -73,7 +163,8 @@ using namespace facebook::react;
   return _mapView;
 }
 
-// TODO: no need for individual comparison
+#pragma mark - Property Setters
+
 - (void)updateProps:(Props::Shared const &)props
            oldProps:(Props::Shared const &)oldProps {
   const auto &oldViewProps =
@@ -81,74 +172,40 @@ using namespace facebook::react;
   const auto &newViewProps =
       *std::static_pointer_cast<AppleMapViewProps const>(props);
 
-  if (newViewProps.initialCoordinate.latitude !=
-          oldViewProps.initialCoordinate.latitude ||
-      newViewProps.initialCoordinate.longitude !=
-          oldViewProps.initialCoordinate.longitude ||
-      newViewProps.initialZoom != oldViewProps.initialZoom) {
+  if (_mapView) {
+    if (newViewProps.initialCoordinate.latitude !=
+            oldViewProps.initialCoordinate.latitude ||
+        newViewProps.initialCoordinate.longitude !=
+            oldViewProps.initialCoordinate.longitude ||
+        newViewProps.initialZoom != oldViewProps.initialZoom) {
 
-    [self setCameraWithLatitude:newViewProps.initialCoordinate.latitude
-                      longitude:newViewProps.initialCoordinate.longitude
-                           zoom:newViewProps.initialZoom
-                       animated:NO];
-  }
+      [self setCameraWithLatitude:newViewProps.initialCoordinate.latitude
+                        longitude:newViewProps.initialCoordinate.longitude
+                             zoom:newViewProps.initialZoom
+                         animated:NO];
+    }
 
-  if (newViewProps.zoomEnabled != oldViewProps.zoomEnabled) {
-    _mapView.zoomEnabled = newViewProps.zoomEnabled;
-  }
+    if (newViewProps.zoomEnabled != oldViewProps.zoomEnabled) {
+      _mapView.zoomEnabled = newViewProps.zoomEnabled;
+    }
 
-  if (newViewProps.scrollEnabled != oldViewProps.scrollEnabled) {
-    _mapView.scrollEnabled = newViewProps.scrollEnabled;
-  }
+    if (newViewProps.scrollEnabled != oldViewProps.scrollEnabled) {
+      _mapView.scrollEnabled = newViewProps.scrollEnabled;
+    }
 
-  if (newViewProps.rotateEnabled != oldViewProps.rotateEnabled) {
-    _mapView.rotateEnabled = newViewProps.rotateEnabled;
-  }
+    if (newViewProps.rotateEnabled != oldViewProps.rotateEnabled) {
+      _mapView.rotateEnabled = newViewProps.rotateEnabled;
+    }
 
-  if (newViewProps.pitchEnabled != oldViewProps.pitchEnabled) {
-    _mapView.pitchEnabled = newViewProps.pitchEnabled;
+    if (newViewProps.pitchEnabled != oldViewProps.pitchEnabled) {
+      _mapView.pitchEnabled = newViewProps.pitchEnabled;
+    }
   }
 
   [super updateProps:props oldProps:oldProps];
 }
 
-- (void)mountChildComponentView:
-            (UIView<RCTComponentViewProtocol> *)childComponentView
-                          index:(NSInteger)index {
-  if ([childComponentView isKindOfClass:[MapMarkerView class]]) {
-    MapMarkerView *markerView = (MapMarkerView *)childComponentView;
-    markerView.delegate = self;
-
-    AppleMapMarkerAnnotation *annotation =
-        [[AppleMapMarkerAnnotation alloc] init];
-    annotation.markerView = markerView;
-    markerView.marker = annotation;
-
-    [_mapView addAnnotation:annotation];
-    [self markerViewDidUpdate:markerView];
-  }
-}
-
-- (void)unmountChildComponentView:
-            (UIView<RCTComponentViewProtocol> *)childComponentView
-                            index:(NSInteger)index {
-  if ([childComponentView isKindOfClass:[MapMarkerView class]]) {
-    MapMarkerView *markerView = (MapMarkerView *)childComponentView;
-    markerView.delegate = nil;
-
-    [markerView removeFromSuperview];
-
-    AppleMapMarkerAnnotation *annotation =
-        (AppleMapMarkerAnnotation *)markerView.marker;
-
-    if (annotation) {
-      annotation.markerView = nil;
-      annotation.annotationView = nil;
-      [_mapView removeAnnotation:annotation];
-      markerView.marker = nil;
-    }
-  }
-}
+#pragma mark - Annotation Helpers
 
 - (void)updateAnnotationViewFrame:(AppleMapMarkerAnnotation *)annotation {
   MKAnnotationView *annotationView = annotation.annotationView;

@@ -29,15 +29,6 @@ using namespace facebook::react;
   return self;
 }
 
-- (void)layoutSubviews {
-  [super layoutSubviews];
-
-  UIView *child = self.subviews.firstObject;
-  if (child) {
-    child.frame = self.bounds;
-  }
-}
-
 Class<RCTComponentViewProtocol> MapWrapperViewCls(void) {
   return MapWrapperView.class;
 }
