@@ -10,15 +10,20 @@
 
 using namespace facebook::react;
 
-@implementation GoogleMapViewContent
-@end
+#import "MapWrapperView.h"
 
-@interface GoogleMapView () <RCTGoogleMapViewViewProtocol,
+static NSString *const kDemoMapId = @"DEMO_MAP_ID";
+
+@interface GoogleMapView () <RCTGoogleMapViewViewProtocol, GMSMapViewDelegate,
                              MapMarkerViewDelegate>
 @end
 
 @implementation GoogleMapView {
-  GoogleMapViewContent *_mapView;
+  GMSMapView *_mapView;
+  MapWrapperView *_mapWrapperView;
+  BOOL _isMapReady;
+  NSString *_mapId;
+  NSMutableArray<MapMarkerView *> *_pendingMarkerViews;
 }
 
 + (ComponentDescriptorProvider)componentDescriptorProvider {
@@ -32,95 +37,27 @@ using namespace facebook::react;
         std::make_shared<const GoogleMapViewProps>();
     _props = defaultProps;
 
-    [self setupMapView:defaultProps];
+    _isMapReady = NO;
+    _mapId = kDemoMapId;
+    _pendingMarkerViews = [NSMutableArray array];
   }
 
   return self;
 }
 
-- (void)setupMapView:(std::shared_ptr<const GoogleMapViewProps>)props {
-  NSString *mapId = [NSString stringWithUTF8String:props->mapId.c_str()];
-  GMSMapID *gmsMapId;
-
-  if ([mapId isEqualToString:@"DEMO_MAP_ID"] || mapId.length == 0) {
-    gmsMapId = [GMSMapID demoMapID];
-  } else {
-    gmsMapId = [GMSMapID mapIDWithIdentifier:mapId];
-  }
-
-  GMSCameraPosition *camera = [GMSCameraPosition cameraWithLatitude:37.7749
-                                                          longitude:-122.4194
-                                                               zoom:10];
-
-  GMSMapViewOptions *options = [[GMSMapViewOptions alloc] init];
-  options.frame = self.bounds;
-  options.camera = camera;
-  options.mapID = gmsMapId;
-
-  _mapView = [[GoogleMapViewContent alloc] initWithOptions:options];
-  _mapView.autoresizingMask =
-      UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-
-  self.contentView = _mapView;
-}
-
-- (GMSMapView *)mapView {
-  return _mapView;
-}
-
-// TODO: no need to manually compare individual props
-- (void)updateProps:(Props::Shared const &)props
-           oldProps:(Props::Shared const &)oldProps {
-  const auto &oldViewProps =
-      *std::static_pointer_cast<GoogleMapViewProps const>(_props);
-  const auto &newViewProps =
-      *std::static_pointer_cast<GoogleMapViewProps const>(props);
-
-  if (newViewProps.initialCoordinate.latitude !=
-          oldViewProps.initialCoordinate.latitude ||
-      newViewProps.initialCoordinate.longitude !=
-          oldViewProps.initialCoordinate.longitude ||
-      newViewProps.initialZoom != oldViewProps.initialZoom) {
-
-    GMSCameraPosition *camera = [GMSCameraPosition
-        cameraWithLatitude:newViewProps.initialCoordinate.latitude
-                 longitude:newViewProps.initialCoordinate.longitude
-                      zoom:newViewProps.initialZoom];
-    [_mapView setCamera:camera];
-  }
-
-  if (newViewProps.zoomEnabled != oldViewProps.zoomEnabled) {
-    _mapView.settings.zoomGestures = newViewProps.zoomEnabled;
-  }
-
-  if (newViewProps.scrollEnabled != oldViewProps.scrollEnabled) {
-    _mapView.settings.scrollGestures = newViewProps.scrollEnabled;
-  }
-
-  if (newViewProps.rotateEnabled != oldViewProps.rotateEnabled) {
-    _mapView.settings.rotateGestures = newViewProps.rotateEnabled;
-  }
-
-  if (newViewProps.pitchEnabled != oldViewProps.pitchEnabled) {
-    _mapView.settings.tiltGestures = newViewProps.pitchEnabled;
-  }
-
-  [super updateProps:props oldProps:oldProps];
-}
+#pragma mark - View Lifecycle
 
 - (void)mountChildComponentView:
             (UIView<RCTComponentViewProtocol> *)childComponentView
                           index:(NSInteger)index {
-  if ([childComponentView isKindOfClass:[MapMarkerView class]]) {
+  [super mountChildComponentView:childComponentView index:index];
+
+  if ([childComponentView isKindOfClass:[MapWrapperView class]]) {
+    _mapWrapperView = (MapWrapperView *)childComponentView;
+  } else if ([childComponentView isKindOfClass:[MapMarkerView class]]) {
     MapMarkerView *markerView = (MapMarkerView *)childComponentView;
     markerView.delegate = self;
-
-    GMSAdvancedMarker *marker = [[GMSAdvancedMarker alloc] init];
-    marker.collisionBehavior = GMSCollisionBehaviorRequired;
-    marker.map = _mapView;
-    markerView.annotation = marker;
-
-    [self markerViewDidUpdateProps:markerView];
+    [self syncMarkerView:markerView caller:@"mountChildComponentView"];
   }
 }
 
@@ -129,52 +66,204 @@ using namespace facebook::react;
                             index:(NSInteger)index {
   if ([childComponentView isKindOfClass:[MapMarkerView class]]) {
     MapMarkerView *markerView = (MapMarkerView *)childComponentView;
-    markerView.delegate = nil;
-
-    [markerView removeFromSuperview];
-
-    GMSAdvancedMarker *marker = (GMSAdvancedMarker *)markerView.annotation;
+    GMSAdvancedMarker *marker = (GMSAdvancedMarker *)markerView.marker;
     if (marker) {
       marker.iconView = nil;
       marker.map = nil;
-      markerView.annotation = nil;
+      markerView.marker = nil;
     }
   }
+
+  [super unmountChildComponentView:childComponentView index:index];
+}
+
+- (void)didMoveToWindow {
+  [super didMoveToWindow];
+  if (self.window && !_mapView && _mapWrapperView) {
+    [self initializeMap];
+  }
+}
+
+- (void)prepareForRecycle {
+  [super prepareForRecycle];
+
+  [_pendingMarkerViews removeAllObjects];
+  [_mapView clear];
+  [_mapView removeFromSuperview];
+  _mapView = nil;
+  _mapWrapperView = nil;
+  _isMapReady = NO;
+}
+
+#pragma mark - Map Initialization
+
+- (void)initializeMap {
+  if (_mapView || !_mapWrapperView) {
+    return;
+  }
+
+  GMSMapID *gmsMapId;
+  if ([_mapId isEqualToString:kDemoMapId] || _mapId.length == 0) {
+    gmsMapId = [GMSMapID demoMapID];
+  } else {
+    gmsMapId = [GMSMapID mapIDWithIdentifier:_mapId];
+  }
+
+  GMSCameraPosition *camera = [GMSCameraPosition cameraWithLatitude:37.78
+                                                          longitude:-122.43
+                                                               zoom:14];
+
+  GMSMapViewOptions *options = [[GMSMapViewOptions alloc] init];
+  options.frame = _mapWrapperView.bounds;
+  options.camera = camera;
+  options.mapID = gmsMapId;
+
+  _mapView = [[GMSMapView alloc] initWithOptions:options];
+  _mapView.autoresizingMask =
+      UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+  _mapView.delegate = self;
+
+  [_mapWrapperView addSubview:_mapView];
+
+  _isMapReady = YES;
+  [self processPendingMarkers];
+}
+
+- (GMSMapView *)mapView {
+  return _mapView;
+}
+
+#pragma mark - GMSMapViewDelegate
+
+- (void)mapViewDidFinishTileRendering:(GMSMapView *)mapView {
+  // Map tiles finished rendering
 }
 
 #pragma mark - MapMarkerViewDelegate
 
-- (void)markerViewDidUpdateLayout:(MapMarkerView *)markerView {
-  CGRect frame = markerView.frame;
-  if (frame.size.width <= 0 || frame.size.height <= 0) {
-    return;
-  }
-
-  GMSAdvancedMarker *marker = (GMSAdvancedMarker *)markerView.annotation;
-  if (marker && markerView.hasCustomView) {
-    marker.iconView = nil;
-    marker.iconView = markerView;
-  }
+- (void)markerViewDidLayout:(MapMarkerView *)markerView {
+  [self syncMarkerView:markerView caller:@"markerViewDidLayout"];
 }
 
-- (void)markerViewDidUpdateProps:(MapMarkerView *)markerView {
-  GMSAdvancedMarker *marker = (GMSAdvancedMarker *)markerView.annotation;
+- (void)markerViewDidUpdate:(MapMarkerView *)markerView {
+  [self syncMarkerView:markerView caller:@"markerViewDidUpdate"];
+}
 
-  if (!marker) {
-    RCTLogWarn(@"markerViewDidUpdateProps called without marker");
+#pragma mark - Marker Management
+
+- (void)syncMarkerView:(MapMarkerView *)markerView caller:(NSString *)caller {
+  if (!_mapView) {
+    if (![_pendingMarkerViews containsObject:markerView]) {
+      [_pendingMarkerViews addObject:markerView];
+    }
     return;
   }
 
+  if (!markerView.marker) {
+    [self addMarkerViewToMap:markerView];
+    return;
+  }
+
+  GMSAdvancedMarker *marker = (GMSAdvancedMarker *)markerView.marker;
   marker.position = markerView.coordinate;
   marker.title = markerView.title;
   marker.snippet = markerView.markerDescription;
+  marker.groundAnchor = markerView.anchor;
 
   if (markerView.hasCustomView) {
-    marker.groundAnchor = CGPointMake(markerView.anchor.x, markerView.anchor.y);
-    marker.iconView = markerView;
+    UIView *iconView = markerView.iconView;
+    [iconView removeFromSuperview];
+    marker.iconView = iconView;
   } else {
     marker.iconView = nil;
   }
+}
+
+- (void)processPendingMarkers {
+  if (!_mapView) {
+    return;
+  }
+
+  for (MapMarkerView *markerView in _pendingMarkerViews) {
+    [self addMarkerViewToMap:markerView];
+  }
+  [_pendingMarkerViews removeAllObjects];
+}
+
+- (void)addMarkerViewToMap:(MapMarkerView *)markerView {
+  if (!_mapView) {
+    RCTLogWarn(@"LuggMaps: addMarkerViewToMap called without a map");
+    return;
+  }
+
+  UIView *iconView = markerView.iconView;
+  [iconView removeFromSuperview];
+
+  GMSAdvancedMarker *marker = [[GMSAdvancedMarker alloc] init];
+  marker.position = markerView.coordinate;
+  marker.title = markerView.title;
+  marker.snippet = markerView.markerDescription;
+  marker.collisionBehavior = GMSCollisionBehaviorRequired;
+
+  if (markerView.hasCustomView) {
+    marker.iconView = iconView;
+  }
+
+  marker.groundAnchor = markerView.anchor;
+  marker.map = _mapView;
+
+  markerView.marker = marker;
+}
+
+#pragma mark - Property Setters
+
+- (void)updateProps:(Props::Shared const &)props
+           oldProps:(Props::Shared const &)oldProps {
+  const auto &oldViewProps =
+      *std::static_pointer_cast<GoogleMapViewProps const>(_props);
+  const auto &newViewProps =
+      *std::static_pointer_cast<GoogleMapViewProps const>(props);
+
+  if (_mapView == nil) {
+    NSString *newMapId =
+        [NSString stringWithUTF8String:newViewProps.mapId.c_str()];
+    if (newMapId.length > 0) {
+      _mapId = newMapId;
+    }
+  }
+
+  if (_mapView) {
+    if (newViewProps.initialCoordinate.latitude !=
+            oldViewProps.initialCoordinate.latitude ||
+        newViewProps.initialCoordinate.longitude !=
+            oldViewProps.initialCoordinate.longitude ||
+        newViewProps.initialZoom != oldViewProps.initialZoom) {
+
+      GMSCameraPosition *camera = [GMSCameraPosition
+          cameraWithLatitude:newViewProps.initialCoordinate.latitude
+                   longitude:newViewProps.initialCoordinate.longitude
+                        zoom:newViewProps.initialZoom];
+      [_mapView setCamera:camera];
+    }
+
+    if (newViewProps.zoomEnabled != oldViewProps.zoomEnabled) {
+      _mapView.settings.zoomGestures = newViewProps.zoomEnabled;
+    }
+
+    if (newViewProps.scrollEnabled != oldViewProps.scrollEnabled) {
+      _mapView.settings.scrollGestures = newViewProps.scrollEnabled;
+    }
+
+    if (newViewProps.rotateEnabled != oldViewProps.rotateEnabled) {
+      _mapView.settings.rotateGestures = newViewProps.rotateEnabled;
+    }
+
+    if (newViewProps.pitchEnabled != oldViewProps.pitchEnabled) {
+      _mapView.settings.tiltGestures = newViewProps.pitchEnabled;
+    }
+  }
+
+  [super updateProps:props oldProps:oldProps];
 }
 
 Class<RCTComponentViewProtocol> GoogleMapViewCls(void) {

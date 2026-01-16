@@ -122,10 +122,10 @@ using namespace facebook::react;
     AppleMapMarkerAnnotation *annotation =
         [[AppleMapMarkerAnnotation alloc] init];
     annotation.markerView = markerView;
-    markerView.annotation = annotation;
+    markerView.marker = annotation;
 
     [_mapView addAnnotation:annotation];
-    [self markerViewDidUpdateProps:markerView];
+    [self markerViewDidUpdate:markerView];
   }
 }
 
@@ -139,13 +139,13 @@ using namespace facebook::react;
     [markerView removeFromSuperview];
 
     AppleMapMarkerAnnotation *annotation =
-        (AppleMapMarkerAnnotation *)markerView.annotation;
+        (AppleMapMarkerAnnotation *)markerView.marker;
 
     if (annotation) {
       annotation.markerView = nil;
       annotation.annotationView = nil;
       [_mapView removeAnnotation:annotation];
-      markerView.annotation = nil;
+      markerView.marker = nil;
     }
   }
 }
@@ -158,7 +158,8 @@ using namespace facebook::react;
     return;
   }
 
-  CGRect frame = markerView.frame;
+  UIView *iconView = markerView.iconView;
+  CGRect frame = iconView.frame;
   if (frame.size.width > 0 && frame.size.height > 0) {
     annotationView.frame = frame;
 
@@ -171,26 +172,28 @@ using namespace facebook::react;
 
 #pragma mark - MapMarkerViewDelegate
 
-- (void)markerViewDidUpdateLayout:(MapMarkerView *)markerView {
+- (void)markerViewDidLayout:(MapMarkerView *)markerView {
   AppleMapMarkerAnnotation *annotation =
-      (AppleMapMarkerAnnotation *)markerView.annotation;
+      (AppleMapMarkerAnnotation *)markerView.marker;
   if (annotation) {
     [self updateAnnotationViewFrame:annotation];
   }
 }
 
-- (void)markerViewDidUpdateProps:(MapMarkerView *)markerView {
+- (void)markerViewDidUpdate:(MapMarkerView *)markerView {
   AppleMapMarkerAnnotation *annotation =
-      (AppleMapMarkerAnnotation *)markerView.annotation;
+      (AppleMapMarkerAnnotation *)markerView.marker;
 
   if (!annotation) {
-    RCTLogWarn(@"markerViewDidUpdateProps called without annotation");
+    RCTLogWarn(@"markerViewDidUpdate called without annotation");
     return;
   }
 
   annotation.coordinate = markerView.coordinate;
   annotation.title = markerView.title;
   annotation.subtitle = markerView.markerDescription;
+
+  [self updateAnnotationViewFrame:annotation];
 }
 
 #pragma mark - MKMapViewDelegate
@@ -216,10 +219,10 @@ using namespace facebook::react;
   annotationView.displayPriority = MKFeatureDisplayPriorityRequired;
   annotationView.collisionMode = MKAnnotationViewCollisionModeNone;
 
-  // Add marker view as a subview
-  [annotationView addSubview:markerView];
+  UIView *iconView = markerView.iconView;
+  [iconView removeFromSuperview];
+  [annotationView addSubview:iconView];
 
-  // Store reference for frame updates
   markerAnnotation.annotationView = annotationView;
 
   return annotationView;

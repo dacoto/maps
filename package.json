@@ -122,7 +122,8 @@
       "componentProvider": {
         "GoogleMapView": "GoogleMapView",
         "AppleMapView": "AppleMapView",
-        "MapMarkerView": "MapMarkerView"
+        "MapMarkerView": "MapMarkerView",
+        "MapWrapperView": "MapWrapperView"
       }
     }
   },

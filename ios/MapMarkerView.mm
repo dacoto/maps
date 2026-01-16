@@ -17,6 +17,8 @@ using namespace facebook::react;
   NSString *_title;
   NSString *_markerDescription;
   CGPoint _anchor;
+  BOOL _didLayout;
+  UIView *_iconView;
 }
 
 + (ComponentDescriptorProvider)componentDescriptorProvider {
@@ -32,8 +34,13 @@ using namespace facebook::react;
 
     _coordinate = CLLocationCoordinate2DMake(0, 0);
     _anchor = CGPointMake(0.5, 1.0);
+    _didLayout = NO;
+
+    _iconView = [[UIView alloc] init];
+    _iconView.backgroundColor = [UIColor clearColor];
 
     self.backgroundColor = [UIColor clearColor];
+    self.hidden = YES;
   }
 
   return self;
@@ -57,37 +64,46 @@ using namespace facebook::react;
   [super finalizeUpdates:updateMask];
 
   if (updateMask & RNComponentViewUpdateMaskProps) {
-    if ([self.delegate
-            respondsToSelector:@selector(markerViewDidUpdateProps:)]) {
-      [self.delegate markerViewDidUpdateProps:self];
+    if ([self.delegate respondsToSelector:@selector(markerViewDidUpdate:)]) {
+      [self.delegate markerViewDidUpdate:self];
     }
   }
+}
+
+- (void)mountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView
+                          index:(NSInteger)index {
+  [_iconView insertSubview:childComponentView atIndex:index];
+  _didLayout = NO;
+}
+
+- (void)unmountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView
+                            index:(NSInteger)index {
+  [childComponentView removeFromSuperview];
+  _didLayout = NO;
 }
 
 - (void)layoutSubviews {
   [super layoutSubviews];
 
-  if (!self.hasCustomView) {
-    return;
+  if (self.hasCustomView) {
+    CGFloat width = 0;
+    CGFloat height = 0;
+
+    for (UIView *subview in _iconView.subviews) {
+      CGFloat fw = subview.frame.origin.x + subview.frame.size.width;
+      CGFloat fh = subview.frame.origin.y + subview.frame.size.height;
+      width = MAX(fw, width);
+      height = MAX(fh, height);
+    }
+
+    if (width > 0 && height > 0) {
+      _iconView.frame = CGRectMake(0, 0, width, height);
+    }
   }
 
-  CGFloat width = 0;
-  CGFloat height = 0;
-
-  for (UIView *subview in self.subviews) {
-    CGFloat fw = subview.frame.origin.x + subview.frame.size.width;
-    CGFloat fh = subview.frame.origin.y + subview.frame.size.height;
-    width = MAX(fw, width);
-    height = MAX(fh, height);
-  }
-
-  if (width > 0 && height > 0) {
-    self.frame = CGRectMake(0, 0, width, height);
-  }
-
-  if ([self.delegate
-          respondsToSelector:@selector(markerViewDidUpdateLayout:)]) {
-    [self.delegate markerViewDidUpdateLayout:self];
+  if (!_didLayout) {
+    _didLayout = YES;
+    [self.delegate markerViewDidLayout:self];
   }
 }
 
@@ -108,13 +124,25 @@ using namespace facebook::react;
 }
 
 - (BOOL)hasCustomView {
-  return self.subviews.count > 0;
+  return _iconView.subviews.count > 0;
+}
+
+- (BOOL)didLayout {
+  return _didLayout;
+}
+
+- (UIView *)iconView {
+  return _iconView;
 }
 
 - (void)prepareForRecycle {
   [super prepareForRecycle];
-  self.annotation = nil;
+  _didLayout = NO;
+  self.marker = nil;
   self.delegate = nil;
+  for (UIView *subview in _iconView.subviews) {
+    [subview removeFromSuperview];
+  }
 }
 
 Class<RCTComponentViewProtocol> MapMarkerViewCls(void) {

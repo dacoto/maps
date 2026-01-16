@@ -8,8 +8,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @protocol MapMarkerViewDelegate <NSObject>
 @optional
-- (void)markerViewDidUpdateLayout:(MapMarkerView *)markerView;
-- (void)markerViewDidUpdateProps:(MapMarkerView *)markerView;
+- (void)markerViewDidLayout:(MapMarkerView *)markerView;
+- (void)markerViewDidUpdate:(MapMarkerView *)markerView;
 @end
 
 @interface MapMarkerView : RCTViewComponentView
@@ -19,8 +19,10 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, readonly, nullable) NSString *markerDescription;
 @property(nonatomic, readonly) CGPoint anchor;
 @property(nonatomic, readonly) BOOL hasCustomView;
+@property(nonatomic, readonly) BOOL didLayout;
+@property(nonatomic, readonly) UIView *iconView;
 @property(nonatomic, weak, nullable) id<MapMarkerViewDelegate> delegate;
-@property(nonatomic, strong, nullable) NSObject *annotation;
+@property(nonatomic, strong, nullable) NSObject *marker;
 
 @end
 

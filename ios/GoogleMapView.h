@@ -4,12 +4,9 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface GoogleMapViewContent : GMSMapView
-@end
-
 @interface GoogleMapView : RCTViewComponentView
 
-- (GMSMapView *)mapView;
+@property(nonatomic, readonly, nullable) GMSMapView *mapView;
 
 @end
 
