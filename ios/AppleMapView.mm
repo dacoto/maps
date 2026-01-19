@@ -1,4 +1,5 @@
 #import "AppleMapView.h"
+#import "core/PolylineRenderer.h"
 #import "MapWrapperView.h"
 #import "MarkerView.h"
 #import "PolylineView.h"
@@ -366,27 +367,14 @@ using namespace facebook::react;
     if (polylineView) {
       NSArray<UIColor *> *colors = polylineView.strokeColors;
 
+      PolylineRenderer *renderer =
+          [[PolylineRenderer alloc] initWithPolyline:polyline];
+      renderer.lineWidth = polylineView.strokeWidth;
+      renderer.strokeColor = colors.firstObject;
       if (colors.count > 1) {
-        MKGradientPolylineRenderer *renderer =
-            [[MKGradientPolylineRenderer alloc] initWithPolyline:polyline];
-        renderer.lineWidth = polylineView.strokeWidth;
-
-        NSUInteger segmentCount = polyline.pointCount - 1;
-        for (NSUInteger i = 0; i < segmentCount; i++) {
-          CGFloat location = (CGFloat)i / (CGFloat)segmentCount;
-          UIColor *color = colors[i % colors.count];
-          [renderer
-                setColors:@[ color, color ]
-              atLocations:@[ @(location), @(location + 1.0 / segmentCount) ]];
-        }
-        return renderer;
-      } else {
-        MKPolylineRenderer *renderer =
-            [[MKPolylineRenderer alloc] initWithPolyline:polyline];
-        renderer.strokeColor = colors.firstObject;
-        renderer.lineWidth = polylineView.strokeWidth;
-        return renderer;
+        renderer.strokeColors = colors;
       }
+      return renderer;
     }
 
     MKPolylineRenderer *renderer =
