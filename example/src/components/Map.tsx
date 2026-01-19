@@ -99,7 +99,14 @@ export const Map = forwardRef<MapView, MapProps>(
         {polylineCoordinates.length >= 2 && (
           <Polyline
             coordinates={polylineCoordinates}
-            strokeColor="#FF3B30"
+            strokeColors={[
+              '#FF3B30',
+              '#FF9500',
+              '#FFCC00',
+              '#34C759',
+              '#007AFF',
+              '#5856D6',
+            ]}
             strokeWidth={4}
           />
         )}

@@ -14,7 +14,7 @@ class PolylineView(context: Context) : ReactViewGroup(context) {
   var coordinates: List<LatLng> = emptyList()
     private set
 
-  var strokeColor: Int = Color.BLACK
+  var strokeColors: List<Int> = listOf(Color.BLACK)
     private set
 
   var strokeWidth: Float = 1f
@@ -31,8 +31,8 @@ class PolylineView(context: Context) : ReactViewGroup(context) {
     coordinates = coords
   }
 
-  fun setStrokeColor(color: Int?) {
-    strokeColor = color ?: Color.BLACK
+  fun setStrokeColors(colors: List<Int>) {
+    strokeColors = colors.ifEmpty { listOf(Color.BLACK) }
   }
 
   fun setStrokeWidth(width: Float) {

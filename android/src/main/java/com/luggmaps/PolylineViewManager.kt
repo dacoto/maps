@@ -44,9 +44,15 @@ class PolylineViewManager :
     }
   }
 
-  @ReactProp(name = "strokeColor", customType = "Color")
-  override fun setStrokeColor(view: PolylineView, value: Int?) {
-    view.setStrokeColor(value)
+  @ReactProp(name = "strokeColors")
+  override fun setStrokeColors(view: PolylineView, value: ReadableArray?) {
+    val colors = mutableListOf<Int>()
+    value?.let { array ->
+      for (i in 0 until array.size()) {
+        colors.add(array.getInt(i))
+      }
+    }
+    view.setStrokeColors(colors)
   }
 
   @ReactProp(name = "strokeWidth", defaultDouble = 1.0)

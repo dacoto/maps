@@ -5,13 +5,13 @@ import { StyleSheet } from 'react-native';
 
 export class Polyline extends React.Component<PolylineProps> {
   render() {
-    const { coordinates, strokeColor, strokeWidth } = this.props;
+    const { coordinates, strokeColors, strokeWidth } = this.props;
 
     return (
       <PolylineViewNativeComponent
         style={styles.polyline}
         coordinates={coordinates}
-        strokeColor={strokeColor}
+        strokeColors={strokeColors}
         strokeWidth={strokeWidth}
       />
     );

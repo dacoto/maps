@@ -258,8 +258,21 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
     [path addCoordinate:location.coordinate];
   }
   polyline.path = path;
-  polyline.strokeColor = polylineView.strokeColor;
   polyline.strokeWidth = polylineView.strokeWidth;
+
+  NSArray<UIColor *> *colors = polylineView.strokeColors;
+  if (colors.count > 1) {
+    NSMutableArray<GMSStyleSpan *> *spans = [NSMutableArray array];
+    NSUInteger segmentCount = polylineView.coordinates.count - 1;
+    for (NSUInteger i = 0; i < segmentCount; i++) {
+      UIColor *color = colors[i % colors.count];
+      GMSStrokeStyle *style = [GMSStrokeStyle solidColor:color];
+      [spans addObject:[GMSStyleSpan spanWithStyle:style]];
+    }
+    polyline.spans = spans;
+  } else {
+    polyline.strokeColor = colors.firstObject;
+  }
 }
 
 - (void)processPendingPolylines {
@@ -284,8 +297,22 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
   }
 
   GMSPolyline *polyline = [GMSPolyline polylineWithPath:path];
-  polyline.strokeColor = polylineView.strokeColor;
   polyline.strokeWidth = polylineView.strokeWidth;
+
+  NSArray<UIColor *> *colors = polylineView.strokeColors;
+  if (colors.count > 1) {
+    NSMutableArray<GMSStyleSpan *> *spans = [NSMutableArray array];
+    NSUInteger segmentCount = polylineView.coordinates.count - 1;
+    for (NSUInteger i = 0; i < segmentCount; i++) {
+      UIColor *color = colors[i % colors.count];
+      GMSStrokeStyle *style = [GMSStrokeStyle solidColor:color];
+      [spans addObject:[GMSStyleSpan spanWithStyle:style]];
+    }
+    polyline.spans = spans;
+  } else {
+    polyline.strokeColor = colors.firstObject;
+  }
+
   polyline.map = _mapView;
 
   polylineView.polyline = polyline;

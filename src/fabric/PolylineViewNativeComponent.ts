@@ -9,7 +9,7 @@ export interface Coordinate {
 
 export interface NativeProps extends ViewProps {
   coordinates: ReadonlyArray<Coordinate>;
-  strokeColor?: ColorValue;
+  strokeColors?: ReadonlyArray<ColorValue>;
   strokeWidth?: Double;
 }
 

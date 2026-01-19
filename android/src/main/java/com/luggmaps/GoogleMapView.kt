@@ -18,6 +18,8 @@ import com.google.android.gms.maps.model.AdvancedMarkerOptions
 import com.google.android.gms.maps.model.AdvancedMarkerOptions.CollisionBehavior
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.PolylineOptions
+import com.google.android.gms.maps.model.StrokeStyle
+import com.google.android.gms.maps.model.StyleSpan
 
 @SuppressLint("ViewConstructor")
 class GoogleMapView(private val reactContext: ThemedReactContext) :
@@ -255,8 +257,19 @@ class GoogleMapView(private val reactContext: ThemedReactContext) :
 
     polylineView.polyline?.apply {
       points = polylineView.coordinates
-      color = polylineView.strokeColor
       width = polylineView.strokeWidth.dpToPx()
+
+      val colors = polylineView.strokeColors
+      if (colors.size > 1) {
+        val segmentCount = polylineView.coordinates.size - 1
+        val spans = (0 until segmentCount).map { i ->
+          val color = colors[i % colors.size]
+          StyleSpan(StrokeStyle.colorBuilder(color).build())
+        }
+        setSpans(spans)
+      } else {
+        color = colors.firstOrNull() ?: android.graphics.Color.BLACK
+      }
     }
   }
 
@@ -270,10 +283,21 @@ class GoogleMapView(private val reactContext: ThemedReactContext) :
   private fun addPolylineViewToMap(polylineView: PolylineView) {
     val map = googleMap ?: return
 
+    val colors = polylineView.strokeColors
     val options = PolylineOptions()
       .addAll(polylineView.coordinates)
-      .color(polylineView.strokeColor)
       .width(polylineView.strokeWidth.dpToPx())
+
+    if (colors.size > 1) {
+      val segmentCount = polylineView.coordinates.size - 1
+      val spans = (0 until segmentCount).map { i ->
+        val color = colors[i % colors.size]
+        StyleSpan(StrokeStyle.colorBuilder(color).build())
+      }
+      options.addAllSpans(spans)
+    } else {
+      options.color(colors.firstOrNull() ?: android.graphics.Color.BLACK)
+    }
 
     polylineView.polyline = map.addPolyline(options)
   }

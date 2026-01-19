@@ -361,12 +361,36 @@ using namespace facebook::react;
             rendererForOverlay:(id<MKOverlay>)overlay {
   if ([overlay isKindOfClass:[MKPolyline class]]) {
     PolylineView *polylineView = [self findPolylineViewForOverlay:overlay];
-    MKPolylineRenderer *renderer =
-        [[MKPolylineRenderer alloc] initWithPolyline:(MKPolyline *)overlay];
+    MKPolyline *polyline = (MKPolyline *)overlay;
+
     if (polylineView) {
-      renderer.strokeColor = polylineView.strokeColor;
-      renderer.lineWidth = polylineView.strokeWidth;
+      NSArray<UIColor *> *colors = polylineView.strokeColors;
+
+      if (colors.count > 1) {
+        MKGradientPolylineRenderer *renderer =
+            [[MKGradientPolylineRenderer alloc] initWithPolyline:polyline];
+        renderer.lineWidth = polylineView.strokeWidth;
+
+        NSUInteger segmentCount = polyline.pointCount - 1;
+        for (NSUInteger i = 0; i < segmentCount; i++) {
+          CGFloat location = (CGFloat)i / (CGFloat)segmentCount;
+          UIColor *color = colors[i % colors.count];
+          [renderer
+                setColors:@[ color, color ]
+              atLocations:@[ @(location), @(location + 1.0 / segmentCount) ]];
+        }
+        return renderer;
+      } else {
+        MKPolylineRenderer *renderer =
+            [[MKPolylineRenderer alloc] initWithPolyline:polyline];
+        renderer.strokeColor = colors.firstObject;
+        renderer.lineWidth = polylineView.strokeWidth;
+        return renderer;
+      }
     }
+
+    MKPolylineRenderer *renderer =
+        [[MKPolylineRenderer alloc] initWithPolyline:polyline];
     return renderer;
   }
   return nil;

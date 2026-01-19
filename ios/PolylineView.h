@@ -14,7 +14,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface PolylineView : RCTViewComponentView
 
 @property(nonatomic, readonly) NSArray<CLLocation *> *coordinates;
-@property(nonatomic, readonly) UIColor *strokeColor;
+@property(nonatomic, readonly) NSArray<UIColor *> *strokeColors;
 @property(nonatomic, readonly) CGFloat strokeWidth;
 @property(nonatomic, weak, nullable) id<PolylineViewDelegate> delegate;
 @property(nonatomic, strong, nullable) NSObject *polyline;

@@ -15,7 +15,7 @@ using namespace facebook::react;
 
 @implementation PolylineView {
   NSArray<CLLocation *> *_coordinates;
-  UIColor *_strokeColor;
+  NSArray<UIColor *> *_strokeColors;
   CGFloat _strokeWidth;
 }
 
@@ -30,7 +30,7 @@ using namespace facebook::react;
     _props = defaultProps;
 
     _coordinates = @[];
-    _strokeColor = [UIColor blackColor];
+    _strokeColors = @[ [UIColor blackColor] ];
     _strokeWidth = 1.0;
 
     self.hidden = YES;
@@ -54,8 +54,14 @@ using namespace facebook::react;
   }
   _coordinates = [coords copy];
 
-  _strokeColor = RCTUIColorFromSharedColor(newViewProps.strokeColor)
-                     ?: [UIColor blackColor];
+  NSMutableArray<UIColor *> *colors = [NSMutableArray array];
+  for (const auto &color : newViewProps.strokeColors) {
+    UIColor *uiColor = RCTUIColorFromSharedColor(color);
+    if (uiColor) {
+      [colors addObject:uiColor];
+    }
+  }
+  _strokeColors = colors.count > 0 ? [colors copy] : @[ [UIColor blackColor] ];
 
   _strokeWidth = newViewProps.strokeWidth > 0 ? newViewProps.strokeWidth : 1.0;
 }
@@ -74,8 +80,8 @@ using namespace facebook::react;
   return _coordinates;
 }
 
-- (UIColor *)strokeColor {
-  return _strokeColor;
+- (NSArray<UIColor *> *)strokeColors {
+  return _strokeColors;
 }
 
 - (CGFloat)strokeWidth {
