@@ -123,7 +123,8 @@
         "GoogleMapView": "GoogleMapView",
         "AppleMapView": "AppleMapView",
         "MarkerView": "MarkerView",
-        "MapWrapperView": "MapWrapperView"
+        "MapWrapperView": "MapWrapperView",
+        "PolylineView": "PolylineView"
       }
     }
   },

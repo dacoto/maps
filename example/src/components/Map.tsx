@@ -1,6 +1,6 @@
 import { forwardRef } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { MapView, Marker, type MapProvider } from '@lugg/maps';
+import { MapView, Marker, Polyline, type MapProvider } from '@lugg/maps';
 
 import { MarkerIcon } from './MarkerIcon';
 import { MarkerText } from './MarkerText';
@@ -65,14 +65,7 @@ const renderMarker = (marker: MarkerData) => {
     case 'custom':
       return (
         <Marker key={id} name={name} coordinate={coordinate} anchor={anchor}>
-          <View
-            style={{
-              backgroundColor: color,
-              height: 40,
-              width: 40,
-              borderRadius: 8,
-            }}
-          />
+          <View style={[styles.customMarker, { backgroundColor: color }]} />
         </Marker>
       );
     default:
@@ -90,19 +83,36 @@ const renderMarker = (marker: MarkerData) => {
 };
 
 export const Map = forwardRef<MapView, MapProps>(
-  ({ provider, markers }, ref) => (
-    <MapView
-      ref={ref}
-      style={styles.map}
-      mapId="6939261d95ee48fd57332474"
-      provider={provider}
-      initialCoordinate={{ latitude: 37.78, longitude: -122.43 }}
-      initialZoom={14}
-    >
-      {markers.map(renderMarker)}
-      <View style={styles.centerPin} />
-    </MapView>
-  )
+  ({ provider, markers }, ref) => {
+    const polylineCoordinates = markers.map((m) => m.coordinate);
+
+    return (
+      <MapView
+        ref={ref}
+        style={styles.map}
+        mapId="6939261d95ee48fd57332474"
+        provider={provider}
+        initialCoordinate={{ latitude: 37.78, longitude: -122.43 }}
+        initialZoom={14}
+      >
+        {markers.map(renderMarker)}
+        {polylineCoordinates.length >= 2 && (
+          <Polyline
+            coordinates={polylineCoordinates}
+            strokeColor="#FF3B30"
+            strokeWidth={8}
+          />
+        )}
+        <Marker
+          name="linline-marker"
+          coordinate={{ latitude: 37.782, longitude: -122.425 }}
+        >
+          <View style={styles.customMarker} />
+        </Marker>
+        <View style={styles.centerPin} />
+      </MapView>
+    );
+  }
 );
 
 const styles = StyleSheet.create({
@@ -112,5 +122,11 @@ const styles = StyleSheet.create({
     height: 20,
     width: 20,
     borderRadius: 10,
+  },
+  customMarker: {
+    backgroundColor: 'gray',
+    height: 30,
+    width: 30,
+    borderRadius: 15,
   },
 });

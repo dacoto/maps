@@ -1,5 +1,6 @@
 #import "GoogleMapView.h"
 #import "MarkerView.h"
+#import "PolylineView.h"
 
 #import <react/renderer/components/RNMapsSpec/ComponentDescriptors.h>
 #import <react/renderer/components/RNMapsSpec/EventEmitters.h>
@@ -15,7 +16,7 @@ using namespace facebook::react;
 static NSString *const kDemoMapId = @"DEMO_MAP_ID";
 
 @interface GoogleMapView () <RCTGoogleMapViewViewProtocol, GMSMapViewDelegate,
-                             MarkerViewDelegate>
+                             MarkerViewDelegate, PolylineViewDelegate>
 @end
 
 @implementation GoogleMapView {
@@ -24,6 +25,7 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
   BOOL _isMapReady;
   NSString *_mapId;
   NSMutableArray<MarkerView *> *_pendingMarkerViews;
+  NSMutableArray<PolylineView *> *_pendingPolylineViews;
 }
 
 + (ComponentDescriptorProvider)componentDescriptorProvider {
@@ -40,6 +42,7 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
     _isMapReady = NO;
     _mapId = kDemoMapId;
     _pendingMarkerViews = [NSMutableArray array];
+    _pendingPolylineViews = [NSMutableArray array];
   }
 
   return self;
@@ -58,6 +61,10 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
     MarkerView *markerView = (MarkerView *)childComponentView;
     markerView.delegate = self;
     [self syncMarkerView:markerView caller:@"mountChildComponentView"];
+  } else if ([childComponentView isKindOfClass:[PolylineView class]]) {
+    PolylineView *polylineView = (PolylineView *)childComponentView;
+    polylineView.delegate = self;
+    [self syncPolylineView:polylineView];
   }
 }
 
@@ -71,6 +78,13 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
       marker.iconView = nil;
       marker.map = nil;
       markerView.marker = nil;
+    }
+  } else if ([childComponentView isKindOfClass:[PolylineView class]]) {
+    PolylineView *polylineView = (PolylineView *)childComponentView;
+    GMSPolyline *polyline = (GMSPolyline *)polylineView.polyline;
+    if (polyline) {
+      polyline.map = nil;
+      polylineView.polyline = nil;
     }
   }
 
@@ -88,6 +102,7 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
   [super prepareForRecycle];
 
   [_pendingMarkerViews removeAllObjects];
+  [_pendingPolylineViews removeAllObjects];
   [_mapView clear];
   [_mapView removeFromSuperview];
   _mapView = nil;
@@ -127,6 +142,7 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
 
   _isMapReady = YES;
   [self processPendingMarkers];
+  [self processPendingPolylines];
 }
 
 - (GMSMapView *)mapView {
@@ -137,6 +153,12 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
 
 - (void)mapViewDidFinishTileRendering:(GMSMapView *)mapView {
   // Map tiles finished rendering
+}
+
+#pragma mark - PolylineViewDelegate
+
+- (void)polylineViewDidUpdate:(PolylineView *)polylineView {
+  [self syncPolylineView:polylineView];
 }
 
 #pragma mark - MarkerViewDelegate
@@ -213,6 +235,60 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
   marker.map = _mapView;
 
   markerView.marker = marker;
+}
+
+#pragma mark - Polyline Management
+
+- (void)syncPolylineView:(PolylineView *)polylineView {
+  if (!_mapView) {
+    if (![_pendingPolylineViews containsObject:polylineView]) {
+      [_pendingPolylineViews addObject:polylineView];
+    }
+    return;
+  }
+
+  if (!polylineView.polyline) {
+    [self addPolylineViewToMap:polylineView];
+    return;
+  }
+
+  GMSPolyline *polyline = (GMSPolyline *)polylineView.polyline;
+  GMSMutablePath *path = [GMSMutablePath path];
+  for (CLLocation *location in polylineView.coordinates) {
+    [path addCoordinate:location.coordinate];
+  }
+  polyline.path = path;
+  polyline.strokeColor = polylineView.strokeColor;
+  polyline.strokeWidth = polylineView.strokeWidth;
+}
+
+- (void)processPendingPolylines {
+  if (!_mapView) {
+    return;
+  }
+
+  for (PolylineView *polylineView in _pendingPolylineViews) {
+    [self addPolylineViewToMap:polylineView];
+  }
+  [_pendingPolylineViews removeAllObjects];
+}
+
+- (void)addPolylineViewToMap:(PolylineView *)polylineView {
+  if (!_mapView) {
+    return;
+  }
+
+  GMSMutablePath *path = [GMSMutablePath path];
+  for (CLLocation *location in polylineView.coordinates) {
+    [path addCoordinate:location.coordinate];
+  }
+
+  GMSPolyline *polyline = [GMSPolyline polylineWithPath:path];
+  polyline.strokeColor = polylineView.strokeColor;
+  polyline.strokeWidth = polylineView.strokeWidth;
+  polyline.map = _mapView;
+
+  polylineView.polyline = polyline;
 }
 
 #pragma mark - Property Setters

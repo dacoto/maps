@@ -1,5 +1,6 @@
 #import "AppleMapView.h"
 #import "MarkerView.h"
+#import "PolylineView.h"
 #import "MapWrapperView.h"
 #import "extensions/MKMapView+Zoom.h"
 
@@ -27,7 +28,7 @@ using namespace facebook::react;
 @end
 
 @interface AppleMapView () <RCTAppleMapViewViewProtocol, MKMapViewDelegate,
-                            MarkerViewDelegate>
+                            MarkerViewDelegate, PolylineViewDelegate>
 @end
 
 @implementation AppleMapView {
@@ -72,6 +73,10 @@ using namespace facebook::react;
     }
 
     [self markerViewDidUpdate:markerView];
+  } else if ([childComponentView isKindOfClass:[PolylineView class]]) {
+    PolylineView *polylineView = (PolylineView *)childComponentView;
+    polylineView.delegate = self;
+    [self addPolylineViewToMap:polylineView];
   }
 }
 
@@ -90,6 +95,14 @@ using namespace facebook::react;
       annotation.annotationView = nil;
       [_mapView removeAnnotation:annotation];
       markerView.marker = nil;
+    }
+  } else if ([childComponentView isKindOfClass:[PolylineView class]]) {
+    PolylineView *polylineView = (PolylineView *)childComponentView;
+    polylineView.delegate = nil;
+    MKPolyline *polyline = (MKPolyline *)polylineView.polyline;
+    if (polyline) {
+      [_mapView removeOverlay:polyline];
+      polylineView.polyline = nil;
     }
   }
 
@@ -146,6 +159,9 @@ using namespace facebook::react;
       if (annotation) {
         [_mapView addAnnotation:annotation];
       }
+    } else if ([subview isKindOfClass:[PolylineView class]]) {
+      PolylineView *polylineView = (PolylineView *)subview;
+      [self addPolylineViewToMap:polylineView];
     }
   }
 }
@@ -227,6 +243,64 @@ using namespace facebook::react;
   }
 }
 
+#pragma mark - PolylineViewDelegate
+
+- (void)polylineViewDidUpdate:(PolylineView *)polylineView {
+  [self syncPolylineView:polylineView];
+}
+
+#pragma mark - Polyline Management
+
+- (void)addPolylineViewToMap:(PolylineView *)polylineView {
+  if (!_mapView) {
+    return;
+  }
+
+  NSArray<CLLocation *> *coordinates = polylineView.coordinates;
+  if (coordinates.count == 0) {
+    return;
+  }
+
+  CLLocationCoordinate2D *coords =
+      (CLLocationCoordinate2D *)malloc(sizeof(CLLocationCoordinate2D) * coordinates.count);
+  for (NSUInteger i = 0; i < coordinates.count; i++) {
+    coords[i] = coordinates[i].coordinate;
+  }
+
+  MKPolyline *polyline =
+      [MKPolyline polylineWithCoordinates:coords count:coordinates.count];
+  free(coords);
+
+  polylineView.polyline = polyline;
+  [_mapView addOverlay:polyline];
+}
+
+- (void)syncPolylineView:(PolylineView *)polylineView {
+  if (!_mapView) {
+    return;
+  }
+
+  MKPolyline *oldPolyline = (MKPolyline *)polylineView.polyline;
+  if (oldPolyline) {
+    [_mapView removeOverlay:oldPolyline];
+    polylineView.polyline = nil;
+  }
+
+  [self addPolylineViewToMap:polylineView];
+}
+
+- (PolylineView *)findPolylineViewForOverlay:(id<MKOverlay>)overlay {
+  for (UIView *subview in self.subviews) {
+    if ([subview isKindOfClass:[PolylineView class]]) {
+      PolylineView *polylineView = (PolylineView *)subview;
+      if (polylineView.polyline == overlay) {
+        return polylineView;
+      }
+    }
+  }
+  return nil;
+}
+
 #pragma mark - MarkerViewDelegate
 
 - (void)markerViewDidLayout:(MarkerView *)markerView {
@@ -283,6 +357,21 @@ using namespace facebook::react;
   markerAnnotation.annotationView = annotationView;
 
   return annotationView;
+}
+
+- (MKOverlayRenderer *)mapView:(MKMapView *)mapView
+            rendererForOverlay:(id<MKOverlay>)overlay {
+  if ([overlay isKindOfClass:[MKPolyline class]]) {
+    PolylineView *polylineView = [self findPolylineViewForOverlay:overlay];
+    MKPolylineRenderer *renderer =
+        [[MKPolylineRenderer alloc] initWithPolyline:(MKPolyline *)overlay];
+    if (polylineView) {
+      renderer.strokeColor = polylineView.strokeColor;
+      renderer.lineWidth = polylineView.strokeWidth;
+    }
+    return renderer;
+  }
+  return nil;
 }
 
 #pragma mark - Commands

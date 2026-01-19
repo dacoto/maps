@@ -90,7 +90,7 @@ class MarkerView(context: Context) : ReactViewGroup(context) {
     bottom: Int
   ) {
     super.onLayout(changed, left, top, right, bottom)
-    if (changed && !didLayout) {
+    if (changed && !didLayout && hasCustomView) {
       didLayout = true
       delegate?.markerViewDidLayout(this)
     }

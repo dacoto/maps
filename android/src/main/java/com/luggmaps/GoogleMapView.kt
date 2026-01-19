@@ -16,12 +16,14 @@ import com.google.android.gms.maps.model.AdvancedMarker
 import com.google.android.gms.maps.model.AdvancedMarkerOptions
 import com.google.android.gms.maps.model.AdvancedMarkerOptions.CollisionBehavior
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.PolylineOptions
 
 @SuppressLint("ViewConstructor")
 class GoogleMapView(private val reactContext: ThemedReactContext) :
   ReactViewGroup(reactContext),
   OnMapReadyCallback,
-  MarkerViewDelegate {
+  MarkerViewDelegate,
+  PolylineViewDelegate {
 
   private var mapView: MapView? = null
   private var mapWrapperView: MapWrapperView? = null
@@ -29,6 +31,7 @@ class GoogleMapView(private val reactContext: ThemedReactContext) :
   private var isMapReady = false
   private var mapId: String = DEMO_MAP_ID
   private val pendingMarkerViews = mutableListOf<MarkerView>()
+  private val pendingPolylineViews = mutableListOf<PolylineView>()
 
   // Initial camera settings
   private var initialLatitude: Double = 37.78
@@ -47,7 +50,14 @@ class GoogleMapView(private val reactContext: ThemedReactContext) :
     super.addView(child, index)
     when (child) {
       is MapWrapperView -> mapWrapperView = child
-      is MarkerView -> child.delegate = this
+      is MarkerView -> {
+        child.delegate = this
+        syncMarkerView(child)
+      }
+      is PolylineView -> {
+        child.delegate = this
+        syncPolylineView(child)
+      }
     }
   }
 
@@ -57,6 +67,9 @@ class GoogleMapView(private val reactContext: ThemedReactContext) :
       Log.d(TAG, "removing markerView: ${view.name}")
       view.marker?.remove()
       view.marker = null
+    } else if (view is PolylineView) {
+      view.polyline?.remove()
+      view.polyline = null
     }
     super.removeViewAt(index)
   }
@@ -71,6 +84,7 @@ class GoogleMapView(private val reactContext: ThemedReactContext) :
   fun onDropViewInstance() {
     Log.d(TAG, "dropping mapView instance")
     pendingMarkerViews.clear()
+    pendingPolylineViews.clear()
     googleMap?.clear()
     googleMap = null
     isMapReady = false
@@ -108,6 +122,7 @@ class GoogleMapView(private val reactContext: ThemedReactContext) :
 
     applyUiSettings()
     processPendingMarkers()
+    processPendingPolylines()
   }
 
   private fun applyUiSettings() {
@@ -121,40 +136,49 @@ class GoogleMapView(private val reactContext: ThemedReactContext) :
 
   // endregion
 
+  // region PolylineViewDelegate
+
+  override fun polylineViewDidUpdate(polylineView: PolylineView) {
+    syncPolylineView(polylineView)
+  }
+
+  // endregion
+
   // region MarkerViewDelegate
 
   override fun markerViewDidLayout(markerView: MarkerView) {
-    syncMarkerView(markerView, "markerViewDidLayout")
+    if (googleMap == null) {
+      if (!pendingMarkerViews.contains(markerView)) {
+        pendingMarkerViews.add(markerView)
+      }
+      return
+    }
+
+    // Recreate marker with custom view
+    markerView.marker?.remove()
+    addMarkerViewToMap(markerView)
   }
 
   override fun markerViewDidUpdate(markerView: MarkerView) {
-    syncMarkerView(markerView, "markerViewDidUpdate")
+    syncMarkerView(markerView)
   }
 
   // endregion
 
   // region Marker Management
 
-  private fun syncMarkerView(markerView: MarkerView, caller: String) {
+  private fun syncMarkerView(markerView: MarkerView) {
+    // Custom views are handled in markerViewDidLayout
+    if (markerView.hasCustomView) return
+
     if (googleMap == null) {
       if (!pendingMarkerViews.contains(markerView)) {
-        Log.d(TAG, "$caller: ${markerView.name} - added to pending markers")
         pendingMarkerViews.add(markerView)
       }
       return
     }
 
     if (markerView.marker == null) {
-      Log.d(TAG, "$caller: ${markerView.name} - adding to map")
-      addMarkerViewToMap(markerView)
-      return
-    }
-
-    Log.d(TAG, "$caller: ${markerView.name} hasCustomView: ${markerView.hasCustomView}")
-
-    // Recreate the marker when it has a custom view
-    if (markerView.hasCustomView) {
-      markerView.marker?.remove()
       addMarkerViewToMap(markerView)
       return
     }
@@ -164,7 +188,6 @@ class GoogleMapView(private val reactContext: ThemedReactContext) :
       title = markerView.title
       snippet = markerView.description
       setAnchor(markerView.anchorX, markerView.anchorY)
-      iconView = null
     }
   }
 
@@ -202,6 +225,50 @@ class GoogleMapView(private val reactContext: ThemedReactContext) :
     marker.setAnchor(markerView.anchorX, markerView.anchorY)
 
     markerView.marker = marker
+  }
+
+  // endregion
+
+  // region Polyline Management
+
+  private fun syncPolylineView(polylineView: PolylineView) {
+    if (googleMap == null) {
+      if (!pendingPolylineViews.contains(polylineView)) {
+        pendingPolylineViews.add(polylineView)
+      }
+      return
+    }
+
+    if (polylineView.polyline == null) {
+      addPolylineViewToMap(polylineView)
+      return
+    }
+
+    val density = resources.displayMetrics.density
+    polylineView.polyline?.apply {
+      points = polylineView.coordinates
+      color = polylineView.strokeColor
+      width = polylineView.strokeWidth * density
+    }
+  }
+
+  private fun processPendingPolylines() {
+    if (googleMap == null) return
+
+    pendingPolylineViews.forEach { addPolylineViewToMap(it) }
+    pendingPolylineViews.clear()
+  }
+
+  private fun addPolylineViewToMap(polylineView: PolylineView) {
+    val map = googleMap ?: return
+
+    val density = resources.displayMetrics.density
+    val options = PolylineOptions()
+      .addAll(polylineView.coordinates)
+      .color(polylineView.strokeColor)
+      .width(polylineView.strokeWidth * density)
+
+    polylineView.polyline = map.addPolyline(options)
   }
 
   // endregion
