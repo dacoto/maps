@@ -385,6 +385,18 @@ using namespace facebook::react;
   [iconView removeFromSuperview];
   [annotationView addSubview:iconView];
 
+  // Set frame and centerOffset based on iconView
+  CGRect frame = iconView.frame;
+  if (frame.size.width > 0 && frame.size.height > 0) {
+    annotationView.frame = CGRectMake(0, 0, frame.size.width, frame.size.height);
+    iconView.frame = CGRectMake(0, 0, frame.size.width, frame.size.height);
+
+    CGPoint anchor = markerView.anchor;
+    annotationView.centerOffset =
+        CGPointMake(frame.size.width * (anchor.x - 0.5),
+                    -frame.size.height * (anchor.y - 0.5));
+  }
+
   markerAnnotation.annotationView = annotationView;
 
   return annotationView;
