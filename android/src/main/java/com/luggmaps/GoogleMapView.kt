@@ -30,6 +30,17 @@ class GoogleMapView(private val reactContext: ThemedReactContext) :
   private var mapId: String = DEMO_MAP_ID
   private val pendingMarkerViews = mutableListOf<MapMarkerView>()
 
+  // Initial camera settings
+  private var initialLatitude: Double = 37.78
+  private var initialLongitude: Double = -122.43
+  private var initialZoom: Float = 14f
+
+  // UI settings
+  private var zoomEnabled: Boolean = true
+  private var scrollEnabled: Boolean = true
+  private var rotateEnabled: Boolean = true
+  private var pitchEnabled: Boolean = true
+
   // region View Lifecycle
 
   override fun addView(child: View?, index: Int) {
@@ -92,9 +103,20 @@ class GoogleMapView(private val reactContext: ThemedReactContext) :
     googleMap = map
     isMapReady = true
 
-    val position = LatLng(37.78, -122.43)
-    map.moveCamera(CameraUpdateFactory.newLatLngZoom(position, 14f))
+    val position = LatLng(initialLatitude, initialLongitude)
+    map.moveCamera(CameraUpdateFactory.newLatLngZoom(position, initialZoom))
+
+    applyUiSettings()
     processPendingMarkers()
+  }
+
+  private fun applyUiSettings() {
+    googleMap?.uiSettings?.apply {
+      isZoomGesturesEnabled = zoomEnabled
+      isScrollGesturesEnabled = scrollEnabled
+      isRotateGesturesEnabled = rotateEnabled
+      isTiltGesturesEnabled = pitchEnabled
+    }
   }
 
   // endregion
@@ -198,27 +220,32 @@ class GoogleMapView(private val reactContext: ThemedReactContext) :
   }
 
   fun setInitialCoordinate(latitude: Double, longitude: Double) {
-    // TODO: Implement initial coordinate
+    initialLatitude = latitude
+    initialLongitude = longitude
   }
 
   fun setInitialZoom(zoom: Double) {
-    // TODO: Implement initial zoom
+    initialZoom = zoom.toFloat()
   }
 
   fun setZoomEnabled(enabled: Boolean) {
-    // TODO: Implement zoom enabled
+    zoomEnabled = enabled
+    googleMap?.uiSettings?.isZoomGesturesEnabled = enabled
   }
 
   fun setScrollEnabled(enabled: Boolean) {
-    // TODO: Implement scroll enabled
+    scrollEnabled = enabled
+    googleMap?.uiSettings?.isScrollGesturesEnabled = enabled
   }
 
   fun setRotateEnabled(enabled: Boolean) {
-    // TODO: Implement rotate enabled
+    rotateEnabled = enabled
+    googleMap?.uiSettings?.isRotateGesturesEnabled = enabled
   }
 
   fun setPitchEnabled(enabled: Boolean) {
-    // TODO: Implement pitch enabled
+    pitchEnabled = enabled
+    googleMap?.uiSettings?.isTiltGesturesEnabled = enabled
   }
 
   // endregion

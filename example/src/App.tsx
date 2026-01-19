@@ -217,14 +217,7 @@ export default function App() {
           >
             <View style={{ backgroundColor: 'red', height: 30, width: 30 }} />
           </MapMarker>
-          <View
-            style={{
-              zIndex: 10,
-              backgroundColor: 'blue',
-              height: 40,
-              width: 40,
-            }}
-          />
+          <View style={styles.centerPin} />
         </MapView>
       )}
 
@@ -249,11 +242,7 @@ export default function App() {
             onPress={() => setShowMap((prev) => !prev)}
           />
           <Button
-            title={
-              provider === 'google'
-                ? 'Switch to Apple Maps'
-                : 'Switch to Google Maps'
-            }
+            title={provider === 'google' ? 'Apple Maps' : 'Google Maps'}
             disabled={Platform.OS === 'android'}
             onPress={toggleProvider}
           />
@@ -277,5 +266,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 12,
+  },
+  centerPin: {
+    backgroundColor: 'blue',
+    height: 20,
+    width: 20,
+    borderRadius: 10,
   },
 });
