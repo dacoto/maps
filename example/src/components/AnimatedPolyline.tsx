@@ -1,12 +1,11 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
+import { processColor, type ColorValue } from 'react-native';
 import { Polyline, type PolylineProps, type Coordinate } from '@lugg/maps';
 import Animated, {
   cancelAnimation,
   Easing,
   interpolate,
-  runOnJS,
   useAnimatedProps,
-  useAnimatedReaction,
   useSharedValue,
   withDelay,
   withRepeat,
@@ -27,9 +26,15 @@ interface AnimatedPolylineProps extends Omit<PolylineProps, 'strokeColors'> {
 const getSliceIndices = (progress: number, len: number): [number, number] => {
   'worklet';
   if (progress <= 1) {
-    return [0, Math.max(1, Math.floor(interpolate(progress, [0, 1], [1, len])))];
+    return [
+      0,
+      Math.max(1, Math.floor(interpolate(progress, [0, 1], [1, len]))),
+    ];
   }
-  return [Math.max(0, Math.floor(interpolate(progress, [1, 2], [0, len - 1]))), len];
+  return [
+    Math.max(0, Math.floor(interpolate(progress, [1, 2], [0, len - 1]))),
+    len,
+  ];
 };
 
 export function AnimatedPolyline({
@@ -68,25 +73,20 @@ export function AnimatedPolyline({
         strokeColors[0],
         strokeColors[1],
         processedCoordinates.length
-      ),
+      ).map((c) => processColor(c)!),
     [processedCoordinates.length, strokeColors]
   );
 
-  const [currentStrokeColors, setCurrentStrokeColors] = useState(gradientColors);
-
   const animatedProps = useAnimatedProps(() => {
-    const [start, end] = getSliceIndices(progress.value, processedCoordinates.length);
-    return { coordinates: processedCoordinates.slice(start, end) };
+    const [start, end] = getSliceIndices(
+      progress.value,
+      processedCoordinates.length
+    );
+    return {
+      coordinates: processedCoordinates.slice(start, end),
+      strokeColors: gradientColors.slice(start, end) as ColorValue[],
+    };
   });
-
-  useAnimatedReaction(
-    () => progress.value,
-    (value) => {
-      const [start, end] = getSliceIndices(value, gradientColors.length);
-      runOnJS(setCurrentStrokeColors)(gradientColors.slice(start, end));
-    },
-    [gradientColors]
-  );
 
   const animate = useCallback(() => {
     if (coordinates.length > 1) {
@@ -113,7 +113,6 @@ export function AnimatedPolyline({
       ref={animate}
       animatedProps={animatedProps}
       strokeWidth={strokeWidth}
-      strokeColors={currentStrokeColors}
     />
   );
 }

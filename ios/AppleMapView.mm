@@ -1,8 +1,8 @@
 #import "AppleMapView.h"
-#import "core/PolylineRenderer.h"
 #import "MapWrapperView.h"
 #import "MarkerView.h"
 #import "PolylineView.h"
+#import "core/PolylineRenderer.h"
 #import "extensions/MKMapView+Zoom.h"
 
 #import <react/renderer/components/RNMapsSpec/ComponentDescriptors.h>

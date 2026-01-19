@@ -19,7 +19,9 @@ const hexToRgb = (hex: string) => {
 };
 
 const rgbToHex = (r: number, g: number, b: number) =>
-  `#${[r, g, b].map((x) => Math.round(x).toString(16).padStart(2, '0')).join('')}`;
+  `#${[r, g, b]
+    .map((x) => Math.round(x).toString(16).padStart(2, '0'))
+    .join('')}`;
 
 export const generateGradientColors = (
   startColor: string,
@@ -41,7 +43,13 @@ export const generateGradientColors = (
 
 type Point = { latitude: number; longitude: number };
 
-const catmullRom = (p0: number, p1: number, p2: number, p3: number, t: number) => {
+const catmullRom = (
+  p0: number,
+  p1: number,
+  p2: number,
+  p3: number,
+  t: number
+) => {
   const t2 = t * t;
   const t3 = t2 * t;
   return (
@@ -71,8 +79,20 @@ export const smoothCoordinates = (
     for (let j = 0; j < segments; j++) {
       const t = j / segments;
       result.push({
-        latitude: catmullRom(p0.latitude, p1.latitude, p2.latitude, p3.latitude, t),
-        longitude: catmullRom(p0.longitude, p1.longitude, p2.longitude, p3.longitude, t),
+        latitude: catmullRom(
+          p0.latitude,
+          p1.latitude,
+          p2.latitude,
+          p3.latitude,
+          t
+        ),
+        longitude: catmullRom(
+          p0.longitude,
+          p1.longitude,
+          p2.longitude,
+          p3.longitude,
+          t
+        ),
       });
     }
   }

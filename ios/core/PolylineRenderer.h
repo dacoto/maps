@@ -4,6 +4,6 @@
 
 - (id)initWithPolyline:(MKPolyline *)polyline;
 
-@property (nonatomic, strong) NSArray<UIColor *> *strokeColors;
+@property(nonatomic, strong) NSArray<UIColor *> *strokeColors;
 
 @end
