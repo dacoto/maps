@@ -154,9 +154,13 @@ class GoogleMapView(private val reactContext: ThemedReactContext) :
       return
     }
 
-    // Recreate marker with custom view
-    markerView.marker?.remove()
-    addMarkerViewToMap(markerView)
+    if (markerView.hasCustomView) {
+      // Recreate marker with custom view
+      markerView.marker?.remove()
+      addMarkerViewToMap(markerView)
+    } else {
+      syncMarkerView(markerView);
+    }
   }
 
   override fun markerViewDidUpdate(markerView: MarkerView) {
@@ -168,9 +172,6 @@ class GoogleMapView(private val reactContext: ThemedReactContext) :
   // region Marker Management
 
   private fun syncMarkerView(markerView: MarkerView) {
-    // Custom views are handled in markerViewDidLayout
-    if (markerView.hasCustomView) return
-
     if (googleMap == null) {
       if (!pendingMarkerViews.contains(markerView)) {
         pendingMarkerViews.add(markerView)
@@ -179,6 +180,8 @@ class GoogleMapView(private val reactContext: ThemedReactContext) :
     }
 
     if (markerView.marker == null) {
+      // Custom views need layout first before adding to map
+      if (markerView.hasCustomView) return
       addMarkerViewToMap(markerView)
       return
     }
@@ -188,6 +191,9 @@ class GoogleMapView(private val reactContext: ThemedReactContext) :
       title = markerView.title
       snippet = markerView.description
       setAnchor(markerView.anchorX, markerView.anchorY)
+      if (!markerView.hasCustomView) {
+        iconView = null
+      }
     }
   }
 

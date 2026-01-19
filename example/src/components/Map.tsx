@@ -100,11 +100,11 @@ export const Map = forwardRef<MapView, MapProps>(
           <Polyline
             coordinates={polylineCoordinates}
             strokeColor="#FF3B30"
-            strokeWidth={8}
+            strokeWidth={4}
           />
         )}
         <Marker
-          name="linline-marker"
+          name="inline-marker"
           coordinate={{ latitude: 37.782, longitude: -122.425 }}
         >
           <View style={styles.customMarker} />
