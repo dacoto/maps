@@ -122,6 +122,7 @@ class GoogleMapView(private val reactContext: ThemedReactContext) :
 
     val position = LatLng(initialLatitude, initialLongitude)
     map.moveCamera(CameraUpdateFactory.newLatLngZoom(position, initialZoom))
+    map.setPadding(0, 0, 0, 0)
 
     applyUiSettings()
     processPendingMarkers()

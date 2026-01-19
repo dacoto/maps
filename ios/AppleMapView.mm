@@ -138,6 +138,7 @@ using namespace facebook::react;
   _mapView.autoresizingMask =
       UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
   _mapView.delegate = self;
+  _mapView.insetsLayoutMarginsFromSafeArea = NO;
   _mapView.zoomEnabled = viewProps.zoomEnabled;
   _mapView.scrollEnabled = viewProps.scrollEnabled;
   _mapView.rotateEnabled = viewProps.rotateEnabled;

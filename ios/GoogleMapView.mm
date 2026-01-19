@@ -137,6 +137,7 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
   _mapView.autoresizingMask =
       UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
   _mapView.delegate = self;
+  _mapView.paddingAdjustmentBehavior = kGMSMapViewPaddingAdjustmentBehaviorNever;
 
   [_mapWrapperView addSubview:_mapView];
 
