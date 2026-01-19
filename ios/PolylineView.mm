@@ -54,7 +54,8 @@ using namespace facebook::react;
   }
   _coordinates = [coords copy];
 
-  _strokeColor = RCTUIColorFromSharedColor(newViewProps.strokeColor) ?: [UIColor blackColor];
+  _strokeColor = RCTUIColorFromSharedColor(newViewProps.strokeColor)
+                     ?: [UIColor blackColor];
 
   _strokeWidth = newViewProps.strokeWidth > 0 ? newViewProps.strokeWidth : 1.0;
 }

@@ -49,10 +49,15 @@ export default function App() {
 
   const moveToRandomMarker = () => {
     if (markers.length === 0) return;
-    mapRef.current?.moveCamera({
-      coordinate: randomFrom(markers).coordinate,
+    const marker = randomFrom(markers);
+    mapRef.current?.moveCamera(marker.coordinate, {
       zoom: 12 + Math.random() * 4,
     });
+  };
+
+  const fitAllMarkers = () => {
+    const coordinates = markers.map((m) => m.coordinate);
+    mapRef.current?.fitCoordinates(coordinates, { padding: 40 });
   };
 
   return (
@@ -74,7 +79,17 @@ export default function App() {
             onPress={removeRandomMarker}
             disabled={markers.length === 0}
           />
+          <Button
+            title="Clear Markers"
+            onPress={() => setMarkers([])}
+            disabled={markers.length === 0}
+          />
           <Button title="Move Camera" onPress={moveToRandomMarker} />
+          <Button
+            title="Fit Markers"
+            onPress={fitAllMarkers}
+            disabled={markers.length === 0}
+          />
           <Button
             title={showMap ? 'Hide Map' : 'Show Map'}
             onPress={() => setShowMap((prev) => !prev)}

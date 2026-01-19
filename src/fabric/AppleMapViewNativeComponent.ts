@@ -29,10 +29,16 @@ interface NativeCommands {
     zoom: Double,
     duration: Double
   ) => void;
+  fitCoordinates: (
+    viewRef: React.ElementRef<ComponentType>,
+    coordinates: Coordinate[],
+    padding: Double,
+    duration: Double
+  ) => void;
 }
 
 export const Commands = codegenNativeCommands<NativeCommands>({
-  supportedCommands: ['moveCamera'],
+  supportedCommands: ['moveCamera', 'fitCoordinates'],
 });
 
 export default codegenNativeComponent<NativeProps>(

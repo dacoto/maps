@@ -11,7 +11,9 @@ import type {
   MapViewProps,
   MapViewRef,
   MoveCameraOptions,
+  FitCoordinatesOptions,
 } from './MapView.types';
+import type { Coordinate } from './types';
 
 export class MapView
   extends React.Component<MapViewProps>
@@ -28,22 +30,40 @@ export class MapView
 
   private nativeRef = React.createRef<any>();
 
-  moveCamera(options: MoveCameraOptions) {
-    const { coordinate, zoom, duration = -1 } = options;
+  private get nativeCommands() {
+    const provider = this.props.provider ?? MapView.defaultProps.provider;
+    const isApple = Platform.OS === 'ios' && provider === 'apple';
+    return isApple ? AppleMapCommands : GoogleMapCommands;
+  }
+
+  moveCamera(coordinate: Coordinate, options: MoveCameraOptions) {
     const ref = this.nativeRef.current;
     if (!ref) return;
 
-    const provider = this.props.provider ?? MapView.defaultProps.provider;
-    const isApple = Platform.OS === 'ios' && provider === 'apple';
-    const Commands = isApple ? AppleMapCommands : GoogleMapCommands;
-
-    Commands.moveCamera(
+    const { zoom, duration = -1 } = options;
+    this.nativeCommands.moveCamera(
       ref,
       coordinate.latitude,
       coordinate.longitude,
       zoom,
       duration
     );
+  }
+
+  fitCoordinates(coordinates: Coordinate[], options?: FitCoordinatesOptions) {
+    const ref = this.nativeRef.current;
+    const first = coordinates[0];
+    if (!ref || !first) return;
+
+    const { padding = 0, duration = -1 } = options ?? {};
+
+    if (coordinates.length === 1) {
+      const zoom = this.props.initialZoom ?? 10;
+      this.moveCamera(first, { zoom, duration });
+      return;
+    }
+
+    this.nativeCommands.fitCoordinates(ref, coordinates, padding, duration);
   }
 
   render() {

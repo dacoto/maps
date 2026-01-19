@@ -3,13 +3,21 @@ import type { ViewProps } from 'react-native';
 import type { MapProvider, Coordinate } from './types';
 
 export interface MoveCameraOptions {
-  coordinate: Coordinate;
   zoom: number;
   duration?: number;
 }
 
+export interface FitCoordinatesOptions {
+  padding?: number;
+  duration?: number;
+}
+
 export interface MapViewRef {
-  moveCamera(options: MoveCameraOptions): void;
+  moveCamera(coordinate: Coordinate, options: MoveCameraOptions): void;
+  fitCoordinates(
+    coordinates: Coordinate[],
+    options?: FitCoordinatesOptions
+  ): void;
 }
 
 export interface MapViewProps extends ViewProps {

@@ -22,14 +22,12 @@ using namespace facebook::react;
 }
 
 + (ComponentDescriptorProvider)componentDescriptorProvider {
-  return concreteComponentDescriptorProvider<
-      MarkerViewComponentDescriptor>();
+  return concreteComponentDescriptorProvider<MarkerViewComponentDescriptor>();
 }
 
 - (instancetype)initWithFrame:(CGRect)frame {
   if (self = [super initWithFrame:frame]) {
-    static const auto defaultProps =
-        std::make_shared<const MarkerViewProps>();
+    static const auto defaultProps = std::make_shared<const MarkerViewProps>();
     _props = defaultProps;
 
     _coordinate = CLLocationCoordinate2DMake(0, 0);
@@ -70,13 +68,15 @@ using namespace facebook::react;
   }
 }
 
-- (void)mountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView
+- (void)mountChildComponentView:
+            (UIView<RCTComponentViewProtocol> *)childComponentView
                           index:(NSInteger)index {
   [_iconView insertSubview:childComponentView atIndex:index];
   _didLayout = NO;
 }
 
-- (void)unmountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView
+- (void)unmountChildComponentView:
+            (UIView<RCTComponentViewProtocol> *)childComponentView
                             index:(NSInteger)index {
   [childComponentView removeFromSuperview];
   _didLayout = NO;
@@ -145,8 +145,6 @@ using namespace facebook::react;
   }
 }
 
-Class<RCTComponentViewProtocol> MarkerViewCls(void) {
-  return MarkerView.class;
-}
+Class<RCTComponentViewProtocol> MarkerViewCls(void) { return MarkerView.class; }
 
 @end

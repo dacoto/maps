@@ -8,7 +8,8 @@ NS_ASSUME_NONNULL_BEGIN
                   zoomLevel:(double)zoomLevel
                    animated:(BOOL)animated;
 
-- (MKCoordinateRegion)regionForCenterCoordinate:(CLLocationCoordinate2D)centerCoordinate
+- (MKCoordinateRegion)regionForCenterCoordinate:
+                          (CLLocationCoordinate2D)centerCoordinate
                                       zoomLevel:(double)zoomLevel;
 
 - (double)zoomLevel;

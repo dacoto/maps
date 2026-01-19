@@ -1,7 +1,7 @@
 #import "AppleMapView.h"
+#import "MapWrapperView.h"
 #import "MarkerView.h"
 #import "PolylineView.h"
-#import "MapWrapperView.h"
 #import "extensions/MKMapView+Zoom.h"
 
 #import <react/renderer/components/RNMapsSpec/ComponentDescriptors.h>
@@ -63,8 +63,7 @@ using namespace facebook::react;
     MarkerView *markerView = (MarkerView *)childComponentView;
     markerView.delegate = self;
 
-    AppleMarkerAnnotation *annotation =
-        [[AppleMarkerAnnotation alloc] init];
+    AppleMarkerAnnotation *annotation = [[AppleMarkerAnnotation alloc] init];
     annotation.markerView = markerView;
     markerView.marker = annotation;
 
@@ -261,14 +260,14 @@ using namespace facebook::react;
     return;
   }
 
-  CLLocationCoordinate2D *coords =
-      (CLLocationCoordinate2D *)malloc(sizeof(CLLocationCoordinate2D) * coordinates.count);
+  CLLocationCoordinate2D *coords = (CLLocationCoordinate2D *)malloc(
+      sizeof(CLLocationCoordinate2D) * coordinates.count);
   for (NSUInteger i = 0; i < coordinates.count; i++) {
     coords[i] = coordinates[i].coordinate;
   }
 
-  MKPolyline *polyline =
-      [MKPolyline polylineWithCoordinates:coords count:coordinates.count];
+  MKPolyline *polyline = [MKPolyline polylineWithCoordinates:coords
+                                                       count:coordinates.count];
   free(coords);
 
   polylineView.polyline = polyline;
@@ -335,8 +334,7 @@ using namespace facebook::react;
     return nil;
   }
 
-  AppleMarkerAnnotation *markerAnnotation =
-      (AppleMarkerAnnotation *)annotation;
+  AppleMarkerAnnotation *markerAnnotation = (AppleMarkerAnnotation *)annotation;
   MarkerView *markerView = markerAnnotation.markerView;
 
   if (!markerView || !markerView.hasCustomView) {
@@ -376,6 +374,46 @@ using namespace facebook::react;
 
 #pragma mark - Commands
 
+- (void)fitCoordinates:(NSArray *)coordinates
+               padding:(double)padding
+              duration:(double)duration {
+  if (!_mapView || coordinates.count == 0) {
+    return;
+  }
+
+  CLLocationCoordinate2D *coords = (CLLocationCoordinate2D *)malloc(
+      sizeof(CLLocationCoordinate2D) * coordinates.count);
+  for (NSUInteger i = 0; i < coordinates.count; i++) {
+    NSDictionary *coord = coordinates[i];
+    coords[i] = CLLocationCoordinate2DMake([coord[@"latitude"] doubleValue],
+                                           [coord[@"longitude"] doubleValue]);
+  }
+
+  MKMapRect mapRect = MKMapRectNull;
+  for (NSUInteger i = 0; i < coordinates.count; i++) {
+    MKMapPoint point = MKMapPointForCoordinate(coords[i]);
+    MKMapRect pointRect = MKMapRectMake(point.x, point.y, 0, 0);
+    mapRect = MKMapRectUnion(mapRect, pointRect);
+  }
+  free(coords);
+
+  UIEdgeInsets edgePadding =
+      UIEdgeInsetsMake(padding, padding, padding, padding);
+
+  if (duration < 0) {
+    [_mapView setVisibleMapRect:mapRect edgePadding:edgePadding animated:YES];
+  } else if (duration > 0) {
+    [UIView animateWithDuration:duration / 1000.0
+                     animations:^{
+                       [self->_mapView setVisibleMapRect:mapRect
+                                             edgePadding:edgePadding
+                                                animated:NO];
+                     }];
+  } else {
+    [_mapView setVisibleMapRect:mapRect edgePadding:edgePadding animated:NO];
+  }
+}
+
 - (void)handleCommand:(const NSString *)commandName args:(const NSArray *)args {
   if ([commandName isEqualToString:@"moveCamera"]) {
     double latitude = [args[0] doubleValue];
@@ -391,8 +429,8 @@ using namespace facebook::react;
     } else if (duration > 0) {
       CLLocationCoordinate2D center =
           CLLocationCoordinate2DMake(latitude, longitude);
-      MKCoordinateRegion region =
-          [_mapView regionForCenterCoordinate:center zoomLevel:zoom];
+      MKCoordinateRegion region = [_mapView regionForCenterCoordinate:center
+                                                            zoomLevel:zoom];
       [UIView animateWithDuration:duration / 1000.0
                        animations:^{
                          [self->_mapView setRegion:region animated:NO];
@@ -403,6 +441,11 @@ using namespace facebook::react;
                              zoom:zoom
                          animated:NO];
     }
+  } else if ([commandName isEqualToString:@"fitCoordinates"]) {
+    NSArray *coordinates = args[0];
+    double padding = [args[1] doubleValue];
+    double duration = [args[2] doubleValue];
+    [self fitCoordinates:coordinates padding:padding duration:duration];
   }
 }
 

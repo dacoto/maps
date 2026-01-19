@@ -368,6 +368,35 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
   }
 }
 
+- (void)fitCoordinates:(NSArray *)coordinates
+               padding:(double)padding
+              duration:(double)duration {
+  if (!_mapView || coordinates.count == 0) {
+    return;
+  }
+
+  GMSCoordinateBounds *bounds = [[GMSCoordinateBounds alloc] init];
+  for (NSDictionary *coord in coordinates) {
+    double lat = [coord[@"latitude"] doubleValue];
+    double lng = [coord[@"longitude"] doubleValue];
+    bounds = [bounds includingCoordinate:CLLocationCoordinate2DMake(lat, lng)];
+  }
+
+  GMSCameraUpdate *cameraUpdate = [GMSCameraUpdate fitBounds:bounds
+                                                 withPadding:padding];
+
+  if (duration < 0) {
+    [_mapView animateWithCameraUpdate:cameraUpdate];
+  } else if (duration > 0) {
+    [CATransaction begin];
+    [CATransaction setAnimationDuration:duration / 1000.0];
+    [_mapView animateWithCameraUpdate:cameraUpdate];
+    [CATransaction commit];
+  } else {
+    [_mapView moveCamera:cameraUpdate];
+  }
+}
+
 - (void)handleCommand:(const NSString *)commandName args:(const NSArray *)args {
   if ([commandName isEqualToString:@"moveCamera"]) {
     double latitude = [args[0] doubleValue];
@@ -375,6 +404,11 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
     double zoom = [args[2] doubleValue];
     double duration = [args[3] doubleValue];
     [self moveCamera:latitude longitude:longitude zoom:zoom duration:duration];
+  } else if ([commandName isEqualToString:@"fitCoordinates"]) {
+    NSArray *coordinates = args[0];
+    double padding = [args[1] doubleValue];
+    double duration = [args[2] doubleValue];
+    [self fitCoordinates:coordinates padding:padding duration:duration];
   }
 }
 

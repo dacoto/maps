@@ -1,5 +1,6 @@
 package com.luggmaps
 
+import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.module.annotations.ReactModule
 import com.facebook.react.uimanager.ThemedReactContext
@@ -8,6 +9,7 @@ import com.facebook.react.uimanager.ViewManagerDelegate
 import com.facebook.react.uimanager.annotations.ReactProp
 import com.facebook.react.viewmanagers.GoogleMapViewManagerDelegate
 import com.facebook.react.viewmanagers.GoogleMapViewManagerInterface
+import com.google.android.gms.maps.model.LatLng
 
 @ReactModule(name = GoogleMapViewManager.NAME)
 class GoogleMapViewManager :
@@ -73,6 +75,19 @@ class GoogleMapViewManager :
     duration: Double
   ) {
     view.moveCamera(latitude, longitude, zoom, duration.toInt())
+  }
+
+  override fun fitCoordinates(view: GoogleMapView, coordinates: ReadableArray?, padding: Double, duration: Double) {
+    val coords = mutableListOf<LatLng>()
+    coordinates?.let {
+      for (i in 0 until it.size()) {
+        val coord = it.getMap(i)
+        val lat = coord?.getDouble("latitude") ?: 0.0
+        val lng = coord?.getDouble("longitude") ?: 0.0
+        coords.add(LatLng(lat, lng))
+      }
+    }
+    view.fitCoordinates(coords, padding.toInt(), duration.toInt())
   }
 
   companion object {

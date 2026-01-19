@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
+import com.facebook.react.uimanager.PixelUtil.dpToPx
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.util.RNLog
 import com.facebook.react.views.view.ReactViewGroup
@@ -50,10 +51,12 @@ class GoogleMapView(private val reactContext: ThemedReactContext) :
     super.addView(child, index)
     when (child) {
       is MapWrapperView -> mapWrapperView = child
+
       is MarkerView -> {
         child.delegate = this
         syncMarkerView(child)
       }
+
       is PolylineView -> {
         child.delegate = this
         syncPolylineView(child)
@@ -159,7 +162,7 @@ class GoogleMapView(private val reactContext: ThemedReactContext) :
       markerView.marker?.remove()
       addMarkerViewToMap(markerView)
     } else {
-      syncMarkerView(markerView);
+      syncMarkerView(markerView)
     }
   }
 
@@ -250,11 +253,10 @@ class GoogleMapView(private val reactContext: ThemedReactContext) :
       return
     }
 
-    val density = resources.displayMetrics.density
     polylineView.polyline?.apply {
       points = polylineView.coordinates
       color = polylineView.strokeColor
-      width = polylineView.strokeWidth * density
+      width = polylineView.strokeWidth.dpToPx()
     }
   }
 
@@ -268,11 +270,10 @@ class GoogleMapView(private val reactContext: ThemedReactContext) :
   private fun addPolylineViewToMap(polylineView: PolylineView) {
     val map = googleMap ?: return
 
-    val density = resources.displayMetrics.density
     val options = PolylineOptions()
       .addAll(polylineView.coordinates)
       .color(polylineView.strokeColor)
-      .width(polylineView.strokeWidth * density)
+      .width(polylineView.strokeWidth.dpToPx())
 
     polylineView.polyline = map.addPolyline(options)
   }
@@ -329,6 +330,22 @@ class GoogleMapView(private val reactContext: ThemedReactContext) :
     val map = googleMap ?: return
     val position = LatLng(latitude, longitude)
     val cameraUpdate = CameraUpdateFactory.newLatLngZoom(position, zoom.toFloat())
+    when {
+      duration < 0 -> map.animateCamera(cameraUpdate)
+      duration > 0 -> map.animateCamera(cameraUpdate, duration, null)
+      else -> map.moveCamera(cameraUpdate)
+    }
+  }
+
+  fun fitCoordinates(coordinates: List<LatLng>, padding: Int, duration: Int) {
+    val map = googleMap ?: return
+    if (coordinates.isEmpty()) return
+
+    val boundsBuilder = com.google.android.gms.maps.model.LatLngBounds.Builder()
+    coordinates.forEach { boundsBuilder.include(it) }
+    val bounds = boundsBuilder.build()
+
+    val cameraUpdate = CameraUpdateFactory.newLatLngBounds(bounds, padding.toFloat().dpToPx().toInt())
     when {
       duration < 0 -> map.animateCamera(cameraUpdate)
       duration > 0 -> map.animateCamera(cameraUpdate, duration, null)
