@@ -1,240 +1,65 @@
 import { useRef, useState } from 'react';
 import { StyleSheet, View, Platform } from 'react-native';
-import { MapView, Marker, type MapProvider } from '@lugg/maps';
+import { MapView, type MapProvider } from '@lugg/maps';
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 
-import { Button, MarkerIcon, MarkerText, MarkerImage } from './components';
-
-type MarkerType = 'basic' | 'icon' | 'text' | 'image' | 'custom';
-
-interface MarkerData {
-  id: string;
-  name: string;
-  coordinate: { latitude: number; longitude: number };
-  type: MarkerType;
-  title?: string;
-  description?: string;
-  anchor?: { x: number; y: number };
-  text?: string;
-  color?: string;
-  imageUrl?: string;
-}
-
-const MARKER_COLORS = [
-  '#EA4335',
-  '#4285F4',
-  '#34A853',
-  '#FBBC05',
-  '#9C27B0',
-  '#FF5722',
-];
-const AVATAR_URLS = [
-  'https://i.pravatar.cc/100?img=1',
-  'https://i.pravatar.cc/100?img=2',
-  'https://i.pravatar.cc/100?img=3',
-  'https://i.pravatar.cc/100?img=4',
-  'https://i.pravatar.cc/100?img=5',
-];
-
-const INITIAL_MARKERS: MarkerData[] = [
-  {
-    id: '1',
-    name: 'sf-marker',
-    coordinate: { latitude: 37.78, longitude: -122.43 },
-    type: 'basic',
-    title: 'San Francisco',
-    description: 'The Golden Gate City',
-  },
-  {
-    id: '2',
-    name: 'marker-2',
-    coordinate: { latitude: 37.785, longitude: -122.42 },
-    type: 'basic',
-    anchor: { x: 0.5, y: 1 },
-  },
-  {
-    id: '3',
-    name: 'marker-3',
-    coordinate: { latitude: 37.775, longitude: -122.443 },
-    type: 'basic',
-  },
-  {
-    id: '4',
-    name: 'marker-4',
-    coordinate: { latitude: 37.775, longitude: -122.44 },
-    type: 'basic',
-    anchor: { x: 0.5, y: 1 },
-  },
-  {
-    id: '5',
-    name: 'marker-5',
-    coordinate: { latitude: 37.79, longitude: -122.435 },
-    type: 'basic',
-    anchor: { x: 0.5, y: 1 },
-  },
-];
+import { Button, Map } from './components';
+import { randomFrom, randomLetter } from './utils';
+import {
+  MARKER_COLORS,
+  AVATAR_URLS,
+  MARKER_TYPES,
+  INITIAL_MARKERS,
+} from './markers';
 
 export default function App() {
-  const sheetRef = useRef<TrueSheet>(null);
   const mapRef = useRef<MapView>(null);
   const [provider, setProvider] = useState<MapProvider>('google');
   const [showMap, setShowMap] = useState(true);
   const [markers, setMarkers] = useState(INITIAL_MARKERS);
 
-  const toggleProvider = () => {
-    setProvider((prev) => (prev === 'google' ? 'apple' : 'google'));
+  const addRandomMarker = () => {
+    const type = randomFrom(MARKER_TYPES);
+    const id = Date.now().toString();
+
+    setMarkers((prev) => [
+      ...prev,
+      {
+        id,
+        name: `marker-${id}`,
+        coordinate: {
+          latitude: 37.77 + Math.random() * 0.03,
+          longitude: -122.45 + Math.random() * 0.05,
+        },
+        type,
+        anchor: { x: 0.5, y: type === 'icon' ? 1 : 0.5 },
+        text: randomLetter(),
+        color: randomFrom(MARKER_COLORS),
+        imageUrl: randomFrom(AVATAR_URLS),
+      },
+    ]);
   };
 
   const removeRandomMarker = () => {
     if (markers.length === 0) return;
-    const randomIndex = Math.floor(Math.random() * markers.length);
-    setMarkers((prev) => prev.filter((_, index) => index !== randomIndex));
-  };
-
-  const addRandomMarker = () => {
-    const types: MarkerType[] = ['basic', 'icon', 'text', 'image', 'custom'];
-    const randomType = types[Math.floor(Math.random() * types.length)]!;
-    const randomColor =
-      MARKER_COLORS[Math.floor(Math.random() * MARKER_COLORS.length)];
-    const randomAvatar =
-      AVATAR_URLS[Math.floor(Math.random() * AVATAR_URLS.length)];
-    const randomLetter = String.fromCharCode(
-      65 + Math.floor(Math.random() * 26)
+    setMarkers((prev) =>
+      prev.filter((_, i) => i !== Math.floor(Math.random() * prev.length))
     );
-
-    // Random coordinate around San Francisco
-    const latitude = 37.77 + Math.random() * 0.03;
-    const longitude = -122.45 + Math.random() * 0.05;
-
-    const id = Date.now().toString();
-    const newMarker: MarkerData = {
-      id,
-      name: `marker-${id}`,
-      coordinate: { latitude, longitude },
-      type: randomType,
-      anchor: { x: 0.5, y: randomType === 'icon' ? 1 : 0.5 },
-      text: randomLetter,
-      color: randomColor,
-      imageUrl: randomAvatar,
-    };
-
-    setMarkers((prev) => [...prev, newMarker]);
   };
 
   const moveToRandomMarker = () => {
     if (markers.length === 0) return;
-    const randomMarker = markers[Math.floor(Math.random() * markers.length)]!;
-    const zoom = 12 + Math.random() * 4;
     mapRef.current?.moveCamera({
-      coordinate: randomMarker.coordinate,
-      zoom,
+      coordinate: randomFrom(markers).coordinate,
+      zoom: 12 + Math.random() * 4,
     });
   };
 
   return (
     <View style={styles.container}>
-      {showMap && (
-        <MapView
-          ref={mapRef}
-          style={styles.map}
-          mapId="6939261d95ee48fd57332474"
-          provider={provider}
-          initialCoordinate={{ latitude: 37.78, longitude: -122.43 }}
-          initialZoom={14}
-        >
-          {markers.map((marker) => {
-            switch (marker.type) {
-              case 'icon':
-                return (
-                  <MarkerIcon
-                    key={marker.id}
-                    name={marker.name}
-                    coordinate={marker.coordinate}
-                  />
-                );
-              case 'text':
-                return (
-                  <MarkerText
-                    key={marker.id}
-                    name={marker.name}
-                    coordinate={marker.coordinate}
-                    text={marker.text ?? 'X'}
-                    color={marker.color}
-                  />
-                );
-              case 'image':
-                return (
-                  <MarkerImage
-                    key={marker.id}
-                    name={marker.name}
-                    coordinate={marker.coordinate}
-                    source={{ uri: marker.imageUrl }}
-                  />
-                );
-              case 'custom':
-                return (
-                  <Marker
-                    key={marker.id}
-                    name={marker.name}
-                    coordinate={marker.coordinate}
-                    anchor={marker.anchor}
-                  >
-                    <View
-                      style={{
-                        backgroundColor: marker.color,
-                        height: 40,
-                        width: 40,
-                        borderRadius: 8,
-                      }}
-                    />
-                  </Marker>
-                );
-              default:
-                return (
-                  <Marker
-                    key={marker.id}
-                    name={marker.name}
-                    coordinate={marker.coordinate}
-                    title={marker.title}
-                    description={marker.description}
-                    anchor={marker.anchor}
-                  />
-                );
-            }
-          })}
-          <MarkerIcon
-            name="marker-icon"
-            coordinate={{ latitude: 37.788, longitude: -122.41 }}
-          />
-          <MarkerText
-            name="marker-text-a"
-            coordinate={{ latitude: 37.772, longitude: -122.425 }}
-            text="A"
-          />
-          <MarkerText
-            name="marker-text-b"
-            coordinate={{ latitude: 37.795, longitude: -122.42 }}
-            text="B"
-            color="#4285F4"
-          />
-          <MarkerImage
-            name="marker-image"
-            coordinate={{ latitude: 37.782, longitude: -122.415 }}
-            source={{ uri: 'https://i.pravatar.cc/100' }}
-          />
-          <Marker
-            name="marker-simple"
-            coordinate={{ latitude: 37.784, longitude: -122.423 }}
-            anchor={{ x: 0.5, y: 0.5 }}
-          >
-            <View style={{ backgroundColor: 'red', height: 30, width: 30 }} />
-          </Marker>
-          <View style={styles.centerPin} />
-        </MapView>
-      )}
+      {showMap && <Map ref={mapRef} provider={provider} markers={markers} />}
 
       <TrueSheet
-        ref={sheetRef}
         detents={['auto']}
         dimmed={false}
         initialDetentIndex={0}
@@ -257,7 +82,9 @@ export default function App() {
           <Button
             title={provider === 'google' ? 'Apple Maps' : 'Google Maps'}
             disabled={Platform.OS === 'android'}
-            onPress={toggleProvider}
+            onPress={() =>
+              setProvider((p) => (p === 'google' ? 'apple' : 'google'))
+            }
           />
         </View>
       </TrueSheet>
@@ -266,24 +93,11 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  map: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  container: { flex: 1 },
   sheetContent: {
     padding: 16,
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 12,
-  },
-  centerPin: {
-    backgroundColor: 'blue',
-    height: 20,
-    width: 20,
-    borderRadius: 10,
   },
 });
