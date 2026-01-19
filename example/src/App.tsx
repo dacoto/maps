@@ -76,6 +76,7 @@ const INITIAL_MARKERS: Marker[] = [
 
 export default function App() {
   const sheetRef = useRef<TrueSheet>(null);
+  const mapRef = useRef<MapView>(null);
   const [provider, setProvider] = useState<MapProvider>('google');
   const [showMap, setShowMap] = useState(true);
   const [markers, setMarkers] = useState(INITIAL_MARKERS);
@@ -120,10 +121,21 @@ export default function App() {
     setMarkers((prev) => [...prev, newMarker]);
   };
 
+  const moveToRandomMarker = () => {
+    if (markers.length === 0) return;
+    const randomMarker = markers[Math.floor(Math.random() * markers.length)]!;
+    const zoom = 12 + Math.random() * 4;
+    mapRef.current?.moveCamera({
+      coordinate: randomMarker.coordinate,
+      zoom,
+    });
+  };
+
   return (
     <View style={styles.container}>
       {showMap && (
         <MapView
+          ref={mapRef}
           style={styles.map}
           mapId="6939261d95ee48fd57332474"
           provider={provider}
@@ -237,6 +249,7 @@ export default function App() {
             onPress={removeRandomMarker}
             disabled={markers.length === 0}
           />
+          <Button title="Move Camera" onPress={moveToRandomMarker} />
           <Button
             title={showMap ? 'Hide Map' : 'Show Map'}
             onPress={() => setShowMap((prev) => !prev)}

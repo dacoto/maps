@@ -23,10 +23,16 @@
                   zoomLevel:(double)zoomLevel
                    animated:(BOOL)animated
 {
+    MKCoordinateRegion region = [self regionForCenterCoordinate:centerCoordinate zoomLevel:zoomLevel];
+    [self setRegion:region animated:animated];
+}
+
+- (MKCoordinateRegion)regionForCenterCoordinate:(CLLocationCoordinate2D)centerCoordinate
+                                      zoomLevel:(double)zoomLevel
+{
     zoomLevel = MIN(zoomLevel, 28);
     MKCoordinateSpan span = [self coordinateSpanForZoomLevel:zoomLevel centerCoordinate:centerCoordinate];
-    MKCoordinateRegion region = MKCoordinateRegionMake(centerCoordinate, span);
-    [self setRegion:region animated:animated];
+    return MKCoordinateRegionMake(centerCoordinate, span);
 }
 
 - (double)zoomLevel

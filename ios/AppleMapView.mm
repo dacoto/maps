@@ -285,6 +285,38 @@ using namespace facebook::react;
   return annotationView;
 }
 
+#pragma mark - Commands
+
+- (void)handleCommand:(const NSString *)commandName args:(const NSArray *)args {
+  if ([commandName isEqualToString:@"moveCamera"]) {
+    double latitude = [args[0] doubleValue];
+    double longitude = [args[1] doubleValue];
+    double zoom = [args[2] doubleValue];
+    double duration = [args[3] doubleValue];
+
+    if (duration < 0) {
+      [self setCameraWithLatitude:latitude
+                        longitude:longitude
+                             zoom:zoom
+                         animated:YES];
+    } else if (duration > 0) {
+      CLLocationCoordinate2D center =
+          CLLocationCoordinate2DMake(latitude, longitude);
+      MKCoordinateRegion region =
+          [_mapView regionForCenterCoordinate:center zoomLevel:zoom];
+      [UIView animateWithDuration:duration / 1000.0
+                       animations:^{
+                         [self->_mapView setRegion:region animated:NO];
+                       }];
+    } else {
+      [self setCameraWithLatitude:latitude
+                        longitude:longitude
+                             zoom:zoom
+                         animated:NO];
+    }
+  }
+}
+
 Class<RCTComponentViewProtocol> AppleMapViewCls(void) {
   return AppleMapView.class;
 }

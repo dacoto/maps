@@ -250,6 +250,21 @@ class GoogleMapView(private val reactContext: ThemedReactContext) :
 
   // endregion
 
+  // region Commands
+
+  fun moveCamera(latitude: Double, longitude: Double, zoom: Double, duration: Int) {
+    val map = googleMap ?: return
+    val position = LatLng(latitude, longitude)
+    val cameraUpdate = CameraUpdateFactory.newLatLngZoom(position, zoom.toFloat())
+    when {
+      duration < 0 -> map.animateCamera(cameraUpdate)
+      duration > 0 -> map.animateCamera(cameraUpdate, duration, null)
+      else -> map.moveCamera(cameraUpdate)
+    }
+  }
+
+  // endregion
+
   companion object {
     private const val TAG = "LuggMaps"
     const val DEMO_MAP_ID = "DEMO_MAP_ID"

@@ -2,6 +2,16 @@ import type { ReactNode } from 'react';
 import type { ViewProps } from 'react-native';
 import type { MapProvider, Coordinate } from './types';
 
+export interface MoveCameraOptions {
+  coordinate: Coordinate;
+  zoom: number;
+  duration?: number;
+}
+
+export interface MapViewRef {
+  moveCamera(options: MoveCameraOptions): void;
+}
+
 export interface MapViewProps extends ViewProps {
   provider?: MapProvider;
   mapId?: string;

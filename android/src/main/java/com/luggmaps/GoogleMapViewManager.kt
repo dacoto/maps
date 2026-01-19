@@ -1,6 +1,5 @@
 package com.luggmaps
 
-import android.util.Log
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.module.annotations.ReactModule
 import com.facebook.react.uimanager.ThemedReactContext
@@ -64,6 +63,16 @@ class GoogleMapViewManager :
   override fun onDropViewInstance(view: GoogleMapView) {
     super.onDropViewInstance(view)
     view.onDropViewInstance()
+  }
+
+  override fun moveCamera(
+    view: GoogleMapView,
+    latitude: Double,
+    longitude: Double,
+    zoom: Double,
+    duration: Double
+  ) {
+    view.moveCamera(latitude, longitude, zoom, duration.toInt())
   }
 
   companion object {

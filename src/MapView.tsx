@@ -1,11 +1,22 @@
 import React from 'react';
 import { Platform, StyleSheet } from 'react-native';
-import NativeGoogleMapView from './fabric/GoogleMapViewNativeComponent';
-import NativeAppleMapView from './fabric/AppleMapViewNativeComponent';
+import NativeGoogleMapView, {
+  Commands as GoogleMapCommands,
+} from './fabric/GoogleMapViewNativeComponent';
+import NativeAppleMapView, {
+  Commands as AppleMapCommands,
+} from './fabric/AppleMapViewNativeComponent';
 import NativeMapWrapperView from './fabric/MapWrapperViewNativeComponent';
-import type { MapViewProps } from './MapView.types';
+import type {
+  MapViewProps,
+  MapViewRef,
+  MoveCameraOptions,
+} from './MapView.types';
 
-export class MapView extends React.Component<MapViewProps> {
+export class MapView
+  extends React.Component<MapViewProps>
+  implements MapViewRef
+{
   static defaultProps: Partial<MapViewProps> = {
     provider: Platform.OS === 'ios' ? 'apple' : 'google',
     initialZoom: 10,
@@ -14,6 +25,26 @@ export class MapView extends React.Component<MapViewProps> {
     rotateEnabled: true,
     pitchEnabled: true,
   };
+
+  private nativeRef = React.createRef<any>();
+
+  moveCamera(options: MoveCameraOptions) {
+    const { coordinate, zoom, duration = -1 } = options;
+    const ref = this.nativeRef.current;
+    if (!ref) return;
+
+    const provider = this.props.provider ?? MapView.defaultProps.provider;
+    const isApple = Platform.OS === 'ios' && provider === 'apple';
+    const Commands = isApple ? AppleMapCommands : GoogleMapCommands;
+
+    Commands.moveCamera(
+      ref,
+      coordinate.latitude,
+      coordinate.longitude,
+      zoom,
+      duration
+    );
+  }
 
   render() {
     const {
@@ -36,6 +67,7 @@ export class MapView extends React.Component<MapViewProps> {
 
     return (
       <NativeMapView
+        ref={this.nativeRef}
         {...rest}
         mapId={mapId}
         initialCoordinate={initialCoordinate}

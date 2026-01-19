@@ -266,6 +266,42 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
   [super updateProps:props oldProps:oldProps];
 }
 
+#pragma mark - Commands
+
+- (void)moveCamera:(double)latitude
+         longitude:(double)longitude
+              zoom:(double)zoom
+          duration:(double)duration {
+  if (!_mapView) {
+    return;
+  }
+
+  GMSCameraPosition *camera =
+      [GMSCameraPosition cameraWithLatitude:latitude
+                                  longitude:longitude
+                                       zoom:(float)zoom];
+  if (duration < 0) {
+    [_mapView animateToCameraPosition:camera];
+  } else if (duration > 0) {
+    [CATransaction begin];
+    [CATransaction setAnimationDuration:duration / 1000.0];
+    [_mapView animateToCameraPosition:camera];
+    [CATransaction commit];
+  } else {
+    [_mapView setCamera:camera];
+  }
+}
+
+- (void)handleCommand:(const NSString *)commandName args:(const NSArray *)args {
+  if ([commandName isEqualToString:@"moveCamera"]) {
+    double latitude = [args[0] doubleValue];
+    double longitude = [args[1] doubleValue];
+    double zoom = [args[2] doubleValue];
+    double duration = [args[3] doubleValue];
+    [self moveCamera:latitude longitude:longitude zoom:zoom duration:duration];
+  }
+}
+
 Class<RCTComponentViewProtocol> GoogleMapViewCls(void) {
   return GoogleMapView.class;
 }

@@ -1,4 +1,4 @@
-import { codegenNativeComponent } from 'react-native';
+import { codegenNativeComponent, codegenNativeCommands } from 'react-native';
 import type { ViewProps, HostComponent } from 'react-native';
 import type {
   Double,
@@ -20,6 +20,22 @@ export interface NativeProps extends ViewProps {
   pitchEnabled?: WithDefault<boolean, true>;
 }
 
+type ComponentType = HostComponent<NativeProps>;
+
+interface NativeCommands {
+  moveCamera: (
+    viewRef: React.ElementRef<ComponentType>,
+    latitude: Double,
+    longitude: Double,
+    zoom: Double,
+    duration: Double
+  ) => void;
+}
+
+export const Commands = codegenNativeCommands<NativeCommands>({
+  supportedCommands: ['moveCamera'],
+});
+
 export default codegenNativeComponent<NativeProps>(
   'GoogleMapView'
-) as HostComponent<NativeProps>;
+) as ComponentType;
