@@ -5,6 +5,8 @@ import android.graphics.Color
 import com.facebook.react.views.view.ReactViewGroup
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Polyline
+import com.google.android.gms.maps.model.StrokeStyle
+import com.google.android.gms.maps.model.StyleSpan
 
 interface PolylineViewDelegate {
   fun polylineViewDidUpdate(polylineView: PolylineView)
@@ -20,6 +22,9 @@ class PolylineView(context: Context) : ReactViewGroup(context) {
   var strokeWidth: Float = 1f
     private set
 
+  var cachedSpans: List<StyleSpan>? = null
+    private set
+
   var delegate: PolylineViewDelegate? = null
   var polyline: Polyline? = null
 
@@ -32,11 +37,27 @@ class PolylineView(context: Context) : ReactViewGroup(context) {
   }
 
   fun setStrokeColors(colors: List<Int>) {
-    strokeColors = colors.ifEmpty { listOf(Color.BLACK) }
+    val newColors = colors.ifEmpty { listOf(Color.BLACK) }
+    if (newColors != strokeColors) {
+      strokeColors = newColors
+      cachedSpans = null
+    }
   }
 
   fun setStrokeWidth(width: Float) {
     strokeWidth = width
+  }
+
+  fun getOrCreateSpans(): List<StyleSpan> {
+    cachedSpans?.let { return it }
+
+    val segmentCount = coordinates.size - 1
+    val spans = (0 until segmentCount).map { i ->
+      val color = strokeColors[i % strokeColors.size]
+      StyleSpan(StrokeStyle.colorBuilder(color).build())
+    }
+    cachedSpans = spans
+    return spans
   }
 
   fun onAfterUpdateTransaction() {

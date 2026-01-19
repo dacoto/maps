@@ -262,14 +262,7 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
 
   NSArray<UIColor *> *colors = polylineView.strokeColors;
   if (colors.count > 1) {
-    NSMutableArray<GMSStyleSpan *> *spans = [NSMutableArray array];
-    NSUInteger segmentCount = polylineView.coordinates.count - 1;
-    for (NSUInteger i = 0; i < segmentCount; i++) {
-      UIColor *color = colors[i % colors.count];
-      GMSStrokeStyle *style = [GMSStrokeStyle solidColor:color];
-      [spans addObject:[GMSStyleSpan spanWithStyle:style]];
-    }
-    polyline.spans = spans;
+    polyline.spans = [self getOrCreateSpansForPolylineView:polylineView];
   } else {
     polyline.strokeColor = colors.firstObject;
   }
@@ -301,14 +294,7 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
 
   NSArray<UIColor *> *colors = polylineView.strokeColors;
   if (colors.count > 1) {
-    NSMutableArray<GMSStyleSpan *> *spans = [NSMutableArray array];
-    NSUInteger segmentCount = polylineView.coordinates.count - 1;
-    for (NSUInteger i = 0; i < segmentCount; i++) {
-      UIColor *color = colors[i % colors.count];
-      GMSStrokeStyle *style = [GMSStrokeStyle solidColor:color];
-      [spans addObject:[GMSStyleSpan spanWithStyle:style]];
-    }
-    polyline.spans = spans;
+    polyline.spans = [self getOrCreateSpansForPolylineView:polylineView];
   } else {
     polyline.strokeColor = colors.firstObject;
   }
@@ -316,6 +302,24 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
   polyline.map = _mapView;
 
   polylineView.polyline = polyline;
+}
+
+- (NSArray<GMSStyleSpan *> *)getOrCreateSpansForPolylineView:(PolylineView *)polylineView {
+  if (polylineView.cachedSpans) {
+    return (NSArray<GMSStyleSpan *> *)polylineView.cachedSpans;
+  }
+
+  NSArray<UIColor *> *colors = polylineView.strokeColors;
+  NSMutableArray<GMSStyleSpan *> *spans = [NSMutableArray array];
+  NSUInteger segmentCount = polylineView.coordinates.count - 1;
+  for (NSUInteger i = 0; i < segmentCount; i++) {
+    UIColor *color = colors[i % colors.count];
+    GMSStrokeStyle *style = [GMSStrokeStyle solidColor:color];
+    [spans addObject:[GMSStyleSpan spanWithStyle:style]];
+  }
+
+  polylineView.cachedSpans = spans;
+  return spans;
 }
 
 #pragma mark - Property Setters

@@ -6,4 +6,6 @@
 
 @property(nonatomic, strong) NSArray<UIColor *> *strokeColors;
 
+- (void)updatePolyline:(MKPolyline *)polyline;
+
 @end

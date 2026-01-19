@@ -280,13 +280,45 @@ using namespace facebook::react;
     return;
   }
 
+  PolylineRenderer *renderer = (PolylineRenderer *)polylineView.renderer;
   MKPolyline *oldPolyline = (MKPolyline *)polylineView.polyline;
-  if (oldPolyline) {
-    [_mapView removeOverlay:oldPolyline];
-    polylineView.polyline = nil;
+
+  // Build new polyline from coordinates
+  NSArray<CLLocation *> *coordinates = polylineView.coordinates;
+  if (coordinates.count == 0) {
+    if (oldPolyline) {
+      [_mapView removeOverlay:oldPolyline];
+      polylineView.polyline = nil;
+      polylineView.renderer = nil;
+    }
+    return;
   }
 
-  [self addPolylineViewToMap:polylineView];
+  CLLocationCoordinate2D *coords = (CLLocationCoordinate2D *)malloc(
+      sizeof(CLLocationCoordinate2D) * coordinates.count);
+  for (NSUInteger i = 0; i < coordinates.count; i++) {
+    coords[i] = coordinates[i].coordinate;
+  }
+  MKPolyline *newPolyline = [MKPolyline polylineWithCoordinates:coords
+                                                          count:coordinates.count];
+  free(coords);
+
+  polylineView.polyline = newPolyline;
+
+  // If we have an existing renderer, update it in place
+  if (renderer && oldPolyline) {
+    [renderer updatePolyline:newPolyline];
+    renderer.strokeColor = polylineView.strokeColors.firstObject;
+    renderer.strokeColors = polylineView.strokeColors.count > 1 ? polylineView.strokeColors : nil;
+    renderer.lineWidth = polylineView.strokeWidth;
+    return;
+  }
+
+  // Otherwise do full add
+  if (oldPolyline) {
+    [_mapView removeOverlay:oldPolyline];
+  }
+  [_mapView addOverlay:newPolyline];
 }
 
 - (PolylineView *)findPolylineViewForOverlay:(id<MKOverlay>)overlay {
@@ -374,6 +406,7 @@ using namespace facebook::react;
       if (colors.count > 1) {
         renderer.strokeColors = colors;
       }
+      polylineView.renderer = renderer;
       return renderer;
     }
 

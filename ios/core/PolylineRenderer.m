@@ -13,6 +13,13 @@
   return self;
 }
 
+- (void)updatePolyline:(MKPolyline *)polyline {
+  _polyline = polyline;
+  [self invalidatePath];
+  [self createPath];
+  [self setNeedsDisplay];
+}
+
 - (void)createPath {
   CGMutablePathRef path = CGPathCreateMutable();
   BOOL first = YES;

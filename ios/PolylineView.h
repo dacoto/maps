@@ -18,6 +18,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, readonly) CGFloat strokeWidth;
 @property(nonatomic, weak, nullable) id<PolylineViewDelegate> delegate;
 @property(nonatomic, strong, nullable) NSObject *polyline;
+@property(nonatomic, weak, nullable) NSObject *renderer;
+@property(nonatomic, strong, nullable) NSArray *cachedSpans;
 
 @end
 

@@ -61,7 +61,11 @@ using namespace facebook::react;
       [colors addObject:uiColor];
     }
   }
-  _strokeColors = colors.count > 0 ? [colors copy] : @[ [UIColor blackColor] ];
+  NSArray<UIColor *> *newColors = colors.count > 0 ? [colors copy] : @[ [UIColor blackColor] ];
+  if (![newColors isEqualToArray:_strokeColors]) {
+    _strokeColors = newColors;
+    self.cachedSpans = nil;
+  }
 
   _strokeWidth = newViewProps.strokeWidth > 0 ? newViewProps.strokeWidth : 1.0;
 }
@@ -91,6 +95,8 @@ using namespace facebook::react;
 - (void)prepareForRecycle {
   [super prepareForRecycle];
   self.polyline = nil;
+  self.renderer = nil;
+  self.cachedSpans = nil;
   self.delegate = nil;
 }
 
