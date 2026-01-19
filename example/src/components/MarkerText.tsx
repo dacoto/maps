@@ -1,7 +1,7 @@
 import { StyleSheet, View, Text } from 'react-native';
-import { MapMarker, type MapMarkerProps } from '@lugg/maps';
+import { Marker, type MarkerProps } from '@lugg/maps';
 
-interface MarkerTextProps extends MapMarkerProps {
+interface MarkerTextProps extends MarkerProps {
   text: string;
   color?: string;
 }
@@ -13,11 +13,11 @@ export function MarkerText({
   ...rest
 }: MarkerTextProps) {
   return (
-    <MapMarker anchor={anchor} {...rest}>
+    <Marker anchor={anchor} {...rest}>
       <View style={[styles.container, { backgroundColor: color }]}>
         <Text style={styles.text}>{text}</Text>
       </View>
-    </MapMarker>
+    </Marker>
   );
 }
 

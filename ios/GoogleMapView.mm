@@ -1,5 +1,5 @@
 #import "GoogleMapView.h"
-#import "MapMarkerView.h"
+#import "MarkerView.h"
 
 #import <react/renderer/components/RNMapsSpec/ComponentDescriptors.h>
 #import <react/renderer/components/RNMapsSpec/EventEmitters.h>
@@ -15,7 +15,7 @@ using namespace facebook::react;
 static NSString *const kDemoMapId = @"DEMO_MAP_ID";
 
 @interface GoogleMapView () <RCTGoogleMapViewViewProtocol, GMSMapViewDelegate,
-                             MapMarkerViewDelegate>
+                             MarkerViewDelegate>
 @end
 
 @implementation GoogleMapView {
@@ -23,7 +23,7 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
   MapWrapperView *_mapWrapperView;
   BOOL _isMapReady;
   NSString *_mapId;
-  NSMutableArray<MapMarkerView *> *_pendingMarkerViews;
+  NSMutableArray<MarkerView *> *_pendingMarkerViews;
 }
 
 + (ComponentDescriptorProvider)componentDescriptorProvider {
@@ -54,8 +54,8 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
 
   if ([childComponentView isKindOfClass:[MapWrapperView class]]) {
     _mapWrapperView = (MapWrapperView *)childComponentView;
-  } else if ([childComponentView isKindOfClass:[MapMarkerView class]]) {
-    MapMarkerView *markerView = (MapMarkerView *)childComponentView;
+  } else if ([childComponentView isKindOfClass:[MarkerView class]]) {
+    MarkerView *markerView = (MarkerView *)childComponentView;
     markerView.delegate = self;
     [self syncMarkerView:markerView caller:@"mountChildComponentView"];
   }
@@ -64,8 +64,8 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
 - (void)unmountChildComponentView:
             (UIView<RCTComponentViewProtocol> *)childComponentView
                             index:(NSInteger)index {
-  if ([childComponentView isKindOfClass:[MapMarkerView class]]) {
-    MapMarkerView *markerView = (MapMarkerView *)childComponentView;
+  if ([childComponentView isKindOfClass:[MarkerView class]]) {
+    MarkerView *markerView = (MarkerView *)childComponentView;
     GMSAdvancedMarker *marker = (GMSAdvancedMarker *)markerView.marker;
     if (marker) {
       marker.iconView = nil;
@@ -139,19 +139,19 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
   // Map tiles finished rendering
 }
 
-#pragma mark - MapMarkerViewDelegate
+#pragma mark - MarkerViewDelegate
 
-- (void)markerViewDidLayout:(MapMarkerView *)markerView {
+- (void)markerViewDidLayout:(MarkerView *)markerView {
   [self syncMarkerView:markerView caller:@"markerViewDidLayout"];
 }
 
-- (void)markerViewDidUpdate:(MapMarkerView *)markerView {
+- (void)markerViewDidUpdate:(MarkerView *)markerView {
   [self syncMarkerView:markerView caller:@"markerViewDidUpdate"];
 }
 
 #pragma mark - Marker Management
 
-- (void)syncMarkerView:(MapMarkerView *)markerView caller:(NSString *)caller {
+- (void)syncMarkerView:(MarkerView *)markerView caller:(NSString *)caller {
   if (!_mapView) {
     if (![_pendingMarkerViews containsObject:markerView]) {
       [_pendingMarkerViews addObject:markerView];
@@ -184,13 +184,13 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
     return;
   }
 
-  for (MapMarkerView *markerView in _pendingMarkerViews) {
+  for (MarkerView *markerView in _pendingMarkerViews) {
     [self addMarkerViewToMap:markerView];
   }
   [_pendingMarkerViews removeAllObjects];
 }
 
-- (void)addMarkerViewToMap:(MapMarkerView *)markerView {
+- (void)addMarkerViewToMap:(MarkerView *)markerView {
   if (!_mapView) {
     RCTLogWarn(@"LuggMaps: addMarkerViewToMap called without a map");
     return;

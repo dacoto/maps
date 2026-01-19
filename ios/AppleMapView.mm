@@ -1,5 +1,5 @@
 #import "AppleMapView.h"
-#import "MapMarkerView.h"
+#import "MarkerView.h"
 #import "MapWrapperView.h"
 #import "extensions/MKMapView+Zoom.h"
 
@@ -12,22 +12,22 @@
 
 using namespace facebook::react;
 
-@interface AppleMapMarkerAnnotation : NSObject <MKAnnotation>
+@interface AppleMarkerAnnotation : NSObject <MKAnnotation>
 @property(nonatomic, assign) CLLocationCoordinate2D coordinate;
 @property(nonatomic, copy, nullable) NSString *title;
 @property(nonatomic, copy, nullable) NSString *subtitle;
-@property(nonatomic, strong) MapMarkerView *markerView;
+@property(nonatomic, strong) MarkerView *markerView;
 @property(nonatomic, weak) MKAnnotationView *annotationView;
 @end
 
-@implementation AppleMapMarkerAnnotation
+@implementation AppleMarkerAnnotation
 @end
 
 @implementation AppleMapViewContent
 @end
 
 @interface AppleMapView () <RCTAppleMapViewViewProtocol, MKMapViewDelegate,
-                            MapMarkerViewDelegate>
+                            MarkerViewDelegate>
 @end
 
 @implementation AppleMapView {
@@ -58,12 +58,12 @@ using namespace facebook::react;
 
   if ([childComponentView isKindOfClass:[MapWrapperView class]]) {
     _mapWrapperView = (MapWrapperView *)childComponentView;
-  } else if ([childComponentView isKindOfClass:[MapMarkerView class]]) {
-    MapMarkerView *markerView = (MapMarkerView *)childComponentView;
+  } else if ([childComponentView isKindOfClass:[MarkerView class]]) {
+    MarkerView *markerView = (MarkerView *)childComponentView;
     markerView.delegate = self;
 
-    AppleMapMarkerAnnotation *annotation =
-        [[AppleMapMarkerAnnotation alloc] init];
+    AppleMarkerAnnotation *annotation =
+        [[AppleMarkerAnnotation alloc] init];
     annotation.markerView = markerView;
     markerView.marker = annotation;
 
@@ -78,12 +78,12 @@ using namespace facebook::react;
 - (void)unmountChildComponentView:
             (UIView<RCTComponentViewProtocol> *)childComponentView
                             index:(NSInteger)index {
-  if ([childComponentView isKindOfClass:[MapMarkerView class]]) {
-    MapMarkerView *markerView = (MapMarkerView *)childComponentView;
+  if ([childComponentView isKindOfClass:[MarkerView class]]) {
+    MarkerView *markerView = (MarkerView *)childComponentView;
     markerView.delegate = nil;
 
-    AppleMapMarkerAnnotation *annotation =
-        (AppleMapMarkerAnnotation *)markerView.marker;
+    AppleMarkerAnnotation *annotation =
+        (AppleMarkerAnnotation *)markerView.marker;
 
     if (annotation) {
       annotation.markerView = nil;
@@ -139,10 +139,10 @@ using namespace facebook::react;
 
   // Add annotations for any markers that were mounted before map was ready
   for (UIView *subview in self.subviews) {
-    if ([subview isKindOfClass:[MapMarkerView class]]) {
-      MapMarkerView *markerView = (MapMarkerView *)subview;
-      AppleMapMarkerAnnotation *annotation =
-          (AppleMapMarkerAnnotation *)markerView.marker;
+    if ([subview isKindOfClass:[MarkerView class]]) {
+      MarkerView *markerView = (MarkerView *)subview;
+      AppleMarkerAnnotation *annotation =
+          (AppleMarkerAnnotation *)markerView.marker;
       if (annotation) {
         [_mapView addAnnotation:annotation];
       }
@@ -207,9 +207,9 @@ using namespace facebook::react;
 
 #pragma mark - Annotation Helpers
 
-- (void)updateAnnotationViewFrame:(AppleMapMarkerAnnotation *)annotation {
+- (void)updateAnnotationViewFrame:(AppleMarkerAnnotation *)annotation {
   MKAnnotationView *annotationView = annotation.annotationView;
-  MapMarkerView *markerView = annotation.markerView;
+  MarkerView *markerView = annotation.markerView;
 
   if (!annotationView || !markerView) {
     return;
@@ -227,19 +227,19 @@ using namespace facebook::react;
   }
 }
 
-#pragma mark - MapMarkerViewDelegate
+#pragma mark - MarkerViewDelegate
 
-- (void)markerViewDidLayout:(MapMarkerView *)markerView {
-  AppleMapMarkerAnnotation *annotation =
-      (AppleMapMarkerAnnotation *)markerView.marker;
+- (void)markerViewDidLayout:(MarkerView *)markerView {
+  AppleMarkerAnnotation *annotation =
+      (AppleMarkerAnnotation *)markerView.marker;
   if (annotation) {
     [self updateAnnotationViewFrame:annotation];
   }
 }
 
-- (void)markerViewDidUpdate:(MapMarkerView *)markerView {
-  AppleMapMarkerAnnotation *annotation =
-      (AppleMapMarkerAnnotation *)markerView.marker;
+- (void)markerViewDidUpdate:(MarkerView *)markerView {
+  AppleMarkerAnnotation *annotation =
+      (AppleMarkerAnnotation *)markerView.marker;
 
   if (!annotation) {
     RCTLogWarn(@"markerViewDidUpdate called without annotation");
@@ -257,13 +257,13 @@ using namespace facebook::react;
 
 - (MKAnnotationView *)mapView:(MKMapView *)mapView
             viewForAnnotation:(id<MKAnnotation>)annotation {
-  if (![annotation isKindOfClass:[AppleMapMarkerAnnotation class]]) {
+  if (![annotation isKindOfClass:[AppleMarkerAnnotation class]]) {
     return nil;
   }
 
-  AppleMapMarkerAnnotation *markerAnnotation =
-      (AppleMapMarkerAnnotation *)annotation;
-  MapMarkerView *markerView = markerAnnotation.markerView;
+  AppleMarkerAnnotation *markerAnnotation =
+      (AppleMarkerAnnotation *)annotation;
+  MarkerView *markerView = markerAnnotation.markerView;
 
   if (!markerView || !markerView.hasCustomView) {
     return nil;

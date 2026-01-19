@@ -1,7 +1,7 @@
 import { StyleSheet, Image, type ImageSourcePropType } from 'react-native';
-import { MapMarker, type MapMarkerProps } from '@lugg/maps';
+import { Marker, type MarkerProps } from '@lugg/maps';
 
-interface MarkerImageProps extends MapMarkerProps {
+interface MarkerImageProps extends MarkerProps {
   source: ImageSourcePropType;
   size?: number;
 }
@@ -13,7 +13,7 @@ export function MarkerImage({
   ...rest
 }: MarkerImageProps) {
   return (
-    <MapMarker anchor={anchor} {...rest}>
+    <Marker anchor={anchor} {...rest}>
       <Image
         source={source}
         style={[
@@ -21,7 +21,7 @@ export function MarkerImage({
           { width: size, height: size, borderRadius: size / 2 },
         ]}
       />
-    </MapMarker>
+    </Marker>
   );
 }
 

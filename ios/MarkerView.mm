@@ -1,4 +1,4 @@
-#import "MapMarkerView.h"
+#import "MarkerView.h"
 
 #import <react/renderer/components/RNMapsSpec/ComponentDescriptors.h>
 #import <react/renderer/components/RNMapsSpec/EventEmitters.h>
@@ -9,10 +9,10 @@
 
 using namespace facebook::react;
 
-@interface MapMarkerView () <RCTMapMarkerViewViewProtocol>
+@interface MarkerView () <RCTMarkerViewViewProtocol>
 @end
 
-@implementation MapMarkerView {
+@implementation MarkerView {
   CLLocationCoordinate2D _coordinate;
   NSString *_title;
   NSString *_markerDescription;
@@ -23,13 +23,13 @@ using namespace facebook::react;
 
 + (ComponentDescriptorProvider)componentDescriptorProvider {
   return concreteComponentDescriptorProvider<
-      MapMarkerViewComponentDescriptor>();
+      MarkerViewComponentDescriptor>();
 }
 
 - (instancetype)initWithFrame:(CGRect)frame {
   if (self = [super initWithFrame:frame]) {
     static const auto defaultProps =
-        std::make_shared<const MapMarkerViewProps>();
+        std::make_shared<const MarkerViewProps>();
     _props = defaultProps;
 
     _coordinate = CLLocationCoordinate2DMake(0, 0);
@@ -50,7 +50,7 @@ using namespace facebook::react;
            oldProps:(Props::Shared const &)oldProps {
   [super updateProps:props oldProps:oldProps];
   const auto &newViewProps =
-      *std::static_pointer_cast<MapMarkerViewProps const>(props);
+      *std::static_pointer_cast<MarkerViewProps const>(props);
 
   _coordinate = CLLocationCoordinate2DMake(newViewProps.coordinate.latitude,
                                            newViewProps.coordinate.longitude);
@@ -145,8 +145,8 @@ using namespace facebook::react;
   }
 }
 
-Class<RCTComponentViewProtocol> MapMarkerViewCls(void) {
-  return MapMarkerView.class;
+Class<RCTComponentViewProtocol> MarkerViewCls(void) {
+  return MarkerView.class;
 }
 
 @end

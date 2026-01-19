@@ -1,13 +1,13 @@
 import { useRef, useState } from 'react';
 import { StyleSheet, View, Platform } from 'react-native';
-import { MapView, MapMarker, type MapProvider } from '@lugg/maps';
+import { MapView, Marker, type MapProvider } from '@lugg/maps';
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 
 import { Button, MarkerIcon, MarkerText, MarkerImage } from './components';
 
 type MarkerType = 'basic' | 'icon' | 'text' | 'image' | 'custom';
 
-interface Marker {
+interface MarkerData {
   id: string;
   name: string;
   coordinate: { latitude: number; longitude: number };
@@ -36,7 +36,7 @@ const AVATAR_URLS = [
   'https://i.pravatar.cc/100?img=5',
 ];
 
-const INITIAL_MARKERS: Marker[] = [
+const INITIAL_MARKERS: MarkerData[] = [
   {
     id: '1',
     name: 'sf-marker',
@@ -107,7 +107,7 @@ export default function App() {
     const longitude = -122.45 + Math.random() * 0.05;
 
     const id = Date.now().toString();
-    const newMarker: Marker = {
+    const newMarker: MarkerData = {
       id,
       name: `marker-${id}`,
       coordinate: { latitude, longitude },
@@ -173,7 +173,7 @@ export default function App() {
                 );
               case 'custom':
                 return (
-                  <MapMarker
+                  <Marker
                     key={marker.id}
                     name={marker.name}
                     coordinate={marker.coordinate}
@@ -187,11 +187,11 @@ export default function App() {
                         borderRadius: 8,
                       }}
                     />
-                  </MapMarker>
+                  </Marker>
                 );
               default:
                 return (
-                  <MapMarker
+                  <Marker
                     key={marker.id}
                     name={marker.name}
                     coordinate={marker.coordinate}
@@ -222,13 +222,13 @@ export default function App() {
             coordinate={{ latitude: 37.782, longitude: -122.415 }}
             source={{ uri: 'https://i.pravatar.cc/100' }}
           />
-          <MapMarker
+          <Marker
             name="marker-simple"
             coordinate={{ latitude: 37.784, longitude: -122.423 }}
             anchor={{ x: 0.5, y: 0.5 }}
           >
             <View style={{ backgroundColor: 'red', height: 30, width: 30 }} />
-          </MapMarker>
+          </Marker>
           <View style={styles.centerPin} />
         </MapView>
       )}

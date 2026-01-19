@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import type { Coordinate, Point } from './types';
 
-export interface MapMarkerProps {
+export interface MarkerProps {
   /** Name used for debugging purposes */
   name?: string;
   coordinate: Coordinate;

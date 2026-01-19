@@ -4,15 +4,15 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class MapMarkerView;
+@class MarkerView;
 
-@protocol MapMarkerViewDelegate <NSObject>
+@protocol MarkerViewDelegate <NSObject>
 @optional
-- (void)markerViewDidLayout:(MapMarkerView *)markerView;
-- (void)markerViewDidUpdate:(MapMarkerView *)markerView;
+- (void)markerViewDidLayout:(MarkerView *)markerView;
+- (void)markerViewDidUpdate:(MarkerView *)markerView;
 @end
 
-@interface MapMarkerView : RCTViewComponentView
+@interface MarkerView : RCTViewComponentView
 
 @property(nonatomic, readonly) CLLocationCoordinate2D coordinate;
 @property(nonatomic, readonly, nullable) NSString *title;
@@ -21,7 +21,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, readonly) BOOL hasCustomView;
 @property(nonatomic, readonly) BOOL didLayout;
 @property(nonatomic, readonly) UIView *iconView;
-@property(nonatomic, weak, nullable) id<MapMarkerViewDelegate> delegate;
+@property(nonatomic, weak, nullable) id<MarkerViewDelegate> delegate;
 @property(nonatomic, strong, nullable) NSObject *marker;
 
 @end

@@ -21,14 +21,14 @@ import com.google.android.gms.maps.model.LatLng
 class GoogleMapView(private val reactContext: ThemedReactContext) :
   ReactViewGroup(reactContext),
   OnMapReadyCallback,
-  MapMarkerDelegate {
+  MarkerViewDelegate {
 
   private var mapView: MapView? = null
   private var mapWrapperView: MapWrapperView? = null
   private var googleMap: GoogleMap? = null
   private var isMapReady = false
   private var mapId: String = DEMO_MAP_ID
-  private val pendingMarkerViews = mutableListOf<MapMarkerView>()
+  private val pendingMarkerViews = mutableListOf<MarkerView>()
 
   // Initial camera settings
   private var initialLatitude: Double = 37.78
@@ -47,13 +47,13 @@ class GoogleMapView(private val reactContext: ThemedReactContext) :
     super.addView(child, index)
     when (child) {
       is MapWrapperView -> mapWrapperView = child
-      is MapMarkerView -> child.delegate = this
+      is MarkerView -> child.delegate = this
     }
   }
 
   override fun removeViewAt(index: Int) {
     val view = getChildAt(index)
-    if (view is MapMarkerView) {
+    if (view is MarkerView) {
       Log.d(TAG, "removing markerView: ${view.name}")
       view.marker?.remove()
       view.marker = null
@@ -121,13 +121,13 @@ class GoogleMapView(private val reactContext: ThemedReactContext) :
 
   // endregion
 
-  // region MapMarkerDelegate
+  // region MarkerViewDelegate
 
-  override fun markerViewDidLayout(markerView: MapMarkerView) {
+  override fun markerViewDidLayout(markerView: MarkerView) {
     syncMarkerView(markerView, "markerViewDidLayout")
   }
 
-  override fun markerViewDidUpdate(markerView: MapMarkerView) {
+  override fun markerViewDidUpdate(markerView: MarkerView) {
     syncMarkerView(markerView, "markerViewDidUpdate")
   }
 
@@ -135,7 +135,7 @@ class GoogleMapView(private val reactContext: ThemedReactContext) :
 
   // region Marker Management
 
-  private fun syncMarkerView(markerView: MapMarkerView, caller: String) {
+  private fun syncMarkerView(markerView: MarkerView, caller: String) {
     if (googleMap == null) {
       if (!pendingMarkerViews.contains(markerView)) {
         Log.d(TAG, "$caller: ${markerView.name} - added to pending markers")
@@ -176,7 +176,7 @@ class GoogleMapView(private val reactContext: ThemedReactContext) :
     pendingMarkerViews.clear()
   }
 
-  private fun addMarkerViewToMap(markerView: MapMarkerView) {
+  private fun addMarkerViewToMap(markerView: MarkerView) {
     val map = googleMap ?: run {
       RNLog.w(reactContext, "LuggMaps: addMarkerViewToMap called without a map")
       return
