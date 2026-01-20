@@ -4,6 +4,7 @@
 #import "PolylineView.h"
 #import "core/PolylineRenderer.h"
 #import "events/CameraMoveEvent.h"
+#import "events/CameraIdleEvent.h"
 #import "extensions/MKMapView+Zoom.h"
 
 #import <react/renderer/components/RNMapsSpec/ComponentDescriptors.h>
@@ -348,6 +349,13 @@ using namespace luggmaps::events;
   if (_eventEmitter) {
     auto emitter = std::static_pointer_cast<AppleMapViewEventEmitter const>(_eventEmitter);
     CameraMoveEvent{mapView.centerCoordinate.latitude, mapView.centerCoordinate.longitude, mapView.zoomLevel}.emit(emitter);
+  }
+}
+
+- (void)mapView:(MKMapView *)mapView regionDidChangeAnimated:(BOOL)animated {
+  if (_eventEmitter) {
+    auto emitter = std::static_pointer_cast<AppleMapViewEventEmitter const>(_eventEmitter);
+    CameraIdleEvent{mapView.centerCoordinate.latitude, mapView.centerCoordinate.longitude, mapView.zoomLevel}.emit(emitter);
   }
 }
 

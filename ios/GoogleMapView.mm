@@ -2,6 +2,7 @@
 #import "MarkerView.h"
 #import "PolylineView.h"
 #import "events/CameraMoveEvent.h"
+#import "events/CameraIdleEvent.h"
 
 #import <react/renderer/components/RNMapsSpec/ComponentDescriptors.h>
 #import <react/renderer/components/RNMapsSpec/EventEmitters.h>
@@ -169,8 +170,11 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
   }
 }
 
-- (void)mapViewDidFinishTileRendering:(GMSMapView *)mapView {
-  // Map tiles finished rendering
+- (void)mapView:(GMSMapView *)mapView idleAtCameraPosition:(GMSCameraPosition *)position {
+  if (_eventEmitter) {
+    auto emitter = std::static_pointer_cast<GoogleMapViewEventEmitter const>(_eventEmitter);
+    CameraIdleEvent{position.target.latitude, position.target.longitude, position.zoom}.emit(emitter);
+  }
 }
 
 #pragma mark - PolylineViewDelegate

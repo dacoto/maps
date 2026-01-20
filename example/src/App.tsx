@@ -11,6 +11,7 @@ import {
   type MapProvider,
   type EdgeInsets,
   type CameraMoveEvent,
+  type CameraIdleEvent,
 } from '@lugg/maps';
 import {
   TrueSheet,
@@ -34,10 +35,20 @@ export default function App() {
   const [markers, setMarkers] = useState(INITIAL_MARKERS);
   const [mapPadding, setMapPadding] = useState<EdgeInsets>();
   const [cameraPosition, setCameraPosition] = useState<CameraMoveEvent>();
+  const [isIdle, setIsIdle] = useState(true);
 
   const handleCameraMove = useCallback(
     (event: { nativeEvent: CameraMoveEvent }) => {
       setCameraPosition(event.nativeEvent);
+      setIsIdle(false);
+    },
+    []
+  );
+
+  const handleCameraIdle = useCallback(
+    (event: { nativeEvent: CameraIdleEvent }) => {
+      setCameraPosition(event.nativeEvent);
+      setIsIdle(true);
     },
     []
   );
@@ -101,6 +112,7 @@ export default function App() {
           markers={markers}
           padding={mapPadding}
           onCameraMove={handleCameraMove}
+          onCameraIdle={handleCameraIdle}
         />
       )}
 
@@ -118,7 +130,7 @@ export default function App() {
           <Text style={styles.positionText}>
             {cameraPosition.coordinate.latitude.toFixed(5)},{' '}
             {cameraPosition.coordinate.longitude.toFixed(5)} (z
-            {cameraPosition.zoom.toFixed(1)})
+            {cameraPosition.zoom.toFixed(1)}){isIdle ? ' (idle)' : ''}
           </Text>
         )}
         <View style={styles.sheetContent}>
@@ -161,7 +173,7 @@ const styles = StyleSheet.create({
   positionText: {
     paddingHorizontal: 16,
     paddingTop: 16,
-    fontSize: 12,
+    fontSize: 14,
     color: '#666',
   },
   sheetContent: {

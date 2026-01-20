@@ -25,6 +25,11 @@ export interface CameraMoveEvent {
   zoom: number;
 }
 
+export interface CameraIdleEvent {
+  coordinate: Coordinate;
+  zoom: number;
+}
+
 export interface MapViewProps extends ViewProps {
   provider?: MapProvider;
   mapId?: string;
@@ -36,5 +41,6 @@ export interface MapViewProps extends ViewProps {
   pitchEnabled?: boolean;
   padding?: EdgeInsets;
   onCameraMove?: (event: NativeSyntheticEvent<CameraMoveEvent>) => void;
+  onCameraIdle?: (event: NativeSyntheticEvent<CameraIdleEvent>) => void;
   children?: ReactNode;
 }

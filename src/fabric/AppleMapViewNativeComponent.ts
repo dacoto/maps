@@ -25,6 +25,14 @@ export interface CameraMoveEvent {
   zoom: Double;
 }
 
+export interface CameraIdleEvent {
+  coordinate: {
+    latitude: Double;
+    longitude: Double;
+  };
+  zoom: Double;
+}
+
 export interface NativeProps extends ViewProps {
   initialCoordinate?: Coordinate;
   initialZoom?: Double;
@@ -34,6 +42,7 @@ export interface NativeProps extends ViewProps {
   pitchEnabled?: boolean;
   padding?: EdgeInsets;
   onCameraMove?: DirectEventHandler<CameraMoveEvent>;
+  onCameraIdle?: DirectEventHandler<CameraIdleEvent>;
 }
 
 type ComponentType = HostComponent<NativeProps>;

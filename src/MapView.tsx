@@ -78,6 +78,7 @@ export class MapView
       pitchEnabled,
       padding,
       onCameraMove,
+      onCameraIdle,
       children,
       ...rest
     } = this.props;
@@ -100,6 +101,7 @@ export class MapView
         pitchEnabled={pitchEnabled}
         padding={padding}
         onCameraMove={onCameraMove}
+        onCameraIdle={onCameraIdle}
       >
         <NativeMapWrapperView style={StyleSheet.absoluteFill} />
         {children}

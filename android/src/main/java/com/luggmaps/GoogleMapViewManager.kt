@@ -12,6 +12,7 @@ import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.viewmanagers.GoogleMapViewManagerDelegate
 import com.facebook.react.viewmanagers.GoogleMapViewManagerInterface
 import com.google.android.gms.maps.model.LatLng
+import com.luggmaps.events.CameraIdleEvent
 import com.luggmaps.events.CameraMoveEvent
 
 @ReactModule(name = GoogleMapViewManager.NAME)
@@ -33,7 +34,8 @@ class GoogleMapViewManager :
 
   override fun getExportedCustomDirectEventTypeConstants(): Map<String, Any> {
     return mapOf(
-      "topCameraMove" to mapOf("registrationName" to "onCameraMove")
+      "topCameraMove" to mapOf("registrationName" to "onCameraMove"),
+      "topCameraIdle" to mapOf("registrationName" to "onCameraIdle")
     )
   }
 
@@ -43,6 +45,14 @@ class GoogleMapViewManager :
       view.id
     )
     eventDispatcher?.dispatchEvent(CameraMoveEvent(UIManagerHelper.getSurfaceId(view), view.id, latitude, longitude, zoom))
+  }
+
+  override fun onCameraIdle(view: GoogleMapView, latitude: Double, longitude: Double, zoom: Float) {
+    val eventDispatcher = UIManagerHelper.getEventDispatcherForReactTag(
+      view.context as ThemedReactContext,
+      view.id
+    )
+    eventDispatcher?.dispatchEvent(CameraIdleEvent(UIManagerHelper.getSurfaceId(view), view.id, latitude, longitude, zoom))
   }
 
   @ReactProp(name = "mapId")

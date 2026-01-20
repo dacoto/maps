@@ -21,6 +21,7 @@ import com.google.android.gms.maps.model.PolylineOptions
 
 interface GoogleMapViewEventDelegate {
   fun onCameraMove(view: GoogleMapView, latitude: Double, longitude: Double, zoom: Float)
+  fun onCameraIdle(view: GoogleMapView, latitude: Double, longitude: Double, zoom: Float)
 }
 
 @SuppressLint("ViewConstructor")
@@ -29,7 +30,8 @@ class GoogleMapView(private val reactContext: ThemedReactContext) :
   OnMapReadyCallback,
   MarkerViewDelegate,
   PolylineViewDelegate,
-  GoogleMap.OnCameraMoveListener {
+  GoogleMap.OnCameraMoveListener,
+  GoogleMap.OnCameraIdleListener {
 
   var eventDelegate: GoogleMapViewEventDelegate? = null
   private var mapView: MapView? = null
@@ -136,6 +138,7 @@ class GoogleMapView(private val reactContext: ThemedReactContext) :
     map.moveCamera(CameraUpdateFactory.newLatLngZoom(position, initialZoom))
 
     map.setOnCameraMoveListener(this)
+    map.setOnCameraIdleListener(this)
 
     applyUiSettings()
     applyPadding()
@@ -147,6 +150,12 @@ class GoogleMapView(private val reactContext: ThemedReactContext) :
     val map = googleMap ?: return
     val position = map.cameraPosition
     eventDelegate?.onCameraMove(this, position.target.latitude, position.target.longitude, position.zoom)
+  }
+
+  override fun onCameraIdle() {
+    val map = googleMap ?: return
+    val position = map.cameraPosition
+    eventDelegate?.onCameraIdle(this, position.target.latitude, position.target.longitude, position.zoom)
   }
 
   private fun applyUiSettings() {
