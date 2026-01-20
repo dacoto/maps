@@ -4,12 +4,14 @@
   "private": true,
   "main": "./src/index.ts",
   "peerDependencies": {
+    "@lodev09/react-native-true-sheet": "*",
     "@lugg/maps": "*",
     "react": "*",
     "react-native": "*",
     "react-native-svg": "*"
   },
   "devDependencies": {
+    "@lodev09/react-native-true-sheet": "*",
     "@types/react": "*",
     "react-native-svg": "*"
   }

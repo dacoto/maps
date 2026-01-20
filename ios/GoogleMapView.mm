@@ -354,8 +354,6 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
 
 - (void)updateProps:(Props::Shared const &)props
            oldProps:(Props::Shared const &)oldProps {
-  const auto &oldViewProps =
-      *std::static_pointer_cast<GoogleMapViewProps const>(_props);
   const auto &newViewProps =
       *std::static_pointer_cast<GoogleMapViewProps const>(props);
 

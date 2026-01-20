@@ -3,7 +3,7 @@ import { type ConfigPlugin, createRunOncePlugin } from '@expo/config-plugins';
 import { withMapsAndroid } from './withMapsAndroid';
 import { withMapsIOS } from './withMapsIOS';
 
-const pkg = require('@lugg/maps/package.json');
+const pkg = require('../../package.json');
 
 export interface MapsPluginProps {
   /**

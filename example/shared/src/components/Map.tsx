@@ -1,14 +1,11 @@
 import { forwardRef } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { MapView, Marker, type MapViewProps } from '@lugg/maps';
-import {
-  MarkerIcon,
-  MarkerText,
-  MarkerImage,
-  type MarkerData,
-} from '@lugg/shared-example';
+import { MapView, Marker, Polyline, type MapViewProps } from '@lugg/maps';
 
-import { AnimatedPolyline } from './AnimatedPolyline';
+import { MarkerIcon } from './MarkerIcon';
+import { MarkerText } from './MarkerText';
+import { MarkerImage } from './MarkerImage';
+import type { MarkerData } from './index';
 
 interface MapProps extends MapViewProps {
   markers: MarkerData[];
@@ -85,9 +82,9 @@ export const Map = forwardRef<MapView, MapProps>(
       >
         {markers.map(renderMarker)}
         {polylineCoordinates.length >= 2 && (
-          <AnimatedPolyline
+          <Polyline
             coordinates={polylineCoordinates}
-            strokeColors={['#B321E0', '#3744FF']}
+            strokeColors={['#B321E0']}
             strokeWidth={4}
           />
         )}

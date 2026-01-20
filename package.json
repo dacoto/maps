@@ -35,6 +35,7 @@
   ],
   "scripts": {
     "bare": "yarn workspace @lugg/bare-example",
+    "expo": "yarn workspace @lugg/expo-example",
     "test": "jest",
     "typecheck": "tsc",
     "lint": "eslint --fix \"**/*.{ts,tsx}\"",
@@ -97,6 +98,7 @@
   },
   "workspaces": [
     "example/bare",
+    "example/expo",
     "example/shared"
   ],
   "packageManager": "yarn@4.11.0",
