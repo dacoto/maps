@@ -61,7 +61,8 @@ using namespace facebook::react;
       [colors addObject:uiColor];
     }
   }
-  NSArray<UIColor *> *newColors = colors.count > 0 ? [colors copy] : @[ [UIColor blackColor] ];
+  NSArray<UIColor *> *newColors =
+      colors.count > 0 ? [colors copy] : @[ [UIColor blackColor] ];
   if (![newColors isEqualToArray:_strokeColors]) {
     _strokeColors = newColors;
     self.cachedSpans = nil;

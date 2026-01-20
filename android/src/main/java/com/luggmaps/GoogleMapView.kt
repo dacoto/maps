@@ -20,7 +20,13 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.PolylineOptions
 
 interface GoogleMapViewEventDelegate {
-  fun onCameraMove(view: GoogleMapView, latitude: Double, longitude: Double, zoom: Float, dragging: Boolean)
+  fun onCameraMove(
+    view: GoogleMapView,
+    latitude: Double,
+    longitude: Double,
+    zoom: Float,
+    dragging: Boolean
+  )
   fun onCameraIdle(view: GoogleMapView, latitude: Double, longitude: Double, zoom: Float)
 }
 

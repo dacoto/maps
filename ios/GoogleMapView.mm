@@ -1,8 +1,8 @@
 #import "GoogleMapView.h"
 #import "MarkerView.h"
 #import "PolylineView.h"
-#import "events/CameraMoveEvent.h"
 #import "events/CameraIdleEvent.h"
+#import "events/CameraMoveEvent.h"
 
 #import <react/renderer/components/RNMapsSpec/ComponentDescriptors.h>
 #import <react/renderer/components/RNMapsSpec/EventEmitters.h>
@@ -145,7 +145,8 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
   _mapView.autoresizingMask =
       UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
   _mapView.delegate = self;
-  _mapView.paddingAdjustmentBehavior = kGMSMapViewPaddingAdjustmentBehaviorNever;
+  _mapView.paddingAdjustmentBehavior =
+      kGMSMapViewPaddingAdjustmentBehaviorNever;
   _mapView.settings.zoomGestures = viewProps.zoomEnabled;
   _mapView.settings.scrollGestures = viewProps.scrollEnabled;
   _mapView.settings.rotateGestures = viewProps.rotateEnabled;
@@ -168,18 +169,26 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
   _isDragging = gesture;
 }
 
-- (void)mapView:(GMSMapView *)mapView didChangeCameraPosition:(GMSCameraPosition *)position {
+- (void)mapView:(GMSMapView *)mapView
+    didChangeCameraPosition:(GMSCameraPosition *)position {
   if (_eventEmitter) {
-    auto emitter = std::static_pointer_cast<GoogleMapViewEventEmitter const>(_eventEmitter);
-    CameraMoveEvent{position.target.latitude, position.target.longitude, position.zoom, _isDragging}.emit(emitter);
+    auto emitter = std::static_pointer_cast<GoogleMapViewEventEmitter const>(
+        _eventEmitter);
+    CameraMoveEvent{position.target.latitude, position.target.longitude,
+                    position.zoom, _isDragging}
+        .emit(emitter);
   }
 }
 
-- (void)mapView:(GMSMapView *)mapView idleAtCameraPosition:(GMSCameraPosition *)position {
+- (void)mapView:(GMSMapView *)mapView
+    idleAtCameraPosition:(GMSCameraPosition *)position {
   _isDragging = NO;
   if (_eventEmitter) {
-    auto emitter = std::static_pointer_cast<GoogleMapViewEventEmitter const>(_eventEmitter);
-    CameraIdleEvent{position.target.latitude, position.target.longitude, position.zoom}.emit(emitter);
+    auto emitter = std::static_pointer_cast<GoogleMapViewEventEmitter const>(
+        _eventEmitter);
+    CameraIdleEvent{position.target.latitude, position.target.longitude,
+                    position.zoom}
+        .emit(emitter);
   }
 }
 
@@ -332,7 +341,8 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
   polylineView.polyline = polyline;
 }
 
-- (NSArray<GMSStyleSpan *> *)getOrCreateSpansForPolylineView:(PolylineView *)polylineView {
+- (NSArray<GMSStyleSpan *> *)getOrCreateSpansForPolylineView:
+    (PolylineView *)polylineView {
   if (polylineView.cachedSpans) {
     return (NSArray<GMSStyleSpan *> *)polylineView.cachedSpans;
   }

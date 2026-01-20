@@ -13,12 +13,16 @@ class CameraMoveEvent(
 ) : Event<CameraMoveEvent>(surfaceId, viewId) {
   override fun getEventName() = "topCameraMove"
 
-  override fun getEventData() = Arguments.createMap().apply {
-    putMap("coordinate", Arguments.createMap().apply {
-      putDouble("latitude", latitude)
-      putDouble("longitude", longitude)
-    })
-    putDouble("zoom", zoom.toDouble())
-    putBoolean("dragging", dragging)
-  }
+  override fun getEventData() =
+    Arguments.createMap().apply {
+      putMap(
+        "coordinate",
+        Arguments.createMap().apply {
+          putDouble("latitude", latitude)
+          putDouble("longitude", longitude)
+        }
+      )
+      putDouble("zoom", zoom.toDouble())
+      putBoolean("dragging", dragging)
+    }
 }

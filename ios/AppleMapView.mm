@@ -3,8 +3,8 @@
 #import "MarkerView.h"
 #import "PolylineView.h"
 #import "core/PolylineRenderer.h"
-#import "events/CameraMoveEvent.h"
 #import "events/CameraIdleEvent.h"
+#import "events/CameraMoveEvent.h"
 #import "extensions/MKMapView+Zoom.h"
 
 #import <react/renderer/components/RNMapsSpec/ComponentDescriptors.h>
@@ -282,8 +282,8 @@ using namespace luggmaps::events;
   for (NSUInteger i = 0; i < coordinates.count; i++) {
     coords[i] = coordinates[i].coordinate;
   }
-  MKPolyline *newPolyline = [MKPolyline polylineWithCoordinates:coords
-                                                          count:coordinates.count];
+  MKPolyline *newPolyline =
+      [MKPolyline polylineWithCoordinates:coords count:coordinates.count];
   free(coords);
 
   polylineView.polyline = newPolyline;
@@ -292,7 +292,8 @@ using namespace luggmaps::events;
   if (renderer && oldPolyline) {
     [renderer updatePolyline:newPolyline];
     renderer.strokeColor = polylineView.strokeColors.firstObject;
-    renderer.strokeColors = polylineView.strokeColors.count > 1 ? polylineView.strokeColors : nil;
+    renderer.strokeColors =
+        polylineView.strokeColors.count > 1 ? polylineView.strokeColors : nil;
     renderer.lineWidth = polylineView.strokeWidth;
     return;
   }
@@ -361,16 +362,23 @@ using namespace luggmaps::events;
 
 - (void)mapViewDidChangeVisibleRegion:(MKMapView *)mapView {
   if (_eventEmitter) {
-    auto emitter = std::static_pointer_cast<AppleMapViewEventEmitter const>(_eventEmitter);
-    CameraMoveEvent{mapView.centerCoordinate.latitude, mapView.centerCoordinate.longitude, mapView.zoomLevel, _isDragging}.emit(emitter);
+    auto emitter =
+        std::static_pointer_cast<AppleMapViewEventEmitter const>(_eventEmitter);
+    CameraMoveEvent{mapView.centerCoordinate.latitude,
+                    mapView.centerCoordinate.longitude, mapView.zoomLevel,
+                    _isDragging}
+        .emit(emitter);
   }
 }
 
 - (void)mapView:(MKMapView *)mapView regionDidChangeAnimated:(BOOL)animated {
   _isDragging = NO;
   if (_eventEmitter) {
-    auto emitter = std::static_pointer_cast<AppleMapViewEventEmitter const>(_eventEmitter);
-    CameraIdleEvent{mapView.centerCoordinate.latitude, mapView.centerCoordinate.longitude, mapView.zoomLevel}.emit(emitter);
+    auto emitter =
+        std::static_pointer_cast<AppleMapViewEventEmitter const>(_eventEmitter);
+    CameraIdleEvent{mapView.centerCoordinate.latitude,
+                    mapView.centerCoordinate.longitude, mapView.zoomLevel}
+        .emit(emitter);
   }
 }
 
@@ -401,7 +409,8 @@ using namespace luggmaps::events;
   // Set frame and centerOffset based on iconView
   CGRect frame = iconView.frame;
   if (frame.size.width > 0 && frame.size.height > 0) {
-    annotationView.frame = CGRectMake(0, 0, frame.size.width, frame.size.height);
+    annotationView.frame =
+        CGRectMake(0, 0, frame.size.width, frame.size.height);
     iconView.frame = CGRectMake(0, 0, frame.size.width, frame.size.height);
 
     CGPoint anchor = markerView.anchor;
@@ -458,8 +467,10 @@ using namespace luggmaps::events;
                            zoom:zoom
                        animated:YES];
   } else if (duration > 0) {
-    CLLocationCoordinate2D center = CLLocationCoordinate2DMake(latitude, longitude);
-    MKCoordinateRegion region = [_mapView regionForCenterCoordinate:center zoomLevel:zoom];
+    CLLocationCoordinate2D center =
+        CLLocationCoordinate2DMake(latitude, longitude);
+    MKCoordinateRegion region = [_mapView regionForCenterCoordinate:center
+                                                          zoomLevel:zoom];
     [UIView animateWithDuration:duration / 1000.0
                      animations:^{
                        [self->_mapView setRegion:region animated:NO];

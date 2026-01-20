@@ -2,13 +2,13 @@ package com.luggmaps
 
 import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap
-import com.facebook.react.uimanager.PixelUtil.dpToPx
 import com.facebook.react.module.annotations.ReactModule
+import com.facebook.react.uimanager.PixelUtil.dpToPx
 import com.facebook.react.uimanager.ThemedReactContext
+import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.ViewGroupManager
 import com.facebook.react.uimanager.ViewManagerDelegate
 import com.facebook.react.uimanager.annotations.ReactProp
-import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.viewmanagers.GoogleMapViewManagerDelegate
 import com.facebook.react.viewmanagers.GoogleMapViewManagerInterface
 import com.google.android.gms.maps.model.LatLng
@@ -32,14 +32,19 @@ class GoogleMapViewManager :
     return view
   }
 
-  override fun getExportedCustomDirectEventTypeConstants(): Map<String, Any> {
-    return mapOf(
+  override fun getExportedCustomDirectEventTypeConstants(): Map<String, Any> =
+    mapOf(
       "topCameraMove" to mapOf("registrationName" to "onCameraMove"),
       "topCameraIdle" to mapOf("registrationName" to "onCameraIdle")
     )
-  }
 
-  override fun onCameraMove(view: GoogleMapView, latitude: Double, longitude: Double, zoom: Float, dragging: Boolean) {
+  override fun onCameraMove(
+    view: GoogleMapView,
+    latitude: Double,
+    longitude: Double,
+    zoom: Float,
+    dragging: Boolean
+  ) {
     val eventDispatcher = UIManagerHelper.getEventDispatcherForReactTag(
       view.context as ThemedReactContext,
       view.id
