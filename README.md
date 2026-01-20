@@ -1,6 +1,9 @@
 # @lugg/maps
 
-React Native Fabric maps library for iOS and Android using Google Maps.
+React Native Fabric maps library for iOS and Android.
+
+- Google Maps (iOS & Android)
+- Apple Maps (iOS only)
 
 ## Installation
 
@@ -8,7 +11,29 @@ React Native Fabric maps library for iOS and Android using Google Maps.
 npm install @lugg/maps
 ```
 
-### iOS Setup
+### Expo
+
+Add the plugin to your `app.json`:
+
+```json
+{
+  "expo": {
+    "plugins": [
+      [
+        "@lugg/maps",
+        {
+          "iosGoogleMapsApiKey": "YOUR_IOS_API_KEY",
+          "androidGoogleMapsApiKey": "YOUR_ANDROID_API_KEY"
+        }
+      ]
+    ]
+  }
+}
+```
+
+### Bare React Native
+
+#### iOS
 
 Add your Google Maps API key to `AppDelegate.swift`:
 
@@ -19,7 +44,7 @@ import GoogleMaps
 GMSServices.provideAPIKey("YOUR_API_KEY")
 ```
 
-### Android Setup
+#### Android
 
 Add your Google Maps API key to `AndroidManifest.xml`:
 
@@ -34,32 +59,54 @@ Add your Google Maps API key to `AndroidManifest.xml`:
 ## Usage
 
 ```tsx
-import { MapView } from '@lugg/maps';
+import { MapView, Marker, Polyline } from '@lugg/maps';
 
 <MapView
   style={{ flex: 1 }}
-  initialRegion={{
-    latitude: 37.7749,
-    longitude: -122.4194,
-    latitudeDelta: 0.0922,
-    longitudeDelta: 0.0421,
-  }}
-  zoomEnabled={true}
-  scrollEnabled={true}
-  rotateEnabled={true}
-  pitchEnabled={true}
-/>
+  provider="google"
+  initialCoordinate={{ latitude: 37.7749, longitude: -122.4194 }}
+  initialZoom={12}
+>
+  <Marker
+    coordinate={{ latitude: 37.7749, longitude: -122.4194 }}
+    title="San Francisco"
+  />
+  <Polyline
+    coordinates={[
+      { latitude: 37.7749, longitude: -122.4194 },
+      { latitude: 37.8049, longitude: -122.4094 },
+    ]}
+    strokeWidth={3}
+  />
+</MapView>
 ```
 
-## Props
+## Components
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `initialRegion` | `Region` | - | Initial map region |
-| `zoomEnabled` | `boolean` | `true` | Enable zoom gestures |
-| `scrollEnabled` | `boolean` | `true` | Enable scroll gestures |
-| `rotateEnabled` | `boolean` | `true` | Enable rotate gestures |
-| `pitchEnabled` | `boolean` | `true` | Enable pitch/tilt gestures |
+- [MapView](docs/MAPVIEW.md) - Main map component
+- [Marker](docs/MARKER.md) - Map markers
+- [Polyline](docs/POLYLINE.md) - Draw lines on the map
+
+## Types
+
+```ts
+interface Coordinate {
+  latitude: number;
+  longitude: number;
+}
+
+interface Point {
+  x: number;
+  y: number;
+}
+
+interface EdgeInsets {
+  top: number;
+  left: number;
+  bottom: number;
+  right: number;
+}
+```
 
 ## Contributing
 

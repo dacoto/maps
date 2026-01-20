@@ -18,6 +18,8 @@
     "android",
     "ios",
     "cpp",
+    "plugin/build",
+    "app.plugin.js",
     "*.podspec",
     "react-native.config.js",
     "!ios/build",
@@ -39,7 +41,8 @@
     "format": "prettier --write \"**/*.{ts,tsx}\"",
     "tidy": "yarn typecheck && yarn lint && yarn format && scripts/objclint.sh && scripts/ktlint.sh",
     "clean": "scripts/clean.sh",
-    "prepare": "bob build",
+    "prepare": "bob build && yarn build:plugin",
+    "build:plugin": "tsc --project plugin",
     "release": "release-it --only-version"
   },
   "keywords": [
@@ -88,6 +91,9 @@
   "peerDependencies": {
     "react": "*",
     "react-native": "*"
+  },
+  "dependencies": {
+    "@expo/config-plugins": "^9.0.0"
   },
   "workspaces": [
     "example"
