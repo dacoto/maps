@@ -2,16 +2,28 @@ import type { ReactNode } from 'react';
 import type { NativeSyntheticEvent, ViewProps } from 'react-native';
 import type { MapProvider, Coordinate, EdgeInsets } from './types';
 
+/**
+ * Options for moving the camera
+ * @default duration -1
+ */
 export interface MoveCameraOptions {
   zoom: number;
   duration?: number;
 }
 
+/**
+ * Options for fitting coordinates in view
+ * @default padding 0
+ * @default duration -1
+ */
 export interface FitCoordinatesOptions {
   padding?: number;
   duration?: number;
 }
 
+/**
+ * MapView ref methods
+ */
 export interface MapViewRef {
   moveCamera(coordinate: Coordinate, options: MoveCameraOptions): void;
   fitCoordinates(
@@ -20,28 +32,79 @@ export interface MapViewRef {
   ): void;
 }
 
+/**
+ * Camera move event data
+ */
 export interface CameraMoveEvent {
   coordinate: Coordinate;
   zoom: number;
   dragging: boolean;
 }
 
+/**
+ * Camera idle event data
+ */
 export interface CameraIdleEvent {
   coordinate: Coordinate;
   zoom: number;
 }
 
+/**
+ * MapView component props
+ */
 export interface MapViewProps extends ViewProps {
+  /**
+   * Map provider to use
+   * @default 'apple' on iOS, 'google' on Android
+   */
   provider?: MapProvider;
+  /**
+   * Map style ID (Google Maps) or configuration name (Apple Maps)
+   */
   mapId?: string;
+  /**
+   * Initial camera coordinate
+   */
   initialCoordinate?: Coordinate;
+  /**
+   * Initial zoom level
+   * @default 10
+   */
   initialZoom?: number;
+  /**
+   * Enable zoom gestures
+   * @default true
+   */
   zoomEnabled?: boolean;
+  /**
+   * Enable scroll/pan gestures
+   * @default true
+   */
   scrollEnabled?: boolean;
+  /**
+   * Enable rotation gestures
+   * @default true
+   */
   rotateEnabled?: boolean;
+  /**
+   * Enable pitch/tilt gestures
+   * @default true
+   */
   pitchEnabled?: boolean;
+  /**
+   * Map content padding
+   */
   padding?: EdgeInsets;
+  /**
+   * Called when camera moves
+   */
   onCameraMove?: (event: NativeSyntheticEvent<CameraMoveEvent>) => void;
+  /**
+   * Called when camera stops moving
+   */
   onCameraIdle?: (event: NativeSyntheticEvent<CameraIdleEvent>) => void;
+  /**
+   * Map children (markers, polylines, etc.)
+   */
   children?: ReactNode;
 }
