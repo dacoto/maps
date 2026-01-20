@@ -3,6 +3,7 @@
 #import "MarkerView.h"
 #import "PolylineView.h"
 #import "core/PolylineRenderer.h"
+#import "events/CameraMoveEvent.h"
 #import "extensions/MKMapView+Zoom.h"
 
 #import <react/renderer/components/RNMapsSpec/ComponentDescriptors.h>
@@ -13,6 +14,7 @@
 #import "RCTFabricComponentsPlugins.h"
 
 using namespace facebook::react;
+using namespace luggmaps::events;
 
 @interface AppleMarkerAnnotation : NSObject <MKAnnotation>
 @property(nonatomic, assign) CLLocationCoordinate2D coordinate;
@@ -345,11 +347,7 @@ using namespace facebook::react;
 - (void)mapViewDidChangeVisibleRegion:(MKMapView *)mapView {
   if (_eventEmitter) {
     auto emitter = std::static_pointer_cast<AppleMapViewEventEmitter const>(_eventEmitter);
-    AppleMapViewEventEmitter::OnCameraMove event;
-    event.coordinate.latitude = mapView.centerCoordinate.latitude;
-    event.coordinate.longitude = mapView.centerCoordinate.longitude;
-    event.zoom = mapView.zoomLevel;
-    emitter->onCameraMove(event);
+    CameraMoveEvent{mapView.centerCoordinate.latitude, mapView.centerCoordinate.longitude, mapView.zoomLevel}.emit(emitter);
   }
 }
 
@@ -423,6 +421,34 @@ using namespace facebook::react;
 
 #pragma mark - Commands
 
+- (void)moveCamera:(double)latitude
+         longitude:(double)longitude
+              zoom:(double)zoom
+          duration:(double)duration {
+  if (!_mapView) {
+    return;
+  }
+
+  if (duration < 0) {
+    [self setCameraWithLatitude:latitude
+                      longitude:longitude
+                           zoom:zoom
+                       animated:YES];
+  } else if (duration > 0) {
+    CLLocationCoordinate2D center = CLLocationCoordinate2DMake(latitude, longitude);
+    MKCoordinateRegion region = [_mapView regionForCenterCoordinate:center zoomLevel:zoom];
+    [UIView animateWithDuration:duration / 1000.0
+                     animations:^{
+                       [self->_mapView setRegion:region animated:NO];
+                     }];
+  } else {
+    [self setCameraWithLatitude:latitude
+                      longitude:longitude
+                           zoom:zoom
+                       animated:NO];
+  }
+}
+
 - (void)fitCoordinates:(NSArray *)coordinates
                padding:(double)padding
               duration:(double)duration {
@@ -464,38 +490,7 @@ using namespace facebook::react;
 }
 
 - (void)handleCommand:(const NSString *)commandName args:(const NSArray *)args {
-  if ([commandName isEqualToString:@"moveCamera"]) {
-    double latitude = [args[0] doubleValue];
-    double longitude = [args[1] doubleValue];
-    double zoom = [args[2] doubleValue];
-    double duration = [args[3] doubleValue];
-
-    if (duration < 0) {
-      [self setCameraWithLatitude:latitude
-                        longitude:longitude
-                             zoom:zoom
-                         animated:YES];
-    } else if (duration > 0) {
-      CLLocationCoordinate2D center =
-          CLLocationCoordinate2DMake(latitude, longitude);
-      MKCoordinateRegion region = [_mapView regionForCenterCoordinate:center
-                                                            zoomLevel:zoom];
-      [UIView animateWithDuration:duration / 1000.0
-                       animations:^{
-                         [self->_mapView setRegion:region animated:NO];
-                       }];
-    } else {
-      [self setCameraWithLatitude:latitude
-                        longitude:longitude
-                             zoom:zoom
-                         animated:NO];
-    }
-  } else if ([commandName isEqualToString:@"fitCoordinates"]) {
-    NSArray *coordinates = args[0];
-    double padding = [args[1] doubleValue];
-    double duration = [args[2] doubleValue];
-    [self fitCoordinates:coordinates padding:padding duration:duration];
-  }
+  RCTAppleMapViewHandleCommand(self, commandName, args);
 }
 
 Class<RCTComponentViewProtocol> AppleMapViewCls(void) {

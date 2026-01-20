@@ -1,6 +1,7 @@
 #import "GoogleMapView.h"
 #import "MarkerView.h"
 #import "PolylineView.h"
+#import "events/CameraMoveEvent.h"
 
 #import <react/renderer/components/RNMapsSpec/ComponentDescriptors.h>
 #import <react/renderer/components/RNMapsSpec/EventEmitters.h>
@@ -10,6 +11,7 @@
 #import "RCTFabricComponentsPlugins.h"
 
 using namespace facebook::react;
+using namespace luggmaps::events;
 
 #import "MapWrapperView.h"
 
@@ -163,11 +165,7 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
 - (void)mapView:(GMSMapView *)mapView didChangeCameraPosition:(GMSCameraPosition *)position {
   if (_eventEmitter) {
     auto emitter = std::static_pointer_cast<GoogleMapViewEventEmitter const>(_eventEmitter);
-    GoogleMapViewEventEmitter::OnCameraMove event;
-    event.coordinate.latitude = position.target.latitude;
-    event.coordinate.longitude = position.target.longitude;
-    event.zoom = position.zoom;
-    emitter->onCameraMove(event);
+    CameraMoveEvent{position.target.latitude, position.target.longitude, position.zoom}.emit(emitter);
   }
 }
 
@@ -428,18 +426,7 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
 }
 
 - (void)handleCommand:(const NSString *)commandName args:(const NSArray *)args {
-  if ([commandName isEqualToString:@"moveCamera"]) {
-    double latitude = [args[0] doubleValue];
-    double longitude = [args[1] doubleValue];
-    double zoom = [args[2] doubleValue];
-    double duration = [args[3] doubleValue];
-    [self moveCamera:latitude longitude:longitude zoom:zoom duration:duration];
-  } else if ([commandName isEqualToString:@"fitCoordinates"]) {
-    NSArray *coordinates = args[0];
-    double padding = [args[1] doubleValue];
-    double duration = [args[2] doubleValue];
-    [self fitCoordinates:coordinates padding:padding duration:duration];
-  }
+  RCTGoogleMapViewHandleCommand(self, commandName, args);
 }
 
 Class<RCTComponentViewProtocol> GoogleMapViewCls(void) {
