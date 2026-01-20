@@ -1,12 +1,12 @@
 import React from 'react';
 import { Platform, StyleSheet } from 'react-native';
-import NativeGoogleMapView, {
+import LuggMapsGoogleMapViewNativeComponent, {
   Commands as GoogleMapCommands,
-} from './fabric/GoogleMapViewNativeComponent';
-import NativeAppleMapView, {
+} from './fabric/LuggMapsGoogleMapViewNativeComponent';
+import LuggMapsAppleMapViewNativeComponent, {
   Commands as AppleMapCommands,
-} from './fabric/AppleMapViewNativeComponent';
-import NativeMapWrapperView from './fabric/MapWrapperViewNativeComponent';
+} from './fabric/LuggMapsAppleMapViewNativeComponent';
+import LuggMapsWrapperViewNativeComponent from './fabric/LuggMapsWrapperViewNativeComponent';
 import type {
   MapViewProps,
   MapViewRef,
@@ -85,8 +85,8 @@ export class MapView
 
     const NativeMapView =
       Platform.OS === 'ios' && provider === 'apple'
-        ? NativeAppleMapView
-        : NativeGoogleMapView;
+        ? LuggMapsAppleMapViewNativeComponent
+        : LuggMapsGoogleMapViewNativeComponent;
 
     return (
       <NativeMapView
@@ -103,7 +103,7 @@ export class MapView
         onCameraMove={onCameraMove}
         onCameraIdle={onCameraIdle}
       >
-        <NativeMapWrapperView style={StyleSheet.absoluteFill} />
+        <LuggMapsWrapperViewNativeComponent style={StyleSheet.absoluteFill} />
         {children}
       </NativeMapView>
     );

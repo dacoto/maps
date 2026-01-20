@@ -1,5 +1,5 @@
 import React from 'react';
-import PolylineViewNativeComponent from './fabric/PolylineViewNativeComponent';
+import LuggMapsPolylineViewNativeComponent from './fabric/LuggMapsPolylineViewNativeComponent';
 import type { PolylineProps } from './Polyline.types';
 import { StyleSheet } from 'react-native';
 
@@ -8,7 +8,7 @@ export class Polyline extends React.Component<PolylineProps> {
     const { coordinates, strokeColors, strokeWidth } = this.props;
 
     return (
-      <PolylineViewNativeComponent
+      <LuggMapsPolylineViewNativeComponent
         style={styles.polyline}
         coordinates={coordinates}
         strokeColors={strokeColors}

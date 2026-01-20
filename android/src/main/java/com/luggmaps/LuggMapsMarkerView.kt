@@ -7,12 +7,12 @@ import androidx.core.view.isNotEmpty
 import com.facebook.react.views.view.ReactViewGroup
 import com.google.android.gms.maps.model.AdvancedMarker
 
-interface MarkerViewDelegate {
-  fun markerViewDidUpdate(markerView: MarkerView)
-  fun markerViewDidLayout(markerView: MarkerView)
+interface LuggMapsMarkerViewDelegate {
+  fun markerViewDidUpdate(markerView: LuggMapsMarkerView)
+  fun markerViewDidLayout(markerView: LuggMapsMarkerView)
 }
 
-class MarkerView(context: Context) : ReactViewGroup(context) {
+class LuggMapsMarkerView(context: Context) : ReactViewGroup(context) {
   var name: String? = null
     private set
 
@@ -26,7 +26,7 @@ class MarkerView(context: Context) : ReactViewGroup(context) {
   var description: String? = null
     private set
 
-  var delegate: MarkerViewDelegate? = null
+  var delegate: LuggMapsMarkerViewDelegate? = null
   var marker: AdvancedMarker? = null
 
   var anchorX: Float = 0.5f

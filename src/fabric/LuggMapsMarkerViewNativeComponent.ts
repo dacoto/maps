@@ -21,5 +21,5 @@ export interface NativeProps extends ViewProps {
 }
 
 export default codegenNativeComponent<NativeProps>(
-  'MarkerView'
+  'LuggMapsMarkerView'
 ) as HostComponent<NativeProps>;

@@ -129,11 +129,11 @@
     },
     "ios": {
       "componentProvider": {
-        "GoogleMapView": "GoogleMapView",
-        "AppleMapView": "AppleMapView",
-        "MarkerView": "MarkerView",
-        "MapWrapperView": "MapWrapperView",
-        "PolylineView": "PolylineView"
+        "LuggMapsGoogleMapView": "LuggMapsGoogleMapView",
+        "LuggMapsAppleMapView": "LuggMapsAppleMapView",
+        "LuggMapsMarkerView": "LuggMapsMarkerView",
+        "LuggMapsWrapperView": "LuggMapsWrapperView",
+        "LuggMapsPolylineView": "LuggMapsPolylineView"
       }
     }
   },

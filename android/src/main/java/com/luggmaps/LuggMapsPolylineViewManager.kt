@@ -6,32 +6,32 @@ import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.ViewGroupManager
 import com.facebook.react.uimanager.ViewManagerDelegate
 import com.facebook.react.uimanager.annotations.ReactProp
-import com.facebook.react.viewmanagers.PolylineViewManagerDelegate
-import com.facebook.react.viewmanagers.PolylineViewManagerInterface
+import com.facebook.react.viewmanagers.LuggMapsPolylineViewManagerDelegate
+import com.facebook.react.viewmanagers.LuggMapsPolylineViewManagerInterface
 import com.google.android.gms.maps.model.LatLng
 
-@ReactModule(name = PolylineViewManager.NAME)
-class PolylineViewManager :
-  ViewGroupManager<PolylineView>(),
-  PolylineViewManagerInterface<PolylineView> {
-  private val delegate: ViewManagerDelegate<PolylineView> = PolylineViewManagerDelegate(this)
+@ReactModule(name = LuggMapsPolylineViewManager.NAME)
+class LuggMapsPolylineViewManager :
+  ViewGroupManager<LuggMapsPolylineView>(),
+  LuggMapsPolylineViewManagerInterface<LuggMapsPolylineView> {
+  private val delegate: ViewManagerDelegate<LuggMapsPolylineView> = LuggMapsPolylineViewManagerDelegate(this)
 
-  override fun getDelegate(): ViewManagerDelegate<PolylineView> = delegate
+  override fun getDelegate(): ViewManagerDelegate<LuggMapsPolylineView> = delegate
   override fun getName(): String = NAME
-  override fun createViewInstance(context: ThemedReactContext): PolylineView = PolylineView(context)
+  override fun createViewInstance(context: ThemedReactContext): LuggMapsPolylineView = LuggMapsPolylineView(context)
 
-  override fun onDropViewInstance(view: PolylineView) {
+  override fun onDropViewInstance(view: LuggMapsPolylineView) {
     super.onDropViewInstance(view)
     view.onDropViewInstance()
   }
 
-  override fun onAfterUpdateTransaction(view: PolylineView) {
+  override fun onAfterUpdateTransaction(view: LuggMapsPolylineView) {
     super.onAfterUpdateTransaction(view)
     view.onAfterUpdateTransaction()
   }
 
   @ReactProp(name = "coordinates")
-  override fun setCoordinates(view: PolylineView, value: ReadableArray?) {
+  override fun setCoordinates(view: LuggMapsPolylineView, value: ReadableArray?) {
     value?.let { array ->
       val coords = mutableListOf<LatLng>()
       for (i in 0 until array.size()) {
@@ -45,7 +45,7 @@ class PolylineViewManager :
   }
 
   @ReactProp(name = "strokeColors")
-  override fun setStrokeColors(view: PolylineView, value: ReadableArray?) {
+  override fun setStrokeColors(view: LuggMapsPolylineView, value: ReadableArray?) {
     val colors = mutableListOf<Int>()
     value?.let { array ->
       for (i in 0 until array.size()) {
@@ -56,11 +56,11 @@ class PolylineViewManager :
   }
 
   @ReactProp(name = "strokeWidth", defaultDouble = 1.0)
-  override fun setStrokeWidth(view: PolylineView, value: Double) {
+  override fun setStrokeWidth(view: LuggMapsPolylineView, value: Double) {
     view.setStrokeWidth(value.toFloat())
   }
 
   companion object {
-    const val NAME = "PolylineView"
+    const val NAME = "LuggMapsPolylineView"
   }
 }

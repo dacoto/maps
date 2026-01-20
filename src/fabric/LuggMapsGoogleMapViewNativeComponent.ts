@@ -35,6 +35,7 @@ export interface CameraIdleEvent {
 }
 
 export interface NativeProps extends ViewProps {
+  mapId?: string;
   initialCoordinate?: Coordinate;
   initialZoom?: Double;
   zoomEnabled?: boolean;
@@ -69,5 +70,5 @@ export const Commands = codegenNativeCommands<NativeCommands>({
 });
 
 export default codegenNativeComponent<NativeProps>(
-  'AppleMapView'
+  'LuggMapsGoogleMapView'
 ) as ComponentType;

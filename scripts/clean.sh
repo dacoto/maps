@@ -64,7 +64,7 @@ step() {
 }
 
 install() {
-  rm -rf node_modules example/bare/node_modules
+  rm -rf node_modules example/bare/node_modules example/expo/node_modules
   yarn
 }
 
@@ -73,7 +73,7 @@ clean_watchman() {
   rm -rf $TMPDIR/metro-*
 }
 
-clean_example() {
+clean_bare_example() {
   del-cli android/build example/bare/android/build example/bare/android/app/build example/bare/ios/build 2>/dev/null || true
   cd example/bare/android
   ./gradlew clean -q
@@ -81,10 +81,17 @@ clean_example() {
   npx pod-install example/bare
 }
 
+clean_expo_example() {
+  cd example/expo
+  npx expo prebuild --clean
+  cd ../..
+}
+
 step "Installing dependencies" "Dependencies installed" install
 step "Cleaning watchman" "Watchman cache cleared" clean_watchman
 step "Cleaning up simulator cache" "Simulator cache cleared" rm -rf ~/Library/Developer/CoreSimulator/Caches
-step "Cleaning example" "Example cleaned" clean_example
+step "Cleaning bare example" "Bare example cleaned" clean_bare_example
+step "Cleaning expo example" "Expo example cleaned" clean_expo_example
 step "Building with bob" "Build complete" bob build
 
 echo -e "${GREEN}${BOLD}All done!${NC}"

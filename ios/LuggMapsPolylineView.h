@@ -4,19 +4,19 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class PolylineView;
+@class LuggMapsPolylineView;
 
-@protocol PolylineViewDelegate <NSObject>
+@protocol LuggMapsPolylineViewDelegate <NSObject>
 @optional
-- (void)polylineViewDidUpdate:(PolylineView *)polylineView;
+- (void)polylineViewDidUpdate:(LuggMapsPolylineView *)polylineView;
 @end
 
-@interface PolylineView : RCTViewComponentView
+@interface LuggMapsPolylineView : RCTViewComponentView
 
 @property(nonatomic, readonly) NSArray<CLLocation *> *coordinates;
 @property(nonatomic, readonly) NSArray<UIColor *> *strokeColors;
 @property(nonatomic, readonly) CGFloat strokeWidth;
-@property(nonatomic, weak, nullable) id<PolylineViewDelegate> delegate;
+@property(nonatomic, weak, nullable) id<LuggMapsPolylineViewDelegate> delegate;
 @property(nonatomic, strong, nullable) NSObject *polyline;
 @property(nonatomic, weak, nullable) NSObject *renderer;
 @property(nonatomic, strong, nullable) NSArray *cachedSpans;

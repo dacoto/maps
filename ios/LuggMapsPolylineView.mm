@@ -1,4 +1,4 @@
-#import "PolylineView.h"
+#import "LuggMapsPolylineView.h"
 
 #import <react/renderer/components/RNMapsSpec/ComponentDescriptors.h>
 #import <react/renderer/components/RNMapsSpec/EventEmitters.h>
@@ -10,23 +10,23 @@
 
 using namespace facebook::react;
 
-@interface PolylineView () <RCTPolylineViewViewProtocol>
+@interface LuggMapsPolylineView () <RCTLuggMapsPolylineViewViewProtocol>
 @end
 
-@implementation PolylineView {
+@implementation LuggMapsPolylineView {
   NSArray<CLLocation *> *_coordinates;
   NSArray<UIColor *> *_strokeColors;
   CGFloat _strokeWidth;
 }
 
 + (ComponentDescriptorProvider)componentDescriptorProvider {
-  return concreteComponentDescriptorProvider<PolylineViewComponentDescriptor>();
+  return concreteComponentDescriptorProvider<LuggMapsPolylineViewComponentDescriptor>();
 }
 
 - (instancetype)initWithFrame:(CGRect)frame {
   if (self = [super initWithFrame:frame]) {
     static const auto defaultProps =
-        std::make_shared<const PolylineViewProps>();
+        std::make_shared<const LuggMapsPolylineViewProps>();
     _props = defaultProps;
 
     _coordinates = @[];
@@ -43,7 +43,7 @@ using namespace facebook::react;
            oldProps:(Props::Shared const &)oldProps {
   [super updateProps:props oldProps:oldProps];
   const auto &newViewProps =
-      *std::static_pointer_cast<PolylineViewProps const>(props);
+      *std::static_pointer_cast<LuggMapsPolylineViewProps const>(props);
 
   NSMutableArray<CLLocation *> *coords = [NSMutableArray array];
   for (const auto &coord : newViewProps.coordinates) {
@@ -101,8 +101,8 @@ using namespace facebook::react;
   self.delegate = nil;
 }
 
-Class<RCTComponentViewProtocol> PolylineViewCls(void) {
-  return PolylineView.class;
+Class<RCTComponentViewProtocol> LuggMapsPolylineViewCls(void) {
+  return LuggMapsPolylineView.class;
 }
 
 @end

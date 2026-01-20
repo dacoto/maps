@@ -1,5 +1,5 @@
 import React from 'react';
-import MarkerViewNativeComponent from './fabric/MarkerViewNativeComponent';
+import LuggMapsMarkerViewNativeComponent from './fabric/LuggMapsMarkerViewNativeComponent';
 import type { MarkerProps } from './Marker.types';
 import { StyleSheet } from 'react-native';
 
@@ -9,7 +9,7 @@ export class Marker extends React.Component<MarkerProps> {
       this.props;
 
     return (
-      <MarkerViewNativeComponent
+      <LuggMapsMarkerViewNativeComponent
         style={styles.marker}
         name={name}
         coordinate={coordinate}
@@ -18,7 +18,7 @@ export class Marker extends React.Component<MarkerProps> {
         anchor={anchor}
       >
         {children}
-      </MarkerViewNativeComponent>
+      </LuggMapsMarkerViewNativeComponent>
     );
   }
 }

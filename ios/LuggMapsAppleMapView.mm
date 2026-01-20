@@ -1,7 +1,7 @@
-#import "AppleMapView.h"
-#import "MapWrapperView.h"
-#import "MarkerView.h"
-#import "PolylineView.h"
+#import "LuggMapsAppleMapView.h"
+#import "LuggMapsWrapperView.h"
+#import "LuggMapsMarkerView.h"
+#import "LuggMapsPolylineView.h"
 #import "core/PolylineRenderer.h"
 #import "events/CameraIdleEvent.h"
 #import "events/CameraMoveEvent.h"
@@ -21,34 +21,34 @@ using namespace luggmaps::events;
 @property(nonatomic, assign) CLLocationCoordinate2D coordinate;
 @property(nonatomic, copy, nullable) NSString *title;
 @property(nonatomic, copy, nullable) NSString *subtitle;
-@property(nonatomic, strong) MarkerView *markerView;
+@property(nonatomic, strong) LuggMapsMarkerView *markerView;
 @property(nonatomic, weak) MKAnnotationView *annotationView;
 @end
 
 @implementation AppleMarkerAnnotation
 @end
 
-@implementation AppleMapViewContent
+@implementation LuggMapsAppleMapViewContent
 @end
 
-@interface AppleMapView () <RCTAppleMapViewViewProtocol, MKMapViewDelegate,
-                            MarkerViewDelegate, PolylineViewDelegate>
+@interface LuggMapsAppleMapView () <RCTLuggMapsAppleMapViewViewProtocol, MKMapViewDelegate,
+                            LuggMapsMarkerViewDelegate, LuggMapsPolylineViewDelegate>
 @end
 
-@implementation AppleMapView {
-  AppleMapViewContent *_mapView;
-  MapWrapperView *_mapWrapperView;
+@implementation LuggMapsAppleMapView {
+  LuggMapsAppleMapViewContent *_mapView;
+  LuggMapsWrapperView *_mapWrapperView;
   BOOL _isDragging;
 }
 
 + (ComponentDescriptorProvider)componentDescriptorProvider {
-  return concreteComponentDescriptorProvider<AppleMapViewComponentDescriptor>();
+  return concreteComponentDescriptorProvider<LuggMapsAppleMapViewComponentDescriptor>();
 }
 
 - (instancetype)initWithFrame:(CGRect)frame {
   if (self = [super initWithFrame:frame]) {
     static const auto defaultProps =
-        std::make_shared<const AppleMapViewProps>();
+        std::make_shared<const LuggMapsAppleMapViewProps>();
     _props = defaultProps;
   }
 
@@ -62,10 +62,10 @@ using namespace luggmaps::events;
                           index:(NSInteger)index {
   [super mountChildComponentView:childComponentView index:index];
 
-  if ([childComponentView isKindOfClass:[MapWrapperView class]]) {
-    _mapWrapperView = (MapWrapperView *)childComponentView;
-  } else if ([childComponentView isKindOfClass:[MarkerView class]]) {
-    MarkerView *markerView = (MarkerView *)childComponentView;
+  if ([childComponentView isKindOfClass:[LuggMapsWrapperView class]]) {
+    _mapWrapperView = (LuggMapsWrapperView *)childComponentView;
+  } else if ([childComponentView isKindOfClass:[LuggMapsMarkerView class]]) {
+    LuggMapsMarkerView *markerView = (LuggMapsMarkerView *)childComponentView;
     markerView.delegate = self;
 
     AppleMarkerAnnotation *annotation = [[AppleMarkerAnnotation alloc] init];
@@ -77,8 +77,8 @@ using namespace luggmaps::events;
     }
 
     [self markerViewDidUpdate:markerView];
-  } else if ([childComponentView isKindOfClass:[PolylineView class]]) {
-    PolylineView *polylineView = (PolylineView *)childComponentView;
+  } else if ([childComponentView isKindOfClass:[LuggMapsPolylineView class]]) {
+    LuggMapsPolylineView *polylineView = (LuggMapsPolylineView *)childComponentView;
     polylineView.delegate = self;
     [self addPolylineViewToMap:polylineView];
   }
@@ -87,8 +87,8 @@ using namespace luggmaps::events;
 - (void)unmountChildComponentView:
             (UIView<RCTComponentViewProtocol> *)childComponentView
                             index:(NSInteger)index {
-  if ([childComponentView isKindOfClass:[MarkerView class]]) {
-    MarkerView *markerView = (MarkerView *)childComponentView;
+  if ([childComponentView isKindOfClass:[LuggMapsMarkerView class]]) {
+    LuggMapsMarkerView *markerView = (LuggMapsMarkerView *)childComponentView;
     markerView.delegate = nil;
 
     AppleMarkerAnnotation *annotation =
@@ -100,8 +100,8 @@ using namespace luggmaps::events;
       [_mapView removeAnnotation:annotation];
       markerView.marker = nil;
     }
-  } else if ([childComponentView isKindOfClass:[PolylineView class]]) {
-    PolylineView *polylineView = (PolylineView *)childComponentView;
+  } else if ([childComponentView isKindOfClass:[LuggMapsPolylineView class]]) {
+    LuggMapsPolylineView *polylineView = (LuggMapsPolylineView *)childComponentView;
     polylineView.delegate = nil;
     MKPolyline *polyline = (MKPolyline *)polylineView.polyline;
     if (polyline) {
@@ -136,9 +136,9 @@ using namespace luggmaps::events;
   }
 
   const auto &viewProps =
-      *std::static_pointer_cast<AppleMapViewProps const>(_props);
+      *std::static_pointer_cast<LuggMapsAppleMapViewProps const>(_props);
 
-  _mapView = [[AppleMapViewContent alloc] initWithFrame:_mapWrapperView.bounds];
+  _mapView = [[LuggMapsAppleMapViewContent alloc] initWithFrame:_mapWrapperView.bounds];
   _mapView.autoresizingMask =
       UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
   _mapView.delegate = self;
@@ -157,15 +157,15 @@ using namespace luggmaps::events;
 
   // Add annotations for any markers that were mounted before map was ready
   for (UIView *subview in self.subviews) {
-    if ([subview isKindOfClass:[MarkerView class]]) {
-      MarkerView *markerView = (MarkerView *)subview;
+    if ([subview isKindOfClass:[LuggMapsMarkerView class]]) {
+      LuggMapsMarkerView *markerView = (LuggMapsMarkerView *)subview;
       AppleMarkerAnnotation *annotation =
           (AppleMarkerAnnotation *)markerView.marker;
       if (annotation) {
         [_mapView addAnnotation:annotation];
       }
-    } else if ([subview isKindOfClass:[PolylineView class]]) {
-      PolylineView *polylineView = (PolylineView *)subview;
+    } else if ([subview isKindOfClass:[LuggMapsPolylineView class]]) {
+      LuggMapsPolylineView *polylineView = (LuggMapsPolylineView *)subview;
       [self addPolylineViewToMap:polylineView];
     }
   }
@@ -189,7 +189,7 @@ using namespace luggmaps::events;
 - (void)updateProps:(Props::Shared const &)props
            oldProps:(Props::Shared const &)oldProps {
   const auto &newViewProps =
-      *std::static_pointer_cast<AppleMapViewProps const>(props);
+      *std::static_pointer_cast<LuggMapsAppleMapViewProps const>(props);
 
   if (_mapView) {
     _mapView.zoomEnabled = newViewProps.zoomEnabled;
@@ -208,7 +208,7 @@ using namespace luggmaps::events;
 
 - (void)updateAnnotationViewFrame:(AppleMarkerAnnotation *)annotation {
   MKAnnotationView *annotationView = annotation.annotationView;
-  MarkerView *markerView = annotation.markerView;
+  LuggMapsMarkerView *markerView = annotation.markerView;
 
   if (!annotationView || !markerView) {
     return;
@@ -228,13 +228,13 @@ using namespace luggmaps::events;
 
 #pragma mark - PolylineViewDelegate
 
-- (void)polylineViewDidUpdate:(PolylineView *)polylineView {
+- (void)polylineViewDidUpdate:(LuggMapsPolylineView *)polylineView {
   [self syncPolylineView:polylineView];
 }
 
 #pragma mark - Polyline Management
 
-- (void)addPolylineViewToMap:(PolylineView *)polylineView {
+- (void)addPolylineViewToMap:(LuggMapsPolylineView *)polylineView {
   if (!_mapView) {
     return;
   }
@@ -258,7 +258,7 @@ using namespace luggmaps::events;
   [_mapView addOverlay:polyline];
 }
 
-- (void)syncPolylineView:(PolylineView *)polylineView {
+- (void)syncPolylineView:(LuggMapsPolylineView *)polylineView {
   if (!_mapView) {
     return;
   }
@@ -305,10 +305,10 @@ using namespace luggmaps::events;
   [_mapView addOverlay:newPolyline];
 }
 
-- (PolylineView *)findPolylineViewForOverlay:(id<MKOverlay>)overlay {
+- (LuggMapsPolylineView *)findPolylineViewForOverlay:(id<MKOverlay>)overlay {
   for (UIView *subview in self.subviews) {
-    if ([subview isKindOfClass:[PolylineView class]]) {
-      PolylineView *polylineView = (PolylineView *)subview;
+    if ([subview isKindOfClass:[LuggMapsPolylineView class]]) {
+      LuggMapsPolylineView *polylineView = (LuggMapsPolylineView *)subview;
       if (polylineView.polyline == overlay) {
         return polylineView;
       }
@@ -319,7 +319,7 @@ using namespace luggmaps::events;
 
 #pragma mark - MarkerViewDelegate
 
-- (void)markerViewDidLayout:(MarkerView *)markerView {
+- (void)markerViewDidLayout:(LuggMapsMarkerView *)markerView {
   AppleMarkerAnnotation *annotation =
       (AppleMarkerAnnotation *)markerView.marker;
   if (annotation) {
@@ -327,7 +327,7 @@ using namespace luggmaps::events;
   }
 }
 
-- (void)markerViewDidUpdate:(MarkerView *)markerView {
+- (void)markerViewDidUpdate:(LuggMapsMarkerView *)markerView {
   AppleMarkerAnnotation *annotation =
       (AppleMarkerAnnotation *)markerView.marker;
 
@@ -363,7 +363,7 @@ using namespace luggmaps::events;
 - (void)mapViewDidChangeVisibleRegion:(MKMapView *)mapView {
   if (_eventEmitter) {
     auto emitter =
-        std::static_pointer_cast<AppleMapViewEventEmitter const>(_eventEmitter);
+        std::static_pointer_cast<LuggMapsAppleMapViewEventEmitter const>(_eventEmitter);
     CameraMoveEvent{mapView.centerCoordinate.latitude,
                     mapView.centerCoordinate.longitude, mapView.zoomLevel,
                     _isDragging}
@@ -375,7 +375,7 @@ using namespace luggmaps::events;
   _isDragging = NO;
   if (_eventEmitter) {
     auto emitter =
-        std::static_pointer_cast<AppleMapViewEventEmitter const>(_eventEmitter);
+        std::static_pointer_cast<LuggMapsAppleMapViewEventEmitter const>(_eventEmitter);
     CameraIdleEvent{mapView.centerCoordinate.latitude,
                     mapView.centerCoordinate.longitude, mapView.zoomLevel}
         .emit(emitter);
@@ -389,7 +389,7 @@ using namespace luggmaps::events;
   }
 
   AppleMarkerAnnotation *markerAnnotation = (AppleMarkerAnnotation *)annotation;
-  MarkerView *markerView = markerAnnotation.markerView;
+  LuggMapsMarkerView *markerView = markerAnnotation.markerView;
 
   if (!markerView || !markerView.hasCustomView) {
     return nil;
@@ -427,7 +427,7 @@ using namespace luggmaps::events;
 - (MKOverlayRenderer *)mapView:(MKMapView *)mapView
             rendererForOverlay:(id<MKOverlay>)overlay {
   if ([overlay isKindOfClass:[MKPolyline class]]) {
-    PolylineView *polylineView = [self findPolylineViewForOverlay:overlay];
+    LuggMapsPolylineView *polylineView = [self findPolylineViewForOverlay:overlay];
     MKPolyline *polyline = (MKPolyline *)overlay;
 
     if (polylineView) {
@@ -524,11 +524,11 @@ using namespace luggmaps::events;
 }
 
 - (void)handleCommand:(const NSString *)commandName args:(const NSArray *)args {
-  RCTAppleMapViewHandleCommand(self, commandName, args);
+  RCTLuggMapsAppleMapViewHandleCommand(self, commandName, args);
 }
 
-Class<RCTComponentViewProtocol> AppleMapViewCls(void) {
-  return AppleMapView.class;
+Class<RCTComponentViewProtocol> LuggMapsAppleMapViewCls(void) {
+  return LuggMapsAppleMapView.class;
 }
 
 @end
