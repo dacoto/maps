@@ -14,6 +14,17 @@ React Native Fabric (New Architecture) maps library for iOS and Android.
 - **Fabric** - No bridge, direct C++ communication
 - **Codegen** - Auto-generates native interfaces from TypeScript specs
 
+## File Structure
+
+```
+src/                 # TypeScript components & types
+src/fabric/          # Native component specs (Codegen)
+ios/                 # iOS native (Objective-C)
+android/             # Android native (Kotlin)
+plugin/              # Expo config plugin
+example/             # Example app
+```
+
 ### Creating a Pull Request
 
 When creating a PR, use the template from `.github/PULL_REQUEST_TEMPLATE.md`:
