@@ -1,6 +1,12 @@
 import { forwardRef } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { MapView, Marker, type MapProvider, type EdgeInsets } from '@lugg/maps';
+import { StyleSheet, View, type NativeSyntheticEvent } from 'react-native';
+import {
+  MapView,
+  Marker,
+  type MapProvider,
+  type EdgeInsets,
+  type CameraMoveEvent,
+} from '@lugg/maps';
 
 import { AnimatedPolyline } from './AnimatedPolyline';
 import { MarkerIcon } from './MarkerIcon';
@@ -26,6 +32,7 @@ interface MapProps {
   provider: MapProvider;
   markers: MarkerData[];
   padding?: EdgeInsets;
+  onCameraMove?: (event: NativeSyntheticEvent<CameraMoveEvent>) => void;
 }
 
 const renderMarker = (marker: MarkerData) => {
@@ -85,7 +92,7 @@ const renderMarker = (marker: MarkerData) => {
 };
 
 export const Map = forwardRef<MapView, MapProps>(
-  ({ provider, markers, padding }, ref) => {
+  ({ provider, markers, padding, onCameraMove }, ref) => {
     const polylineCoordinates = markers.map((m) => m.coordinate);
 
     return (
@@ -97,6 +104,7 @@ export const Map = forwardRef<MapView, MapProps>(
         initialCoordinate={{ latitude: 37.78, longitude: -122.43 }}
         initialZoom={14}
         padding={padding}
+        onCameraMove={onCameraMove}
       >
         {markers.map(renderMarker)}
         {polylineCoordinates.length >= 2 && (

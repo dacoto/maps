@@ -19,13 +19,19 @@ import com.google.android.gms.maps.model.AdvancedMarkerOptions.CollisionBehavior
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.PolylineOptions
 
+interface GoogleMapViewEventDelegate {
+  fun onCameraMove(view: GoogleMapView, latitude: Double, longitude: Double, zoom: Float)
+}
+
 @SuppressLint("ViewConstructor")
 class GoogleMapView(private val reactContext: ThemedReactContext) :
   ReactViewGroup(reactContext),
   OnMapReadyCallback,
   MarkerViewDelegate,
-  PolylineViewDelegate {
+  PolylineViewDelegate,
+  GoogleMap.OnCameraMoveListener {
 
+  var eventDelegate: GoogleMapViewEventDelegate? = null
   private var mapView: MapView? = null
   private var mapWrapperView: MapWrapperView? = null
   private var googleMap: GoogleMap? = null
@@ -129,10 +135,18 @@ class GoogleMapView(private val reactContext: ThemedReactContext) :
     val position = LatLng(initialLatitude, initialLongitude)
     map.moveCamera(CameraUpdateFactory.newLatLngZoom(position, initialZoom))
 
+    map.setOnCameraMoveListener(this)
+
     applyUiSettings()
     applyPadding()
     processPendingMarkers()
     processPendingPolylines()
+  }
+
+  override fun onCameraMove() {
+    val map = googleMap ?: return
+    val position = map.cameraPosition
+    eventDelegate?.onCameraMove(this, position.target.latitude, position.target.longitude, position.zoom)
   }
 
   private fun applyUiSettings() {

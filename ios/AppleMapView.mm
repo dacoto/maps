@@ -342,6 +342,17 @@ using namespace facebook::react;
 
 #pragma mark - MKMapViewDelegate
 
+- (void)mapViewDidChangeVisibleRegion:(MKMapView *)mapView {
+  if (_eventEmitter) {
+    auto emitter = std::static_pointer_cast<AppleMapViewEventEmitter const>(_eventEmitter);
+    AppleMapViewEventEmitter::OnCameraMove event;
+    event.coordinate.latitude = mapView.centerCoordinate.latitude;
+    event.coordinate.longitude = mapView.centerCoordinate.longitude;
+    event.zoom = mapView.zoomLevel;
+    emitter->onCameraMove(event);
+  }
+}
+
 - (MKAnnotationView *)mapView:(MKMapView *)mapView
             viewForAnnotation:(id<MKAnnotation>)annotation {
   if (![annotation isKindOfClass:[AppleMarkerAnnotation class]]) {

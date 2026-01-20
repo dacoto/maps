@@ -1,6 +1,17 @@
 import { useRef, useState, useCallback } from 'react';
-import { StyleSheet, View, Platform, useWindowDimensions } from 'react-native';
-import { MapView, type MapProvider, type EdgeInsets } from '@lugg/maps';
+import {
+  StyleSheet,
+  View,
+  Text,
+  Platform,
+  useWindowDimensions,
+} from 'react-native';
+import {
+  MapView,
+  type MapProvider,
+  type EdgeInsets,
+  type CameraMoveEvent,
+} from '@lugg/maps';
 import {
   TrueSheet,
   type DidPresentEvent,
@@ -22,6 +33,14 @@ export default function App() {
   const [showMap, setShowMap] = useState(true);
   const [markers, setMarkers] = useState(INITIAL_MARKERS);
   const [mapPadding, setMapPadding] = useState<EdgeInsets>();
+  const [cameraPosition, setCameraPosition] = useState<CameraMoveEvent>();
+
+  const handleCameraMove = useCallback(
+    (event: { nativeEvent: CameraMoveEvent }) => {
+      setCameraPosition(event.nativeEvent);
+    },
+    []
+  );
 
   const handleSheetPresent = useCallback(
     (event: DidPresentEvent) => {
@@ -81,6 +100,7 @@ export default function App() {
           provider={provider}
           markers={markers}
           padding={mapPadding}
+          onCameraMove={handleCameraMove}
         />
       )}
 
@@ -89,10 +109,18 @@ export default function App() {
         dimmed={false}
         initialDetentIndex={0}
         initialDetentAnimated={false}
+        backgroundBlur="system-material-light"
         dismissible={false}
         grabber={false}
         onDidPresent={handleSheetPresent}
       >
+        {cameraPosition && (
+          <Text style={styles.positionText}>
+            {cameraPosition.coordinate.latitude.toFixed(5)},{' '}
+            {cameraPosition.coordinate.longitude.toFixed(5)} (z
+            {cameraPosition.zoom.toFixed(1)})
+          </Text>
+        )}
         <View style={styles.sheetContent}>
           <Button title="Add Marker" onPress={addRandomMarker} />
           <Button
@@ -130,6 +158,12 @@ export default function App() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  positionText: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    fontSize: 12,
+    color: '#666',
+  },
   sheetContent: {
     padding: 16,
     flexDirection: 'row',

@@ -160,6 +160,17 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
 
 #pragma mark - GMSMapViewDelegate
 
+- (void)mapView:(GMSMapView *)mapView didChangeCameraPosition:(GMSCameraPosition *)position {
+  if (_eventEmitter) {
+    auto emitter = std::static_pointer_cast<GoogleMapViewEventEmitter const>(_eventEmitter);
+    GoogleMapViewEventEmitter::OnCameraMove event;
+    event.coordinate.latitude = position.target.latitude;
+    event.coordinate.longitude = position.target.longitude;
+    event.zoom = position.zoom;
+    emitter->onCameraMove(event);
+  }
+}
+
 - (void)mapViewDidFinishTileRendering:(GMSMapView *)mapView {
   // Map tiles finished rendering
 }

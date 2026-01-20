@@ -1,6 +1,9 @@
 import { codegenNativeComponent, codegenNativeCommands } from 'react-native';
 import type { ViewProps, HostComponent } from 'react-native';
-import type { Double } from 'react-native/Libraries/Types/CodegenTypes';
+import type {
+  Double,
+  DirectEventHandler,
+} from 'react-native/Libraries/Types/CodegenTypes';
 
 export interface Coordinate {
   latitude: Double;
@@ -14,6 +17,14 @@ export interface EdgeInsets {
   right: Double;
 }
 
+export interface CameraMoveEvent {
+  coordinate: {
+    latitude: Double;
+    longitude: Double;
+  };
+  zoom: Double;
+}
+
 export interface NativeProps extends ViewProps {
   mapId?: string;
   initialCoordinate?: Coordinate;
@@ -23,6 +34,7 @@ export interface NativeProps extends ViewProps {
   rotateEnabled?: boolean;
   pitchEnabled?: boolean;
   padding?: EdgeInsets;
+  onCameraMove?: DirectEventHandler<CameraMoveEvent>;
 }
 
 type ComponentType = HostComponent<NativeProps>;

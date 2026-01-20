@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import type { ViewProps } from 'react-native';
+import type { NativeSyntheticEvent, ViewProps } from 'react-native';
 import type { MapProvider, Coordinate, EdgeInsets } from './types';
 
 export interface MoveCameraOptions {
@@ -20,6 +20,11 @@ export interface MapViewRef {
   ): void;
 }
 
+export interface CameraMoveEvent {
+  coordinate: Coordinate;
+  zoom: number;
+}
+
 export interface MapViewProps extends ViewProps {
   provider?: MapProvider;
   mapId?: string;
@@ -30,5 +35,6 @@ export interface MapViewProps extends ViewProps {
   rotateEnabled?: boolean;
   pitchEnabled?: boolean;
   padding?: EdgeInsets;
+  onCameraMove?: (event: NativeSyntheticEvent<CameraMoveEvent>) => void;
   children?: ReactNode;
 }

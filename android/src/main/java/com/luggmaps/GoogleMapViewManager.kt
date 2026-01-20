@@ -1,5 +1,6 @@
 package com.luggmaps
 
+import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.uimanager.PixelUtil.dpToPx
@@ -8,21 +9,60 @@ import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.ViewGroupManager
 import com.facebook.react.uimanager.ViewManagerDelegate
 import com.facebook.react.uimanager.annotations.ReactProp
+import com.facebook.react.uimanager.events.Event
+import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.viewmanagers.GoogleMapViewManagerDelegate
 import com.facebook.react.viewmanagers.GoogleMapViewManagerInterface
 import com.google.android.gms.maps.model.LatLng
 
+class CameraMoveEvent(
+  surfaceId: Int,
+  viewId: Int,
+  private val latitude: Double,
+  private val longitude: Double,
+  private val zoom: Float
+) : Event<CameraMoveEvent>(surfaceId, viewId) {
+  override fun getEventName() = "topCameraMove"
+
+  override fun getEventData() = Arguments.createMap().apply {
+    putMap("coordinate", Arguments.createMap().apply {
+      putDouble("latitude", latitude)
+      putDouble("longitude", longitude)
+    })
+    putDouble("zoom", zoom.toDouble())
+  }
+}
+
 @ReactModule(name = GoogleMapViewManager.NAME)
 class GoogleMapViewManager :
   ViewGroupManager<GoogleMapView>(),
-  GoogleMapViewManagerInterface<GoogleMapView> {
+  GoogleMapViewManagerInterface<GoogleMapView>,
+  GoogleMapViewEventDelegate {
   private val delegate: ViewManagerDelegate<GoogleMapView> = GoogleMapViewManagerDelegate(this)
 
   override fun getDelegate(): ViewManagerDelegate<GoogleMapView> = delegate
 
   override fun getName(): String = NAME
 
-  override fun createViewInstance(context: ThemedReactContext): GoogleMapView = GoogleMapView(context)
+  override fun createViewInstance(context: ThemedReactContext): GoogleMapView {
+    val view = GoogleMapView(context)
+    view.eventDelegate = this
+    return view
+  }
+
+  override fun getExportedCustomDirectEventTypeConstants(): Map<String, Any> {
+    return mapOf(
+      "topCameraMove" to mapOf("registrationName" to "onCameraMove")
+    )
+  }
+
+  override fun onCameraMove(view: GoogleMapView, latitude: Double, longitude: Double, zoom: Float) {
+    val eventDispatcher = UIManagerHelper.getEventDispatcherForReactTag(
+      view.context as ThemedReactContext,
+      view.id
+    )
+    eventDispatcher?.dispatchEvent(CameraMoveEvent(UIManagerHelper.getSurfaceId(view), view.id, latitude, longitude, zoom))
+  }
 
   @ReactProp(name = "mapId")
   override fun setMapId(view: GoogleMapView, value: String?) {
