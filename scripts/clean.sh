@@ -64,7 +64,7 @@ step() {
 }
 
 install() {
-  rm -rf node_modules example/node_modules
+  rm -rf node_modules example/bare/node_modules
   yarn
 }
 
@@ -74,11 +74,11 @@ clean_watchman() {
 }
 
 clean_example() {
-  del-cli android/build example/android/build example/android/app/build example/ios/build 2>/dev/null || true
-  cd example/android
+  del-cli android/build example/bare/android/build example/bare/android/app/build example/bare/ios/build 2>/dev/null || true
+  cd example/bare/android
   ./gradlew clean -q
-  cd ../..
-  npx pod-install example
+  cd ../../..
+  npx pod-install example/bare
 }
 
 step "Installing dependencies" "Dependencies installed" install

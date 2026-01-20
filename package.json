@@ -34,7 +34,7 @@
     "!**/.*"
   ],
   "scripts": {
-    "example": "yarn workspace @lugg/maps-example",
+    "bare": "yarn workspace @lugg/bare-example",
     "test": "jest",
     "typecheck": "tsc",
     "lint": "eslint --fix \"**/*.{ts,tsx}\"",
@@ -96,7 +96,7 @@
     "@expo/config-plugins": "^9.0.0"
   },
   "workspaces": [
-    "example"
+    "example/bare"
   ],
   "packageManager": "yarn@4.11.0",
   "react-native-builder-bob": {
@@ -137,7 +137,7 @@
   "jest": {
     "preset": "react-native",
     "modulePathIgnorePatterns": [
-      "<rootDir>/example/node_modules",
+      "<rootDir>/example/bare/node_modules",
       "<rootDir>/lib/"
     ]
   },

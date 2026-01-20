@@ -22,7 +22,7 @@ src/fabric/          # Native component specs (Codegen)
 ios/                 # iOS native (Objective-C)
 android/             # Android native (Kotlin)
 plugin/              # Expo config plugin
-example/             # Example app
+example/bare/        # Bare React Native example app
 ```
 
 ### Creating a Pull Request
