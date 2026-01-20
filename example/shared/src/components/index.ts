@@ -1,3 +1,4 @@
+export { AnimatedPolyline } from './AnimatedPolyline';
 export { Button } from './Button';
 export { Map } from './Map';
 export { MarkerIcon } from './MarkerIcon';

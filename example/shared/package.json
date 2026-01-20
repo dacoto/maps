@@ -8,11 +8,13 @@
     "@lugg/maps": "*",
     "react": "*",
     "react-native": "*",
+    "react-native-reanimated": "*",
     "react-native-svg": "*"
   },
   "devDependencies": {
     "@lodev09/react-native-true-sheet": "*",
     "@types/react": "*",
+    "react-native-reanimated": "*",
     "react-native-svg": "*"
   }
 }
