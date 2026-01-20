@@ -47,7 +47,7 @@ export default function App() {
 
   const handleCameraIdle = useCallback(
     (event: { nativeEvent: CameraIdleEvent }) => {
-      setCameraPosition(event.nativeEvent);
+      setCameraPosition({ ...event.nativeEvent, dragging: false });
       setIsIdle(true);
     },
     []
@@ -130,7 +130,8 @@ export default function App() {
           <Text style={styles.positionText}>
             {cameraPosition.coordinate.latitude.toFixed(5)},{' '}
             {cameraPosition.coordinate.longitude.toFixed(5)} (z
-            {cameraPosition.zoom.toFixed(1)}){isIdle ? ' (idle)' : ''}
+            {cameraPosition.zoom.toFixed(1)})
+            {isIdle ? ' (idle)' : cameraPosition.dragging ? ' (dragging)' : ''}
           </Text>
         )}
         <View style={styles.sheetContent}>

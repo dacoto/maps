@@ -38,6 +38,7 @@ using namespace luggmaps::events;
 @implementation AppleMapView {
   AppleMapViewContent *_mapView;
   MapWrapperView *_mapWrapperView;
+  BOOL _isDragging;
 }
 
 + (ComponentDescriptorProvider)componentDescriptorProvider {
@@ -345,14 +346,30 @@ using namespace luggmaps::events;
 
 #pragma mark - MKMapViewDelegate
 
+- (void)mapView:(MKMapView *)mapView regionWillChangeAnimated:(BOOL)animated {
+  _isDragging = [self isUserInteracting:mapView];
+}
+
+- (BOOL)isUserInteracting:(MKMapView *)mapView {
+  UIView *mapContainerView = mapView.subviews.firstObject;
+  for (UIGestureRecognizer *gesture in mapContainerView.gestureRecognizers) {
+    if (gesture.state == UIGestureRecognizerStateBegan ||
+        gesture.state == UIGestureRecognizerStateChanged) {
+      return YES;
+    }
+  }
+  return NO;
+}
+
 - (void)mapViewDidChangeVisibleRegion:(MKMapView *)mapView {
   if (_eventEmitter) {
     auto emitter = std::static_pointer_cast<AppleMapViewEventEmitter const>(_eventEmitter);
-    CameraMoveEvent{mapView.centerCoordinate.latitude, mapView.centerCoordinate.longitude, mapView.zoomLevel}.emit(emitter);
+    CameraMoveEvent{mapView.centerCoordinate.latitude, mapView.centerCoordinate.longitude, mapView.zoomLevel, _isDragging}.emit(emitter);
   }
 }
 
 - (void)mapView:(MKMapView *)mapView regionDidChangeAnimated:(BOOL)animated {
+  _isDragging = NO;
   if (_eventEmitter) {
     auto emitter = std::static_pointer_cast<AppleMapViewEventEmitter const>(_eventEmitter);
     CameraIdleEvent{mapView.centerCoordinate.latitude, mapView.centerCoordinate.longitude, mapView.zoomLevel}.emit(emitter);

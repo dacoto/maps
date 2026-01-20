@@ -23,6 +23,7 @@ export interface MapViewRef {
 export interface CameraMoveEvent {
   coordinate: Coordinate;
   zoom: number;
+  dragging: boolean;
 }
 
 export interface CameraIdleEvent {

@@ -26,6 +26,7 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
   GMSMapView *_mapView;
   MapWrapperView *_mapWrapperView;
   BOOL _isMapReady;
+  BOOL _isDragging;
   NSString *_mapId;
   NSMutableArray<MarkerView *> *_pendingMarkerViews;
   NSMutableArray<PolylineView *> *_pendingPolylineViews;
@@ -163,14 +164,19 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
 
 #pragma mark - GMSMapViewDelegate
 
+- (void)mapView:(GMSMapView *)mapView willMove:(BOOL)gesture {
+  _isDragging = gesture;
+}
+
 - (void)mapView:(GMSMapView *)mapView didChangeCameraPosition:(GMSCameraPosition *)position {
   if (_eventEmitter) {
     auto emitter = std::static_pointer_cast<GoogleMapViewEventEmitter const>(_eventEmitter);
-    CameraMoveEvent{position.target.latitude, position.target.longitude, position.zoom}.emit(emitter);
+    CameraMoveEvent{position.target.latitude, position.target.longitude, position.zoom, _isDragging}.emit(emitter);
   }
 }
 
 - (void)mapView:(GMSMapView *)mapView idleAtCameraPosition:(GMSCameraPosition *)position {
+  _isDragging = NO;
   if (_eventEmitter) {
     auto emitter = std::static_pointer_cast<GoogleMapViewEventEmitter const>(_eventEmitter);
     CameraIdleEvent{position.target.latitude, position.target.longitude, position.zoom}.emit(emitter);

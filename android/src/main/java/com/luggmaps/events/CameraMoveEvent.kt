@@ -8,7 +8,8 @@ class CameraMoveEvent(
   viewId: Int,
   private val latitude: Double,
   private val longitude: Double,
-  private val zoom: Float
+  private val zoom: Float,
+  private val dragging: Boolean
 ) : Event<CameraMoveEvent>(surfaceId, viewId) {
   override fun getEventName() = "topCameraMove"
 
@@ -18,5 +19,6 @@ class CameraMoveEvent(
       putDouble("longitude", longitude)
     })
     putDouble("zoom", zoom.toDouble())
+    putBoolean("dragging", dragging)
   }
 }

@@ -23,6 +23,7 @@ export interface CameraMoveEvent {
     longitude: Double;
   };
   zoom: Double;
+  dragging: boolean;
 }
 
 export interface CameraIdleEvent {

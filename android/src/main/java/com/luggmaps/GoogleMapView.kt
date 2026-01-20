@@ -20,7 +20,7 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.PolylineOptions
 
 interface GoogleMapViewEventDelegate {
-  fun onCameraMove(view: GoogleMapView, latitude: Double, longitude: Double, zoom: Float)
+  fun onCameraMove(view: GoogleMapView, latitude: Double, longitude: Double, zoom: Float, dragging: Boolean)
   fun onCameraIdle(view: GoogleMapView, latitude: Double, longitude: Double, zoom: Float)
 }
 
@@ -30,6 +30,7 @@ class GoogleMapView(private val reactContext: ThemedReactContext) :
   OnMapReadyCallback,
   MarkerViewDelegate,
   PolylineViewDelegate,
+  GoogleMap.OnCameraMoveStartedListener,
   GoogleMap.OnCameraMoveListener,
   GoogleMap.OnCameraIdleListener {
 
@@ -38,6 +39,7 @@ class GoogleMapView(private val reactContext: ThemedReactContext) :
   private var mapWrapperView: MapWrapperView? = null
   private var googleMap: GoogleMap? = null
   private var isMapReady = false
+  private var isDragging = false
   private var mapId: String = DEMO_MAP_ID
   private val pendingMarkerViews = mutableListOf<MarkerView>()
   private val pendingPolylineViews = mutableListOf<PolylineView>()
@@ -137,6 +139,7 @@ class GoogleMapView(private val reactContext: ThemedReactContext) :
     val position = LatLng(initialLatitude, initialLongitude)
     map.moveCamera(CameraUpdateFactory.newLatLngZoom(position, initialZoom))
 
+    map.setOnCameraMoveStartedListener(this)
     map.setOnCameraMoveListener(this)
     map.setOnCameraIdleListener(this)
 
@@ -146,15 +149,20 @@ class GoogleMapView(private val reactContext: ThemedReactContext) :
     processPendingPolylines()
   }
 
+  override fun onCameraMoveStarted(reason: Int) {
+    isDragging = reason == GoogleMap.OnCameraMoveStartedListener.REASON_GESTURE
+  }
+
   override fun onCameraMove() {
     val map = googleMap ?: return
     val position = map.cameraPosition
-    eventDelegate?.onCameraMove(this, position.target.latitude, position.target.longitude, position.zoom)
+    eventDelegate?.onCameraMove(this, position.target.latitude, position.target.longitude, position.zoom, isDragging)
   }
 
   override fun onCameraIdle() {
     val map = googleMap ?: return
     val position = map.cameraPosition
+    isDragging = false
     eventDelegate?.onCameraIdle(this, position.target.latitude, position.target.longitude, position.zoom)
   }
 
