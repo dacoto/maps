@@ -12,6 +12,7 @@
   "dependencies": {
     "@lodev09/react-native-true-sheet": "^3.7.0",
     "@lugg/maps": "workspace:*",
+    "@lugg/shared-example": "workspace:*",
     "react": "19.2.0",
     "react-native": "0.83.0",
     "react-native-reanimated": "4",

@@ -18,14 +18,17 @@ import {
   type DidPresentEvent,
 } from '@lodev09/react-native-true-sheet';
 
-import { Button, Map } from './components';
-import { randomFrom, randomLetter } from './utils';
 import {
+  Button,
+  randomFrom,
+  randomLetter,
   MARKER_COLORS,
   AVATAR_URLS,
   MARKER_TYPES,
   INITIAL_MARKERS,
-} from './markers';
+} from '@lugg/shared-example';
+
+import { Map } from './components';
 
 export default function App() {
   const mapRef = useRef<MapView>(null);

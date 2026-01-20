@@ -1,0 +1,16 @@
+{
+  "name": "@lugg/shared-example",
+  "version": "0.0.1",
+  "private": true,
+  "main": "./src/index.ts",
+  "peerDependencies": {
+    "@lugg/maps": "*",
+    "react": "*",
+    "react-native": "*",
+    "react-native-svg": "*"
+  },
+  "devDependencies": {
+    "@types/react": "*",
+    "react-native-svg": "*"
+  }
+}

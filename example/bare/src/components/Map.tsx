@@ -1,26 +1,14 @@
 import { forwardRef } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { MapView, Marker, type MapViewProps } from '@lugg/maps';
+import {
+  MarkerIcon,
+  MarkerText,
+  MarkerImage,
+  type MarkerData,
+} from '@lugg/shared-example';
 
 import { AnimatedPolyline } from './AnimatedPolyline';
-import { MarkerIcon } from './MarkerIcon';
-import { MarkerText } from './MarkerText';
-import { MarkerImage } from './MarkerImage';
-
-type MarkerType = 'basic' | 'icon' | 'text' | 'image' | 'custom';
-
-export interface MarkerData {
-  id: string;
-  name: string;
-  coordinate: { latitude: number; longitude: number };
-  type: MarkerType;
-  title?: string;
-  description?: string;
-  anchor?: { x: number; y: number };
-  text?: string;
-  color?: string;
-  imageUrl?: string;
-}
 
 interface MapProps extends MapViewProps {
   markers: MarkerData[];

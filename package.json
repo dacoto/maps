@@ -96,7 +96,8 @@
     "@expo/config-plugins": "^9.0.0"
   },
   "workspaces": [
-    "example/bare"
+    "example/bare",
+    "example/shared"
   ],
   "packageManager": "yarn@4.11.0",
   "react-native-builder-bob": {

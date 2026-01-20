@@ -13,7 +13,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { generateGradientColors, smoothCoordinates } from '../utils';
+import { generateGradientColors, smoothCoordinates } from '@lugg/shared-example';
 
 const ReanimatedPolyline = Animated.createAnimatedComponent(Polyline);
 
