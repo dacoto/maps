@@ -1,6 +1,5 @@
 package com.luggmaps
 
-import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.uimanager.PixelUtil.dpToPx
@@ -9,29 +8,11 @@ import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.ViewGroupManager
 import com.facebook.react.uimanager.ViewManagerDelegate
 import com.facebook.react.uimanager.annotations.ReactProp
-import com.facebook.react.uimanager.events.Event
 import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.viewmanagers.GoogleMapViewManagerDelegate
 import com.facebook.react.viewmanagers.GoogleMapViewManagerInterface
 import com.google.android.gms.maps.model.LatLng
-
-class CameraMoveEvent(
-  surfaceId: Int,
-  viewId: Int,
-  private val latitude: Double,
-  private val longitude: Double,
-  private val zoom: Float
-) : Event<CameraMoveEvent>(surfaceId, viewId) {
-  override fun getEventName() = "topCameraMove"
-
-  override fun getEventData() = Arguments.createMap().apply {
-    putMap("coordinate", Arguments.createMap().apply {
-      putDouble("latitude", latitude)
-      putDouble("longitude", longitude)
-    })
-    putDouble("zoom", zoom.toDouble())
-  }
-}
+import com.luggmaps.events.CameraMoveEvent
 
 @ReactModule(name = GoogleMapViewManager.NAME)
 class GoogleMapViewManager :
