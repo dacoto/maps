@@ -8,7 +8,7 @@ export interface MapsAndroidPluginProps {
   apiKey?: string;
 }
 
-export const withMapsAndroid: ConfigPlugin<MapsAndroidPluginProps> = (
+export const withLuggMapsAndroid: ConfigPlugin<MapsAndroidPluginProps> = (
   config,
   { apiKey }
 ) => {

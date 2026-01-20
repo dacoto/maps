@@ -1,7 +1,7 @@
 import { type ConfigPlugin, createRunOncePlugin } from '@expo/config-plugins';
 
-import { withMapsAndroid } from './withMapsAndroid';
-import { withMapsIOS } from './withMapsIOS';
+import { withLuggMapsAndroid } from './withMapsAndroid';
+import { withLuggMapsIOS } from './withMapsIOS';
 
 const pkg = require('../../package.json');
 
@@ -22,8 +22,8 @@ export interface MapsPluginProps {
 const withMaps: ConfigPlugin<MapsPluginProps | void> = (config, props = {}) => {
   const { iosGoogleMapsApiKey, androidGoogleMapsApiKey } = props ?? {};
 
-  config = withMapsIOS(config, { apiKey: iosGoogleMapsApiKey });
-  config = withMapsAndroid(config, { apiKey: androidGoogleMapsApiKey });
+  config = withLuggMapsIOS(config, { apiKey: iosGoogleMapsApiKey });
+  config = withLuggMapsAndroid(config, { apiKey: androidGoogleMapsApiKey });
 
   return config;
 };
