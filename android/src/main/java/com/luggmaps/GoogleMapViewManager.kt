@@ -2,6 +2,7 @@ package com.luggmaps
 
 import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap
+import com.facebook.react.uimanager.PixelUtil.dpToPx
 import com.facebook.react.module.annotations.ReactModule
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.ViewGroupManager
@@ -60,6 +61,17 @@ class GoogleMapViewManager :
   @ReactProp(name = "pitchEnabled", defaultBoolean = true)
   override fun setPitchEnabled(view: GoogleMapView, value: Boolean) {
     view.setPitchEnabled(value)
+  }
+
+  @ReactProp(name = "padding")
+  override fun setPadding(view: GoogleMapView, value: ReadableMap?) {
+    value?.let {
+      val top = if (it.hasKey("top")) it.getDouble("top").toFloat().dpToPx().toInt() else 0
+      val left = if (it.hasKey("left")) it.getDouble("left").toFloat().dpToPx().toInt() else 0
+      val bottom = if (it.hasKey("bottom")) it.getDouble("bottom").toFloat().dpToPx().toInt() else 0
+      val right = if (it.hasKey("right")) it.getDouble("right").toFloat().dpToPx().toInt() else 0
+      view.setMapPadding(top, left, bottom, right)
+    }
   }
 
   override fun onDropViewInstance(view: GoogleMapView) {

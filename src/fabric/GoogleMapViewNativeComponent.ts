@@ -1,23 +1,28 @@
 import { codegenNativeComponent, codegenNativeCommands } from 'react-native';
 import type { ViewProps, HostComponent } from 'react-native';
-import type {
-  Double,
-  WithDefault,
-} from 'react-native/Libraries/Types/CodegenTypes';
+import type { Double } from 'react-native/Libraries/Types/CodegenTypes';
 
 export interface Coordinate {
   latitude: Double;
   longitude: Double;
 }
 
+export interface EdgeInsets {
+  top: Double;
+  left: Double;
+  bottom: Double;
+  right: Double;
+}
+
 export interface NativeProps extends ViewProps {
-  mapId?: WithDefault<string, 'DEMO_MAP_ID'>;
+  mapId?: string;
   initialCoordinate?: Coordinate;
-  initialZoom?: WithDefault<Double, 10>;
-  zoomEnabled?: WithDefault<boolean, true>;
-  scrollEnabled?: WithDefault<boolean, true>;
-  rotateEnabled?: WithDefault<boolean, true>;
-  pitchEnabled?: WithDefault<boolean, true>;
+  initialZoom?: Double;
+  zoomEnabled?: boolean;
+  scrollEnabled?: boolean;
+  rotateEnabled?: boolean;
+  pitchEnabled?: boolean;
+  padding?: EdgeInsets;
 }
 
 type ComponentType = HostComponent<NativeProps>;

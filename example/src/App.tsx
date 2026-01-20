@@ -1,7 +1,10 @@
-import { useRef, useState } from 'react';
-import { StyleSheet, View, Platform } from 'react-native';
-import { MapView, type MapProvider } from '@lugg/maps';
-import { TrueSheet } from '@lodev09/react-native-true-sheet';
+import { useRef, useState, useCallback } from 'react';
+import { StyleSheet, View, Platform, useWindowDimensions } from 'react-native';
+import { MapView, type MapProvider, type EdgeInsets } from '@lugg/maps';
+import {
+  TrueSheet,
+  type DidPresentEvent,
+} from '@lodev09/react-native-true-sheet';
 
 import { Button, Map } from './components';
 import { randomFrom, randomLetter } from './utils';
@@ -14,9 +17,19 @@ import {
 
 export default function App() {
   const mapRef = useRef<MapView>(null);
+  const { height: screenHeight } = useWindowDimensions();
   const [provider, setProvider] = useState<MapProvider>('google');
   const [showMap, setShowMap] = useState(true);
   const [markers, setMarkers] = useState(INITIAL_MARKERS);
+  const [mapPadding, setMapPadding] = useState<EdgeInsets>();
+
+  const handleSheetPresent = useCallback(
+    (event: DidPresentEvent) => {
+      const sheetHeight = screenHeight - event.nativeEvent.position;
+      setMapPadding({ top: 0, left: 0, bottom: sheetHeight, right: 0 });
+    },
+    [screenHeight]
+  );
 
   const addRandomMarker = () => {
     const type = randomFrom(MARKER_TYPES);
@@ -62,7 +75,14 @@ export default function App() {
 
   return (
     <View style={styles.container}>
-      {showMap && <Map ref={mapRef} provider={provider} markers={markers} />}
+      {showMap && (
+        <Map
+          ref={mapRef}
+          provider={provider}
+          markers={markers}
+          padding={mapPadding}
+        />
+      )}
 
       <TrueSheet
         detents={['auto']}
@@ -71,6 +91,7 @@ export default function App() {
         initialDetentAnimated={false}
         dismissible={false}
         grabber={false}
+        onDidPresent={handleSheetPresent}
       >
         <View style={styles.sheetContent}>
           <Button title="Add Marker" onPress={addRandomMarker} />

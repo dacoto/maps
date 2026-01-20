@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import type { ViewProps } from 'react-native';
-import type { MapProvider, Coordinate } from './types';
+import type { MapProvider, Coordinate, EdgeInsets } from './types';
 
 export interface MoveCameraOptions {
   zoom: number;
@@ -29,5 +29,6 @@ export interface MapViewProps extends ViewProps {
   scrollEnabled?: boolean;
   rotateEnabled?: boolean;
   pitchEnabled?: boolean;
+  padding?: EdgeInsets;
   children?: ReactNode;
 }

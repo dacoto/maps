@@ -190,33 +190,13 @@ using namespace facebook::react;
       *std::static_pointer_cast<AppleMapViewProps const>(props);
 
   if (_mapView) {
-    if (newViewProps.initialCoordinate.latitude !=
-            oldViewProps.initialCoordinate.latitude ||
-        newViewProps.initialCoordinate.longitude !=
-            oldViewProps.initialCoordinate.longitude ||
-        newViewProps.initialZoom != oldViewProps.initialZoom) {
-
-      [self setCameraWithLatitude:newViewProps.initialCoordinate.latitude
-                        longitude:newViewProps.initialCoordinate.longitude
-                             zoom:newViewProps.initialZoom
-                         animated:NO];
-    }
-
-    if (newViewProps.zoomEnabled != oldViewProps.zoomEnabled) {
-      _mapView.zoomEnabled = newViewProps.zoomEnabled;
-    }
-
-    if (newViewProps.scrollEnabled != oldViewProps.scrollEnabled) {
-      _mapView.scrollEnabled = newViewProps.scrollEnabled;
-    }
-
-    if (newViewProps.rotateEnabled != oldViewProps.rotateEnabled) {
-      _mapView.rotateEnabled = newViewProps.rotateEnabled;
-    }
-
-    if (newViewProps.pitchEnabled != oldViewProps.pitchEnabled) {
-      _mapView.pitchEnabled = newViewProps.pitchEnabled;
-    }
+    _mapView.zoomEnabled = newViewProps.zoomEnabled;
+    _mapView.scrollEnabled = newViewProps.scrollEnabled;
+    _mapView.rotateEnabled = newViewProps.rotateEnabled;
+    _mapView.pitchEnabled = newViewProps.pitchEnabled;
+    _mapView.layoutMargins = UIEdgeInsetsMake(
+        newViewProps.padding.top, newViewProps.padding.left,
+        newViewProps.padding.bottom, newViewProps.padding.right);
   }
 
   [super updateProps:props oldProps:oldProps];

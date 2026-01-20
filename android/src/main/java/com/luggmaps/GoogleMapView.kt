@@ -45,6 +45,12 @@ class GoogleMapView(private val reactContext: ThemedReactContext) :
   private var rotateEnabled: Boolean = true
   private var pitchEnabled: Boolean = true
 
+  // Padding
+  private var paddingTop: Int = 0
+  private var paddingLeft: Int = 0
+  private var paddingBottom: Int = 0
+  private var paddingRight: Int = 0
+
   // region View Lifecycle
 
   override fun addView(child: View?, index: Int) {
@@ -122,9 +128,9 @@ class GoogleMapView(private val reactContext: ThemedReactContext) :
 
     val position = LatLng(initialLatitude, initialLongitude)
     map.moveCamera(CameraUpdateFactory.newLatLngZoom(position, initialZoom))
-    map.setPadding(0, 0, 0, 0)
 
     applyUiSettings()
+    applyPadding()
     processPendingMarkers()
     processPendingPolylines()
   }
@@ -136,6 +142,10 @@ class GoogleMapView(private val reactContext: ThemedReactContext) :
       isRotateGesturesEnabled = rotateEnabled
       isTiltGesturesEnabled = pitchEnabled
     }
+  }
+
+  private fun applyPadding() {
+    googleMap?.setPadding(paddingLeft, paddingTop, paddingRight, paddingBottom)
   }
 
   // endregion
@@ -334,6 +344,14 @@ class GoogleMapView(private val reactContext: ThemedReactContext) :
   fun setPitchEnabled(enabled: Boolean) {
     pitchEnabled = enabled
     googleMap?.uiSettings?.isTiltGesturesEnabled = enabled
+  }
+
+  fun setMapPadding(top: Int, left: Int, bottom: Int, right: Int) {
+    paddingTop = top
+    paddingLeft = left
+    paddingBottom = bottom
+    paddingRight = right
+    applyPadding()
   }
 
   // endregion

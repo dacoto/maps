@@ -76,6 +76,7 @@ export class MapView
       scrollEnabled,
       rotateEnabled,
       pitchEnabled,
+      padding,
       children,
       ...rest
     } = this.props;
@@ -96,6 +97,7 @@ export class MapView
         scrollEnabled={scrollEnabled}
         rotateEnabled={rotateEnabled}
         pitchEnabled={pitchEnabled}
+        padding={padding}
       >
         <NativeMapWrapperView style={StyleSheet.absoluteFill} />
         {children}

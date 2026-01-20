@@ -117,6 +117,9 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
     return;
   }
 
+  const auto &viewProps =
+      *std::static_pointer_cast<GoogleMapViewProps const>(_props);
+
   GMSMapID *gmsMapId;
   if ([_mapId isEqualToString:kDemoMapId] || _mapId.length == 0) {
     gmsMapId = [GMSMapID demoMapID];
@@ -124,9 +127,10 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
     gmsMapId = [GMSMapID mapIDWithIdentifier:_mapId];
   }
 
-  GMSCameraPosition *camera = [GMSCameraPosition cameraWithLatitude:37.78
-                                                          longitude:-122.43
-                                                               zoom:14];
+  GMSCameraPosition *camera = [GMSCameraPosition
+      cameraWithLatitude:viewProps.initialCoordinate.latitude
+               longitude:viewProps.initialCoordinate.longitude
+                    zoom:viewProps.initialZoom];
 
   GMSMapViewOptions *options = [[GMSMapViewOptions alloc] init];
   options.frame = _mapWrapperView.bounds;
@@ -138,6 +142,10 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
       UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
   _mapView.delegate = self;
   _mapView.paddingAdjustmentBehavior = kGMSMapViewPaddingAdjustmentBehaviorNever;
+  _mapView.settings.zoomGestures = viewProps.zoomEnabled;
+  _mapView.settings.scrollGestures = viewProps.scrollEnabled;
+  _mapView.settings.rotateGestures = viewProps.rotateEnabled;
+  _mapView.settings.tiltGestures = viewProps.pitchEnabled;
 
   [_mapWrapperView addSubview:_mapView];
 
@@ -341,34 +349,13 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
   }
 
   if (_mapView) {
-    if (newViewProps.initialCoordinate.latitude !=
-            oldViewProps.initialCoordinate.latitude ||
-        newViewProps.initialCoordinate.longitude !=
-            oldViewProps.initialCoordinate.longitude ||
-        newViewProps.initialZoom != oldViewProps.initialZoom) {
-
-      GMSCameraPosition *camera = [GMSCameraPosition
-          cameraWithLatitude:newViewProps.initialCoordinate.latitude
-                   longitude:newViewProps.initialCoordinate.longitude
-                        zoom:newViewProps.initialZoom];
-      [_mapView setCamera:camera];
-    }
-
-    if (newViewProps.zoomEnabled != oldViewProps.zoomEnabled) {
-      _mapView.settings.zoomGestures = newViewProps.zoomEnabled;
-    }
-
-    if (newViewProps.scrollEnabled != oldViewProps.scrollEnabled) {
-      _mapView.settings.scrollGestures = newViewProps.scrollEnabled;
-    }
-
-    if (newViewProps.rotateEnabled != oldViewProps.rotateEnabled) {
-      _mapView.settings.rotateGestures = newViewProps.rotateEnabled;
-    }
-
-    if (newViewProps.pitchEnabled != oldViewProps.pitchEnabled) {
-      _mapView.settings.tiltGestures = newViewProps.pitchEnabled;
-    }
+    _mapView.settings.zoomGestures = newViewProps.zoomEnabled;
+    _mapView.settings.scrollGestures = newViewProps.scrollEnabled;
+    _mapView.settings.rotateGestures = newViewProps.rotateEnabled;
+    _mapView.settings.tiltGestures = newViewProps.pitchEnabled;
+    _mapView.padding = UIEdgeInsetsMake(
+        newViewProps.padding.top, newViewProps.padding.left,
+        newViewProps.padding.bottom, newViewProps.padding.right);
   }
 
   [super updateProps:props oldProps:oldProps];
