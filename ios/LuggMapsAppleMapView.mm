@@ -2,7 +2,7 @@
 #import "LuggMapsWrapperView.h"
 #import "LuggMapsMarkerView.h"
 #import "LuggMapsPolylineView.h"
-#import "core/PolylineRenderer.h"
+#import "core/MKPolylineAnimator.h"
 #import "events/CameraIdleEvent.h"
 #import "events/CameraMoveEvent.h"
 #import "extensions/MKMapView+Zoom.h"
@@ -263,7 +263,7 @@ using namespace luggmaps::events;
     return;
   }
 
-  PolylineRenderer *renderer = (PolylineRenderer *)polylineView.renderer;
+  MKPolylineAnimator *renderer = (MKPolylineAnimator *)polylineView.renderer;
   MKPolyline *oldPolyline = (MKPolyline *)polylineView.polyline;
 
   // Build new polyline from coordinates
@@ -291,10 +291,10 @@ using namespace luggmaps::events;
   // If we have an existing renderer, update it in place
   if (renderer && oldPolyline) {
     [renderer updatePolyline:newPolyline];
-    renderer.strokeColor = polylineView.strokeColors.firstObject;
-    renderer.strokeColors =
-        polylineView.strokeColors.count > 1 ? polylineView.strokeColors : nil;
     renderer.lineWidth = polylineView.strokeWidth;
+    renderer.strokeColor = polylineView.strokeColors.firstObject;
+    renderer.strokeColors = polylineView.strokeColors.count > 1 ? polylineView.strokeColors : nil;
+    renderer.animated = polylineView.animated;
     return;
   }
 
@@ -433,13 +433,14 @@ using namespace luggmaps::events;
     if (polylineView) {
       NSArray<UIColor *> *colors = polylineView.strokeColors;
 
-      PolylineRenderer *renderer =
-          [[PolylineRenderer alloc] initWithPolyline:polyline];
+      MKPolylineAnimator *renderer =
+          [[MKPolylineAnimator alloc] initWithPolyline:polyline];
       renderer.lineWidth = polylineView.strokeWidth;
       renderer.strokeColor = colors.firstObject;
       if (colors.count > 1) {
         renderer.strokeColors = colors;
       }
+      renderer.animated = polylineView.animated;
       polylineView.renderer = renderer;
       return renderer;
     }

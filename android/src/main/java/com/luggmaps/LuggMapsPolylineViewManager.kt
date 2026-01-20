@@ -60,6 +60,11 @@ class LuggMapsPolylineViewManager :
     view.setStrokeWidth(value.toFloat())
   }
 
+  @ReactProp(name = "animated", defaultBoolean = false)
+  override fun setAnimated(view: LuggMapsPolylineView, value: Boolean) {
+    view.setAnimated(value)
+  }
+
   companion object {
     const val NAME = "LuggMapsPolylineView"
   }

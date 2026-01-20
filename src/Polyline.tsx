@@ -5,7 +5,12 @@ import { StyleSheet } from 'react-native';
 
 export class Polyline extends React.Component<PolylineProps> {
   render() {
-    const { coordinates, strokeColors, strokeWidth } = this.props;
+    const {
+      coordinates,
+      strokeColors,
+      strokeWidth,
+      animated = false,
+    } = this.props;
 
     return (
       <LuggMapsPolylineViewNativeComponent
@@ -13,6 +18,7 @@ export class Polyline extends React.Component<PolylineProps> {
         coordinates={coordinates}
         strokeColors={strokeColors}
         strokeWidth={strokeWidth}
+        animated={animated}
       />
     );
   }

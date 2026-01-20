@@ -1,8 +1,7 @@
 import { forwardRef } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { MapView, Marker, type MapViewProps } from '@lugg/maps';
+import { MapView, Marker, Polyline, type MapViewProps } from '@lugg/maps';
 
-import { AnimatedPolyline } from './AnimatedPolyline';
 import { MarkerIcon } from './MarkerIcon';
 import { MarkerText } from './MarkerText';
 import { MarkerImage } from './MarkerImage';
@@ -83,7 +82,12 @@ export const Map = forwardRef<MapView, MapProps>(
       >
         {markers.map(renderMarker)}
         {polylineCoordinates.length >= 2 && (
-          <AnimatedPolyline coordinates={polylineCoordinates} strokeWidth={4} />
+          <Polyline
+            strokeColors={['#B321E0', '#3744FF']}
+            coordinates={polylineCoordinates}
+            strokeWidth={6}
+            animated
+          />
         )}
         <Marker
           name="inline-marker"

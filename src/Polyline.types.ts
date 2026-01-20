@@ -17,4 +17,8 @@ export interface PolylineProps {
    * Line width in points
    */
   strokeWidth?: number;
+  /**
+   * Animate the polyline with a snake effect
+   */
+  animated?: boolean;
 }

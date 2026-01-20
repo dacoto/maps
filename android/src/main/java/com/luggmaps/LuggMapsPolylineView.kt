@@ -22,6 +22,9 @@ class LuggMapsPolylineView(context: Context) : ReactViewGroup(context) {
   var strokeWidth: Float = 1f
     private set
 
+  var animated: Boolean = false
+    private set
+
   var cachedSpans: List<StyleSpan>? = null
     private set
 
@@ -46,6 +49,10 @@ class LuggMapsPolylineView(context: Context) : ReactViewGroup(context) {
 
   fun setStrokeWidth(width: Float) {
     strokeWidth = width
+  }
+
+  fun setAnimated(value: Boolean) {
+    animated = value
   }
 
   fun getOrCreateSpans(): List<StyleSpan> {

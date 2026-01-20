@@ -1,6 +1,8 @@
 #import "LuggMapsGoogleMapView.h"
 #import "LuggMapsMarkerView.h"
 #import "LuggMapsPolylineView.h"
+#import "core/PolylineAnimatorBase.h"
+#import "core/GMSPolylineAnimator.h"
 #import "events/CameraIdleEvent.h"
 #import "events/CameraMoveEvent.h"
 
@@ -30,6 +32,7 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
   NSString *_mapId;
   NSMutableArray<LuggMapsMarkerView *> *_pendingMarkerViews;
   NSMutableArray<LuggMapsPolylineView *> *_pendingPolylineViews;
+  NSMapTable<LuggMapsPolylineView *, GMSPolylineAnimator *> *_polylineAnimators;
 }
 
 + (ComponentDescriptorProvider)componentDescriptorProvider {
@@ -47,6 +50,7 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
     _mapId = kDemoMapId;
     _pendingMarkerViews = [NSMutableArray array];
     _pendingPolylineViews = [NSMutableArray array];
+    _polylineAnimators = [NSMapTable weakToStrongObjectsMapTable];
   }
 
   return self;
@@ -85,6 +89,7 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
     }
   } else if ([childComponentView isKindOfClass:[LuggMapsPolylineView class]]) {
     LuggMapsPolylineView *polylineView = (LuggMapsPolylineView *)childComponentView;
+    [_polylineAnimators removeObjectForKey:polylineView];
     GMSPolyline *polyline = (GMSPolyline *)polylineView.polyline;
     if (polyline) {
       polyline.map = nil;
@@ -107,6 +112,7 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
 
   [_pendingMarkerViews removeAllObjects];
   [_pendingPolylineViews removeAllObjects];
+  [_polylineAnimators removeAllObjects];
   [_mapView clear];
   [_mapView removeFromSuperview];
   _mapView = nil;
@@ -290,18 +296,14 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
   }
 
   GMSPolyline *polyline = (GMSPolyline *)polylineView.polyline;
-  GMSMutablePath *path = [GMSMutablePath path];
-  for (CLLocation *location in polylineView.coordinates) {
-    [path addCoordinate:location.coordinate];
-  }
-  polyline.path = path;
   polyline.strokeWidth = polylineView.strokeWidth;
 
-  NSArray<UIColor *> *colors = polylineView.strokeColors;
-  if (colors.count > 1) {
-    polyline.spans = [self getOrCreateSpansForPolylineView:polylineView];
-  } else {
-    polyline.strokeColor = colors.firstObject;
+  GMSPolylineAnimator *animator = [_polylineAnimators objectForKey:polylineView];
+  if (animator) {
+    animator.coordinates = polylineView.coordinates;
+    animator.strokeColors = polylineView.strokeColors;
+    animator.animated = polylineView.animated;
+    [animator update];
   }
 }
 
@@ -321,43 +323,19 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
     return;
   }
 
-  GMSMutablePath *path = [GMSMutablePath path];
-  for (CLLocation *location in polylineView.coordinates) {
-    [path addCoordinate:location.coordinate];
-  }
-
-  GMSPolyline *polyline = [GMSPolyline polylineWithPath:path];
+  GMSPolyline *polyline = [GMSPolyline polylineWithPath:[GMSMutablePath path]];
   polyline.strokeWidth = polylineView.strokeWidth;
-
-  NSArray<UIColor *> *colors = polylineView.strokeColors;
-  if (colors.count > 1) {
-    polyline.spans = [self getOrCreateSpansForPolylineView:polylineView];
-  } else {
-    polyline.strokeColor = colors.firstObject;
-  }
-
   polyline.map = _mapView;
-
   polylineView.polyline = polyline;
-}
 
-- (NSArray<GMSStyleSpan *> *)getOrCreateSpansForPolylineView:
-    (LuggMapsPolylineView *)polylineView {
-  if (polylineView.cachedSpans) {
-    return (NSArray<GMSStyleSpan *> *)polylineView.cachedSpans;
-  }
+  GMSPolylineAnimator *animator = [[GMSPolylineAnimator alloc] init];
+  animator.polyline = polyline;
+  animator.coordinates = polylineView.coordinates;
+  animator.strokeColors = polylineView.strokeColors;
+  animator.animated = polylineView.animated;
+  [animator update];
 
-  NSArray<UIColor *> *colors = polylineView.strokeColors;
-  NSMutableArray<GMSStyleSpan *> *spans = [NSMutableArray array];
-  NSUInteger segmentCount = polylineView.coordinates.count - 1;
-  for (NSUInteger i = 0; i < segmentCount; i++) {
-    UIColor *color = colors[i % colors.count];
-    GMSStrokeStyle *style = [GMSStrokeStyle solidColor:color];
-    [spans addObject:[GMSStyleSpan spanWithStyle:style]];
-  }
-
-  polylineView.cachedSpans = spans;
-  return spans;
+  [_polylineAnimators setObject:animator forKey:polylineView];
 }
 
 #pragma mark - Property Setters

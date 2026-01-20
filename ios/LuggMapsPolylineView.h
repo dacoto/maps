@@ -15,6 +15,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(nonatomic, readonly) NSArray<CLLocation *> *coordinates;
 @property(nonatomic, readonly) NSArray<UIColor *> *strokeColors;
+@property(nonatomic, readonly) BOOL animated;
 @property(nonatomic, readonly) CGFloat strokeWidth;
 @property(nonatomic, weak, nullable) id<LuggMapsPolylineViewDelegate> delegate;
 @property(nonatomic, strong, nullable) NSObject *polyline;

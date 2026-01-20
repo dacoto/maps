@@ -18,6 +18,7 @@ import com.google.android.gms.maps.model.AdvancedMarkerOptions
 import com.google.android.gms.maps.model.AdvancedMarkerOptions.CollisionBehavior
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.PolylineOptions
+import com.luggmaps.core.PolylineAnimator
 
 interface LuggMapsGoogleMapViewEventDelegate {
   fun onCameraMove(
@@ -49,6 +50,7 @@ class LuggMapsGoogleMapView(private val reactContext: ThemedReactContext) :
   private var mapId: String = DEMO_MAP_ID
   private val pendingMarkerViews = mutableListOf<LuggMapsMarkerView>()
   private val pendingPolylineViews = mutableListOf<LuggMapsPolylineView>()
+  private val polylineAnimators = mutableMapOf<LuggMapsPolylineView, PolylineAnimator>()
 
   // Initial camera settings
   private var initialLatitude: Double = 37.78
@@ -93,6 +95,8 @@ class LuggMapsGoogleMapView(private val reactContext: ThemedReactContext) :
       view.marker?.remove()
       view.marker = null
     } else if (view is LuggMapsPolylineView) {
+      polylineAnimators[view]?.destroy()
+      polylineAnimators.remove(view)
       view.polyline?.remove()
       view.polyline = null
     }
@@ -110,6 +114,8 @@ class LuggMapsGoogleMapView(private val reactContext: ThemedReactContext) :
     Log.d(TAG, "dropping mapView instance")
     pendingMarkerViews.clear()
     pendingPolylineViews.clear()
+    polylineAnimators.values.forEach { it.destroy() }
+    polylineAnimators.clear()
     googleMap?.clear()
     googleMap = null
     isMapReady = false
@@ -301,17 +307,14 @@ class LuggMapsGoogleMapView(private val reactContext: ThemedReactContext) :
       return
     }
 
-    polylineView.polyline?.apply {
-      points = polylineView.coordinates
-      width = polylineView.strokeWidth.dpToPx()
+    polylineView.polyline?.width = polylineView.strokeWidth.dpToPx()
 
-      val colors = polylineView.strokeColors
-      if (colors.size > 1) {
-        val spans = polylineView.getOrCreateSpans()
-        setSpans(spans)
-      } else {
-        color = colors.firstOrNull() ?: android.graphics.Color.BLACK
-      }
+    polylineAnimators[polylineView]?.apply {
+      coordinates = polylineView.coordinates
+      strokeColors = polylineView.strokeColors
+      strokeWidth = polylineView.strokeWidth.dpToPx()
+      animated = polylineView.animated
+      update()
     }
   }
 
@@ -325,18 +328,22 @@ class LuggMapsGoogleMapView(private val reactContext: ThemedReactContext) :
   private fun addPolylineViewToMap(polylineView: LuggMapsPolylineView) {
     val map = googleMap ?: return
 
-    val colors = polylineView.strokeColors
     val options = PolylineOptions()
-      .addAll(polylineView.coordinates)
       .width(polylineView.strokeWidth.dpToPx())
 
-    if (colors.size > 1) {
-      options.addAllSpans(polylineView.getOrCreateSpans())
-    } else {
-      options.color(colors.firstOrNull() ?: android.graphics.Color.BLACK)
+    val polyline = map.addPolyline(options)
+    polylineView.polyline = polyline
+
+    val animator = PolylineAnimator().apply {
+      this.polyline = polyline
+      coordinates = polylineView.coordinates
+      strokeColors = polylineView.strokeColors
+      strokeWidth = polylineView.strokeWidth.dpToPx()
+      animated = polylineView.animated
+      update()
     }
 
-    polylineView.polyline = map.addPolyline(options)
+    polylineAnimators[polylineView] = animator
   }
 
   // endregion

@@ -11,6 +11,7 @@ export interface NativeProps extends ViewProps {
   coordinates: ReadonlyArray<Coordinate>;
   strokeColors?: ReadonlyArray<ColorValue>;
   strokeWidth?: Double;
+  animated?: boolean;
 }
 
 export default codegenNativeComponent<NativeProps>(

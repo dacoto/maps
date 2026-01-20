@@ -16,6 +16,7 @@ using namespace facebook::react;
 @implementation LuggMapsPolylineView {
   NSArray<CLLocation *> *_coordinates;
   NSArray<UIColor *> *_strokeColors;
+  BOOL _animated;
   CGFloat _strokeWidth;
 }
 
@@ -68,6 +69,8 @@ using namespace facebook::react;
     self.cachedSpans = nil;
   }
 
+  _animated = newViewProps.animated;
+
   _strokeWidth = newViewProps.strokeWidth > 0 ? newViewProps.strokeWidth : 1.0;
 }
 
@@ -87,6 +90,10 @@ using namespace facebook::react;
 
 - (NSArray<UIColor *> *)strokeColors {
   return _strokeColors;
+}
+
+- (BOOL)animated {
+  return _animated;
 }
 
 - (CGFloat)strokeWidth {
