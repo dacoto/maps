@@ -6,12 +6,7 @@ import {
   Platform,
   useWindowDimensions,
 } from 'react-native';
-import {
-  MapView,
-  type MapProvider,
-  type EdgeInsets,
-  type CameraEventPayload,
-} from '@lugg/maps';
+import { MapView, type MapProvider, type CameraEventPayload } from '@lugg/maps';
 import {
   TrueSheet,
   type DidPresentEvent,
@@ -38,13 +33,6 @@ export function Home() {
   const [sheetHeight, setSheetHeight] = useState(0);
   const [cameraPosition, setCameraPosition] = useState<CameraEventPayload>();
   const [isIdle, setIsIdle] = useState(true);
-
-  const mapPadding: EdgeInsets = {
-    top: 0,
-    left: 0,
-    bottom: sheetHeight,
-    right: 0,
-  };
 
   const handleCameraMove = useCallback(
     (event: { nativeEvent: CameraEventPayload }) => {
@@ -113,7 +101,7 @@ export function Home() {
   const fitAllMarkers = () => {
     const coordinates = markers.map((m) => m.coordinate);
     mapRef.current?.fitCoordinates(coordinates, {
-      padding: { top: 40, left: 40, bottom: sheetHeight + 40, right: 40 },
+      padding: { top: 40, left: 40, bottom: 40, right: 40 },
     });
   };
 
@@ -124,7 +112,12 @@ export function Home() {
           ref={mapRef}
           provider={provider}
           markers={markers}
-          padding={mapPadding}
+          padding={{
+            top: 0,
+            left: 0,
+            bottom: sheetHeight,
+            right: 0,
+          }}
           userLocationEnabled={locationPermission}
           onReady={handleMapReady}
           onCameraMove={handleCameraMove}
