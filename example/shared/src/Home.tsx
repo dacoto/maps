@@ -10,8 +10,7 @@ import {
   MapView,
   type MapProvider,
   type EdgeInsets,
-  type CameraMoveEvent,
-  type CameraIdleEvent,
+  type CameraEventPayload,
 } from '@lugg/maps';
 import {
   TrueSheet,
@@ -34,11 +33,11 @@ export function Home() {
   const [showMap, setShowMap] = useState(true);
   const [markers, setMarkers] = useState(INITIAL_MARKERS);
   const [mapPadding, setMapPadding] = useState<EdgeInsets>();
-  const [cameraPosition, setCameraPosition] = useState<CameraMoveEvent>();
+  const [cameraPosition, setCameraPosition] = useState<CameraEventPayload>();
   const [isIdle, setIsIdle] = useState(true);
 
   const handleCameraMove = useCallback(
-    (event: { nativeEvent: CameraMoveEvent }) => {
+    (event: { nativeEvent: CameraEventPayload }) => {
       setCameraPosition(event.nativeEvent);
       setIsIdle(false);
     },
@@ -46,8 +45,8 @@ export function Home() {
   );
 
   const handleCameraIdle = useCallback(
-    (event: { nativeEvent: CameraIdleEvent }) => {
-      setCameraPosition({ ...event.nativeEvent, dragging: false });
+    (event: { nativeEvent: CameraEventPayload }) => {
+      setCameraPosition(event.nativeEvent);
       setIsIdle(true);
     },
     []
@@ -131,7 +130,7 @@ export function Home() {
             {cameraPosition.coordinate.latitude.toFixed(5)},{' '}
             {cameraPosition.coordinate.longitude.toFixed(5)} (z
             {cameraPosition.zoom.toFixed(1)})
-            {isIdle ? ' (idle)' : cameraPosition.dragging ? ' (dragging)' : ''}
+            {isIdle ? ' (idle)' : cameraPosition.gesture ? ' (gesture)' : ''}
           </Text>
         )}
         <View style={styles.sheetContent}>
