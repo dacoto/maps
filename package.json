@@ -44,7 +44,7 @@
     "clean": "scripts/clean.sh",
     "prepare": "bob build && yarn build:plugin",
     "build:plugin": "tsc --project plugin",
-    "release": "release-it --only-version"
+    "release": "release-it --preRelease=alpha"
   },
   "keywords": [
     "react-native",
@@ -155,10 +155,21 @@
       "tagName": "v${version}"
     },
     "npm": {
-      "publish": true
+      "publish": false
     },
     "github": {
-      "release": true
+      "release": true,
+      "comments": {
+        "submit": true,
+        "issue": ":rocket: _This issue has been resolved in v${version}. See [${releaseName}](${releaseUrl}) for release notes._",
+        "pr": ":rocket: _This pull request is included in v${version}. See [${releaseName}](${releaseUrl}) for release notes._"
+      }
+    },
+    "hooks": {
+      "before:init": [
+        "yarn tidy",
+        "yarn test"
+      ]
     },
     "plugins": {
       "@release-it/conventional-changelog": {
