@@ -13,7 +13,8 @@ struct CameraMoveEvent {
 
   template <typename Emitter>
   void emit(const facebook::react::SharedEventEmitter &eventEmitter) const {
-    if (!eventEmitter) return;
+    if (!eventEmitter)
+      return;
     auto emitter = std::static_pointer_cast<Emitter const>(eventEmitter);
     typename Emitter::OnCameraMove event;
     event.coordinate.latitude = latitude;

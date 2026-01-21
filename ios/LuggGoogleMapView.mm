@@ -369,8 +369,10 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
         newViewProps.padding.top, newViewProps.padding.left,
         newViewProps.padding.bottom, newViewProps.padding.right);
 
-    float minZoom = newViewProps.minZoom > 0 ? (float)newViewProps.minZoom : _mapView.minZoom;
-    float maxZoom = newViewProps.maxZoom > 0 ? (float)newViewProps.maxZoom : _mapView.maxZoom;
+    float minZoom = newViewProps.minZoom > 0 ? (float)newViewProps.minZoom
+                                             : _mapView.minZoom;
+    float maxZoom = newViewProps.maxZoom > 0 ? (float)newViewProps.maxZoom
+                                             : _mapView.maxZoom;
     [_mapView setMinZoom:minZoom maxZoom:maxZoom];
   }
 

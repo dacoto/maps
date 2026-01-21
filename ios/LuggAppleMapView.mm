@@ -204,14 +204,17 @@ using namespace luggmaps::events;
 }
 
 - (void)applyZoomRange {
-  if (!_mapView) return;
+  if (!_mapView)
+    return;
 
-  CLLocationDistance minDistance = _maxZoom > 0 ? [self cameraDistanceForZoomLevel:_maxZoom] : 0;
-  CLLocationDistance maxDistance = _minZoom > 0 ? [self cameraDistanceForZoomLevel:_minZoom] : -1;
+  CLLocationDistance minDistance =
+      _maxZoom > 0 ? [self cameraDistanceForZoomLevel:_maxZoom] : 0;
+  CLLocationDistance maxDistance =
+      _minZoom > 0 ? [self cameraDistanceForZoomLevel:_minZoom] : -1;
 
-  MKMapCameraZoomRange *zoomRange =
-      [[MKMapCameraZoomRange alloc] initWithMinCenterCoordinateDistance:minDistance
-                                              maxCenterCoordinateDistance:maxDistance];
+  MKMapCameraZoomRange *zoomRange = [[MKMapCameraZoomRange alloc]
+      initWithMinCenterCoordinateDistance:minDistance
+              maxCenterCoordinateDistance:maxDistance];
   _mapView.cameraZoomRange = zoomRange;
 }
 

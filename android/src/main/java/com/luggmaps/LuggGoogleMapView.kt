@@ -216,8 +216,12 @@ class LuggGoogleMapView(private val reactContext: ThemedReactContext) :
 
   @SuppressLint("MissingPermission")
   private fun applyUserLocation() {
-    val hasPermission = context.checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION) == android.content.pm.PackageManager.PERMISSION_GRANTED ||
-      context.checkSelfPermission(android.Manifest.permission.ACCESS_COARSE_LOCATION) == android.content.pm.PackageManager.PERMISSION_GRANTED
+    val hasPermission =
+      context.checkSelfPermission(
+        android.Manifest.permission.ACCESS_FINE_LOCATION
+      ) == android.content.pm.PackageManager.PERMISSION_GRANTED ||
+        context.checkSelfPermission(android.Manifest.permission.ACCESS_COARSE_LOCATION) ==
+        android.content.pm.PackageManager.PERMISSION_GRANTED
     googleMap?.isMyLocationEnabled = userLocationEnabled && hasPermission
   }
 
