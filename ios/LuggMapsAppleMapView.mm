@@ -1,7 +1,7 @@
 #import "LuggMapsAppleMapView.h"
-#import "LuggMapsWrapperView.h"
 #import "LuggMapsMarkerView.h"
 #import "LuggMapsPolylineView.h"
+#import "LuggMapsWrapperView.h"
 #import "core/MKPolylineAnimator.h"
 #import "events/CameraIdleEvent.h"
 #import "events/CameraMoveEvent.h"
@@ -31,8 +31,9 @@ using namespace luggmaps::events;
 @implementation LuggMapsAppleMapViewContent
 @end
 
-@interface LuggMapsAppleMapView () <RCTLuggMapsAppleMapViewViewProtocol, MKMapViewDelegate,
-                            LuggMapsMarkerViewDelegate, LuggMapsPolylineViewDelegate>
+@interface LuggMapsAppleMapView () <
+    RCTLuggMapsAppleMapViewViewProtocol, MKMapViewDelegate,
+    LuggMapsMarkerViewDelegate, LuggMapsPolylineViewDelegate>
 @end
 
 @implementation LuggMapsAppleMapView {
@@ -42,7 +43,8 @@ using namespace luggmaps::events;
 }
 
 + (ComponentDescriptorProvider)componentDescriptorProvider {
-  return concreteComponentDescriptorProvider<LuggMapsAppleMapViewComponentDescriptor>();
+  return concreteComponentDescriptorProvider<
+      LuggMapsAppleMapViewComponentDescriptor>();
 }
 
 - (instancetype)initWithFrame:(CGRect)frame {
@@ -78,7 +80,8 @@ using namespace luggmaps::events;
 
     [self markerViewDidUpdate:markerView];
   } else if ([childComponentView isKindOfClass:[LuggMapsPolylineView class]]) {
-    LuggMapsPolylineView *polylineView = (LuggMapsPolylineView *)childComponentView;
+    LuggMapsPolylineView *polylineView =
+        (LuggMapsPolylineView *)childComponentView;
     polylineView.delegate = self;
     [self addPolylineViewToMap:polylineView];
   }
@@ -101,7 +104,8 @@ using namespace luggmaps::events;
       markerView.marker = nil;
     }
   } else if ([childComponentView isKindOfClass:[LuggMapsPolylineView class]]) {
-    LuggMapsPolylineView *polylineView = (LuggMapsPolylineView *)childComponentView;
+    LuggMapsPolylineView *polylineView =
+        (LuggMapsPolylineView *)childComponentView;
     polylineView.delegate = nil;
     MKPolyline *polyline = (MKPolyline *)polylineView.polyline;
     if (polyline) {
@@ -138,7 +142,8 @@ using namespace luggmaps::events;
   const auto &viewProps =
       *std::static_pointer_cast<LuggMapsAppleMapViewProps const>(_props);
 
-  _mapView = [[LuggMapsAppleMapViewContent alloc] initWithFrame:_mapWrapperView.bounds];
+  _mapView = [[LuggMapsAppleMapViewContent alloc]
+      initWithFrame:_mapWrapperView.bounds];
   _mapView.autoresizingMask =
       UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
   _mapView.delegate = self;
@@ -293,7 +298,8 @@ using namespace luggmaps::events;
     [renderer updatePolyline:newPolyline];
     renderer.lineWidth = polylineView.strokeWidth;
     renderer.strokeColor = polylineView.strokeColors.firstObject;
-    renderer.strokeColors = polylineView.strokeColors.count > 1 ? polylineView.strokeColors : nil;
+    renderer.strokeColors =
+        polylineView.strokeColors.count > 1 ? polylineView.strokeColors : nil;
     renderer.animated = polylineView.animated;
     return;
   }
@@ -363,7 +369,8 @@ using namespace luggmaps::events;
 - (void)mapViewDidChangeVisibleRegion:(MKMapView *)mapView {
   if (_eventEmitter) {
     auto emitter =
-        std::static_pointer_cast<LuggMapsAppleMapViewEventEmitter const>(_eventEmitter);
+        std::static_pointer_cast<LuggMapsAppleMapViewEventEmitter const>(
+            _eventEmitter);
     CameraMoveEvent{mapView.centerCoordinate.latitude,
                     mapView.centerCoordinate.longitude, mapView.zoomLevel,
                     _isDragging}
@@ -375,7 +382,8 @@ using namespace luggmaps::events;
   _isDragging = NO;
   if (_eventEmitter) {
     auto emitter =
-        std::static_pointer_cast<LuggMapsAppleMapViewEventEmitter const>(_eventEmitter);
+        std::static_pointer_cast<LuggMapsAppleMapViewEventEmitter const>(
+            _eventEmitter);
     CameraIdleEvent{mapView.centerCoordinate.latitude,
                     mapView.centerCoordinate.longitude, mapView.zoomLevel}
         .emit(emitter);
@@ -427,7 +435,8 @@ using namespace luggmaps::events;
 - (MKOverlayRenderer *)mapView:(MKMapView *)mapView
             rendererForOverlay:(id<MKOverlay>)overlay {
   if ([overlay isKindOfClass:[MKPolyline class]]) {
-    LuggMapsPolylineView *polylineView = [self findPolylineViewForOverlay:overlay];
+    LuggMapsPolylineView *polylineView =
+        [self findPolylineViewForOverlay:overlay];
     MKPolyline *polyline = (MKPolyline *)overlay;
 
     if (polylineView) {

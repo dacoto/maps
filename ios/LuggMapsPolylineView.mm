@@ -21,7 +21,8 @@ using namespace facebook::react;
 }
 
 + (ComponentDescriptorProvider)componentDescriptorProvider {
-  return concreteComponentDescriptorProvider<LuggMapsPolylineViewComponentDescriptor>();
+  return concreteComponentDescriptorProvider<
+      LuggMapsPolylineViewComponentDescriptor>();
 }
 
 - (instancetype)initWithFrame:(CGRect)frame {

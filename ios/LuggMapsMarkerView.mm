@@ -22,12 +22,14 @@ using namespace facebook::react;
 }
 
 + (ComponentDescriptorProvider)componentDescriptorProvider {
-  return concreteComponentDescriptorProvider<LuggMapsMarkerViewComponentDescriptor>();
+  return concreteComponentDescriptorProvider<
+      LuggMapsMarkerViewComponentDescriptor>();
 }
 
 - (instancetype)initWithFrame:(CGRect)frame {
   if (self = [super initWithFrame:frame]) {
-    static const auto defaultProps = std::make_shared<const LuggMapsMarkerViewProps>();
+    static const auto defaultProps =
+        std::make_shared<const LuggMapsMarkerViewProps>();
     _props = defaultProps;
 
     _coordinate = CLLocationCoordinate2DMake(0, 0);
@@ -145,6 +147,8 @@ using namespace facebook::react;
   }
 }
 
-Class<RCTComponentViewProtocol> LuggMapsMarkerViewCls(void) { return LuggMapsMarkerView.class; }
+Class<RCTComponentViewProtocol> LuggMapsMarkerViewCls(void) {
+  return LuggMapsMarkerView.class;
+}
 
 @end

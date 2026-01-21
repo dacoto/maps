@@ -1,8 +1,8 @@
 #import "LuggMapsGoogleMapView.h"
 #import "LuggMapsMarkerView.h"
 #import "LuggMapsPolylineView.h"
-#import "core/PolylineAnimatorBase.h"
 #import "core/GMSPolylineAnimator.h"
+#import "core/PolylineAnimatorBase.h"
 #import "events/CameraIdleEvent.h"
 #import "events/CameraMoveEvent.h"
 
@@ -20,8 +20,9 @@ using namespace luggmaps::events;
 
 static NSString *const kDemoMapId = @"DEMO_MAP_ID";
 
-@interface LuggMapsGoogleMapView () <RCTLuggMapsGoogleMapViewViewProtocol, GMSMapViewDelegate,
-                             LuggMapsMarkerViewDelegate, LuggMapsPolylineViewDelegate>
+@interface LuggMapsGoogleMapView () <
+    RCTLuggMapsGoogleMapViewViewProtocol, GMSMapViewDelegate,
+    LuggMapsMarkerViewDelegate, LuggMapsPolylineViewDelegate>
 @end
 
 @implementation LuggMapsGoogleMapView {
@@ -70,7 +71,8 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
     markerView.delegate = self;
     [self syncMarkerView:markerView caller:@"mountChildComponentView"];
   } else if ([childComponentView isKindOfClass:[LuggMapsPolylineView class]]) {
-    LuggMapsPolylineView *polylineView = (LuggMapsPolylineView *)childComponentView;
+    LuggMapsPolylineView *polylineView =
+        (LuggMapsPolylineView *)childComponentView;
     polylineView.delegate = self;
     [self syncPolylineView:polylineView];
   }
@@ -88,7 +90,8 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
       markerView.marker = nil;
     }
   } else if ([childComponentView isKindOfClass:[LuggMapsPolylineView class]]) {
-    LuggMapsPolylineView *polylineView = (LuggMapsPolylineView *)childComponentView;
+    LuggMapsPolylineView *polylineView =
+        (LuggMapsPolylineView *)childComponentView;
     [_polylineAnimators removeObjectForKey:polylineView];
     GMSPolyline *polyline = (GMSPolyline *)polylineView.polyline;
     if (polyline) {
@@ -178,8 +181,9 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
 - (void)mapView:(GMSMapView *)mapView
     didChangeCameraPosition:(GMSCameraPosition *)position {
   if (_eventEmitter) {
-    auto emitter = std::static_pointer_cast<LuggMapsGoogleMapViewEventEmitter const>(
-        _eventEmitter);
+    auto emitter =
+        std::static_pointer_cast<LuggMapsGoogleMapViewEventEmitter const>(
+            _eventEmitter);
     CameraMoveEvent{position.target.latitude, position.target.longitude,
                     position.zoom, _isDragging}
         .emit(emitter);
@@ -190,8 +194,9 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
     idleAtCameraPosition:(GMSCameraPosition *)position {
   _isDragging = NO;
   if (_eventEmitter) {
-    auto emitter = std::static_pointer_cast<LuggMapsGoogleMapViewEventEmitter const>(
-        _eventEmitter);
+    auto emitter =
+        std::static_pointer_cast<LuggMapsGoogleMapViewEventEmitter const>(
+            _eventEmitter);
     CameraIdleEvent{position.target.latitude, position.target.longitude,
                     position.zoom}
         .emit(emitter);
@@ -216,7 +221,8 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
 
 #pragma mark - Marker Management
 
-- (void)syncMarkerView:(LuggMapsMarkerView *)markerView caller:(NSString *)caller {
+- (void)syncMarkerView:(LuggMapsMarkerView *)markerView
+                caller:(NSString *)caller {
   if (!_mapView) {
     if (![_pendingMarkerViews containsObject:markerView]) {
       [_pendingMarkerViews addObject:markerView];
@@ -298,7 +304,8 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
   GMSPolyline *polyline = (GMSPolyline *)polylineView.polyline;
   polyline.strokeWidth = polylineView.strokeWidth;
 
-  GMSPolylineAnimator *animator = [_polylineAnimators objectForKey:polylineView];
+  GMSPolylineAnimator *animator =
+      [_polylineAnimators objectForKey:polylineView];
   if (animator) {
     animator.coordinates = polylineView.coordinates;
     animator.strokeColors = polylineView.strokeColors;
