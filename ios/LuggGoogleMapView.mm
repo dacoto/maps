@@ -168,6 +168,10 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
     [_mapView setMinZoom:_mapView.minZoom maxZoom:(float)viewProps.maxZoom];
   }
 
+  _mapView.padding =
+      UIEdgeInsetsMake(viewProps.padding.top, viewProps.padding.left,
+                       viewProps.padding.bottom, viewProps.padding.right);
+
   [_mapWrapperView addSubview:_mapView];
 
   _isMapReady = YES;
@@ -406,7 +410,10 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
 }
 
 - (void)fitCoordinates:(NSArray *)coordinates
-               padding:(double)padding
+            paddingTop:(double)paddingTop
+           paddingLeft:(double)paddingLeft
+         paddingBottom:(double)paddingBottom
+          paddingRight:(double)paddingRight
               duration:(double)duration {
   if (!_mapView || coordinates.count == 0) {
     return;
@@ -419,8 +426,10 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
     bounds = [bounds includingCoordinate:CLLocationCoordinate2DMake(lat, lng)];
   }
 
+  UIEdgeInsets edgePadding =
+      UIEdgeInsetsMake(paddingTop, paddingLeft, paddingBottom, paddingRight);
   GMSCameraUpdate *cameraUpdate = [GMSCameraUpdate fitBounds:bounds
-                                                 withPadding:padding];
+                                              withEdgeInsets:edgePadding];
 
   if (duration < 0) {
     [_mapView animateWithCameraUpdate:cameraUpdate];
