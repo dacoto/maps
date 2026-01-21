@@ -311,7 +311,6 @@ class LuggGoogleMapView(private val reactContext: ThemedReactContext) :
       .position(position)
       .title(markerView.title)
       .snippet(markerView.description)
-      .collisionBehavior(CollisionBehavior.REQUIRED)
 
     Log.d(TAG, "adding marker: ${markerView.name} customview: ${markerView.hasCustomView}")
     if (markerView.hasCustomView) {

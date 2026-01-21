@@ -442,7 +442,6 @@ using namespace luggmaps::events;
                                    reuseIdentifier:nil];
   annotationView.canShowCallout = YES;
   annotationView.displayPriority = MKFeatureDisplayPriorityRequired;
-  annotationView.collisionMode = MKAnnotationViewCollisionModeNone;
 
   UIView *iconView = markerView.iconView;
   [iconView removeFromSuperview];

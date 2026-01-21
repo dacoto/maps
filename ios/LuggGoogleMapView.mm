@@ -277,7 +277,6 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
   marker.position = markerView.coordinate;
   marker.title = markerView.title;
   marker.snippet = markerView.markerDescription;
-  marker.collisionBehavior = GMSCollisionBehaviorRequired;
 
   if (markerView.hasCustomView) {
     marker.iconView = iconView;
