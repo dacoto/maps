@@ -64,11 +64,23 @@ function PolylineImpl({
   const hasGradient = colors.length > 1;
 
   // Refs for animation loop access
-  const propsRef = useRef({ map, colors, strokeWidth, hasGradient, zIndex: resolvedZIndex });
+  const propsRef = useRef({
+    map,
+    colors,
+    strokeWidth,
+    hasGradient,
+    zIndex: resolvedZIndex,
+  });
   const [mapReady, setMapReady] = useState(!!map);
 
   useEffect(() => {
-    propsRef.current = { map, colors, strokeWidth, hasGradient, zIndex: resolvedZIndex };
+    propsRef.current = {
+      map,
+      colors,
+      strokeWidth,
+      hasGradient,
+      zIndex: resolvedZIndex,
+    };
     if (map && !mapReady) setMapReady(true);
   }, [map, colors, strokeWidth, hasGradient, resolvedZIndex, mapReady]);
 
