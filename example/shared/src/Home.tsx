@@ -99,7 +99,7 @@ export function Home() {
     if (markers.length === 0) return;
     const marker = randomFrom(markers);
     mapRef.current?.moveCamera(marker.coordinate, {
-      zoom: 12 + Math.random() * 4,
+      zoom: 14,
     });
   };
 

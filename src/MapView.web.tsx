@@ -194,11 +194,15 @@ export class MapView extends Component<MapViewProps> implements MapViewRef {
     const center = { lat: coordinate.latitude, lng: coordinate.longitude };
 
     if (duration === 0) {
-      map.setCenter(center);
-      map.setZoom(zoom);
+      map.moveCamera({ center, zoom });
     } else {
+      const currentZoom = map.getZoom();
+      const zoomChanged = zoom !== undefined && zoom !== currentZoom;
+
+      if (zoomChanged) {
+        map.setZoom(zoom);
+      }
       map.panTo(center);
-      map.setZoom(zoom);
     }
   }
 
