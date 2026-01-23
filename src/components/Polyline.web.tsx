@@ -1,11 +1,4 @@
-import {
-  Component,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useMap } from '@vis.gl/react-google-maps';
 import type { PolylineProps } from './Polyline';
 
@@ -41,7 +34,7 @@ function getGradientColor(colors: string[], position: number): string {
   return interpolateColor(colors[index]!, colors[index + 1]!, t);
 }
 
-function PolylineImpl({
+export function Polyline({
   coordinates,
   strokeColors,
   strokeWidth = 1,
@@ -213,10 +206,4 @@ function PolylineImpl({
   }, [coordinates, animated, hasGradient, updatePath, mapReady]);
 
   return null;
-}
-
-export class Polyline extends Component<PolylineProps> {
-  render() {
-    return <PolylineImpl {...this.props} />;
-  }
 }

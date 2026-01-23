@@ -1,8 +1,9 @@
 import {
   Children,
-  Component,
+  forwardRef,
   isValidElement,
   useEffect,
+  useImperativeHandle,
   useRef,
   useState,
   type CSSProperties,
@@ -24,7 +25,6 @@ import type {
 } from './MapView.types';
 import type { Coordinate } from './types';
 
-// Map-specific component types that render inside the Google Map
 const MAP_COMPONENT_TYPES = new Set([Marker, Polyline]);
 
 const isMapComponent = (child: ReactElement): boolean =>
@@ -49,17 +49,6 @@ const createSyntheticEvent = <T,>(nativeEvent: T): NativeSyntheticEvent<T> =>
     type: '',
   } as unknown as NativeSyntheticEvent<T>);
 
-interface MapControllerProps {
-  onMapReady: (map: google.maps.Map) => void;
-  onCameraMove?: (event: NativeSyntheticEvent<CameraEventPayload>) => void;
-  onCameraIdle?: (event: NativeSyntheticEvent<CameraEventPayload>) => void;
-  onReady?: () => void;
-}
-
-interface UserLocationMarkerProps {
-  enabled?: boolean;
-}
-
 const userLocationDotStyle: CSSProperties = {
   width: 16,
   height: 16,
@@ -69,7 +58,7 @@ const userLocationDotStyle: CSSProperties = {
   boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
 };
 
-function UserLocationMarker({ enabled }: UserLocationMarkerProps) {
+function UserLocationMarker({ enabled }: { enabled?: boolean }) {
   const [coordinate, setCoordinate] = useState<Coordinate | null>(null);
 
   useEffect(() => {
@@ -106,24 +95,89 @@ function UserLocationMarker({ enabled }: UserLocationMarkerProps) {
   );
 }
 
-function MapController({
-  onMapReady,
-  onCameraMove,
-  onCameraIdle,
-  onReady,
-}: MapControllerProps) {
+export const MapView = forwardRef<MapViewRef, MapViewProps>(function MapView(
+  props,
+  ref
+) {
+  const {
+    mapId = 'DEMO_MAP_ID',
+    initialCoordinate,
+    initialZoom = 10,
+    minZoom,
+    maxZoom,
+    zoomEnabled = true,
+    scrollEnabled = true,
+    pitchEnabled = true,
+    padding,
+    userLocationEnabled,
+    onCameraMove,
+    onCameraIdle,
+    onReady,
+    children,
+    style,
+  } = props;
+
   const map = useMap();
   const readyFired = useRef(false);
 
-  useEffect(() => {
-    if (!map) return;
-    onMapReady(map);
+  useImperativeHandle(
+    ref,
+    () => ({
+      moveCamera(coordinate: Coordinate, options: MoveCameraOptions) {
+        if (!map) return;
 
-    if (!readyFired.current) {
+        const { zoom, duration = -1 } = options;
+        const center = { lat: coordinate.latitude, lng: coordinate.longitude };
+
+        if (duration === 0) {
+          map.moveCamera({ center, zoom });
+        } else {
+          const currentZoom = map.getZoom();
+          const zoomChanged = zoom !== undefined && zoom !== currentZoom;
+
+          if (zoomChanged) {
+            map.setZoom(zoom);
+          }
+          map.panTo(center);
+        }
+      },
+
+      fitCoordinates(
+        coordinates: Coordinate[],
+        options?: FitCoordinatesOptions
+      ) {
+        const first = coordinates[0];
+        if (!map || !first) return;
+
+        const { padding: fitPadding, duration = -1 } = options ?? {};
+
+        if (coordinates.length === 1) {
+          this.moveCamera(first, { zoom: initialZoom, duration });
+          return;
+        }
+
+        const bounds = new google.maps.LatLngBounds();
+        coordinates.forEach((coord) => {
+          bounds.extend({ lat: coord.latitude, lng: coord.longitude });
+        });
+
+        map.fitBounds(bounds, {
+          top: fitPadding?.top ?? 0,
+          left: fitPadding?.left ?? 0,
+          bottom: fitPadding?.bottom ?? 0,
+          right: fitPadding?.right ?? 0,
+        });
+      },
+    }),
+    [map, initialZoom]
+  );
+
+  useEffect(() => {
+    if (map && !readyFired.current) {
       readyFired.current = true;
       onReady?.();
     }
-  }, [map, onMapReady, onReady]);
+  }, [map, onReady]);
 
   useEffect(() => {
     if (!map) return;
@@ -169,154 +223,61 @@ function MapController({
     };
   }, [map, onCameraMove, onCameraIdle]);
 
-  return null;
-}
+  const gestureHandling =
+    scrollEnabled === false && zoomEnabled === false
+      ? 'none'
+      : scrollEnabled === false
+      ? 'none'
+      : 'auto';
 
-export class MapView extends Component<MapViewProps> implements MapViewRef {
-  static defaultProps: Partial<MapViewProps> = {
-    provider: 'google',
-    mapId: 'DEMO_MAP_ID',
-    initialZoom: 10,
-    zoomEnabled: true,
-    scrollEnabled: true,
-    rotateEnabled: true,
-    pitchEnabled: true,
-  };
+  const defaultCenter = initialCoordinate
+    ? { lat: initialCoordinate.latitude, lng: initialCoordinate.longitude }
+    : undefined;
 
-  private mapInstance: google.maps.Map | null = null;
+  const mapChildren: ReactNode[] = [];
+  const overlayChildren: ReactNode[] = [];
 
-  private handleMapReady = (map: google.maps.Map) => {
-    this.mapInstance = map;
-  };
-
-  moveCamera(coordinate: Coordinate, options: MoveCameraOptions) {
-    const map = this.mapInstance;
-    if (!map) return;
-
-    const { zoom, duration = -1 } = options;
-    const center = { lat: coordinate.latitude, lng: coordinate.longitude };
-
-    if (duration === 0) {
-      map.moveCamera({ center, zoom });
+  Children.forEach(children, (child) => {
+    if (!isValidElement(child)) return;
+    if (isMapComponent(child)) {
+      mapChildren.push(child);
     } else {
-      const currentZoom = map.getZoom();
-      const zoomChanged = zoom !== undefined && zoom !== currentZoom;
-
-      if (zoomChanged) {
-        map.setZoom(zoom);
-      }
-      map.panTo(center);
+      overlayChildren.push(child);
     }
-  }
+  });
 
-  fitCoordinates(coordinates: Coordinate[], options?: FitCoordinatesOptions) {
-    const map = this.mapInstance;
-    const first = coordinates[0];
-    if (!map || !first) return;
+  const mapContainerStyle: ViewStyle = {
+    position: 'absolute',
+    top: padding?.top ?? 0,
+    left: padding?.left ?? 0,
+    right: padding?.right ?? 0,
+    bottom: padding?.bottom ?? 0,
+  };
 
-    const { padding, duration = -1 } = options ?? {};
+  const mapStyle: CSSProperties = {
+    width: '100%',
+    height: '100%',
+  };
 
-    if (coordinates.length === 1) {
-      const zoom = this.props.initialZoom ?? 10;
-      this.moveCamera(first, { zoom, duration });
-      return;
-    }
-
-    const bounds = new google.maps.LatLngBounds();
-    coordinates.forEach((coord) => {
-      bounds.extend({ lat: coord.latitude, lng: coord.longitude });
-    });
-
-    map.fitBounds(bounds, {
-      top: padding?.top ?? 0,
-      left: padding?.left ?? 0,
-      bottom: padding?.bottom ?? 0,
-      right: padding?.right ?? 0,
-    });
-  }
-
-  render() {
-    const {
-      mapId,
-      initialCoordinate,
-      initialZoom,
-      minZoom,
-      maxZoom,
-      zoomEnabled,
-      scrollEnabled,
-      pitchEnabled,
-      padding,
-      userLocationEnabled,
-      onCameraMove,
-      onCameraIdle,
-      onReady,
-      children,
-      style,
-    } = this.props;
-
-    const gestureHandling =
-      scrollEnabled === false && zoomEnabled === false
-        ? 'none'
-        : scrollEnabled === false
-        ? 'none'
-        : 'auto';
-
-    const defaultCenter = initialCoordinate
-      ? { lat: initialCoordinate.latitude, lng: initialCoordinate.longitude }
-      : undefined;
-
-    // Separate map children (Marker, Polyline) from overlay children (regular Views)
-    const mapChildren: ReactNode[] = [];
-    const overlayChildren: ReactNode[] = [];
-
-    Children.forEach(children, (child) => {
-      if (!isValidElement(child)) return;
-      if (isMapComponent(child)) {
-        mapChildren.push(child);
-      } else {
-        overlayChildren.push(child);
-      }
-    });
-
-    const mapContainerStyle: ViewStyle = {
-      position: 'absolute',
-      top: padding?.top ?? 0,
-      left: padding?.left ?? 0,
-      right: padding?.right ?? 0,
-      bottom: padding?.bottom ?? 0,
-    };
-
-    const mapStyle: CSSProperties = {
-      width: '100%',
-      height: '100%',
-    };
-
-    return (
-      <View style={style}>
-        <View style={mapContainerStyle}>
-          <Map
-            mapId={mapId}
-            defaultCenter={defaultCenter}
-            defaultZoom={initialZoom}
-            minZoom={minZoom}
-            maxZoom={maxZoom}
-            gestureHandling={gestureHandling}
-            disableDefaultUI
-            tilt={pitchEnabled === false ? 0 : undefined}
-            style={mapStyle}
-          >
-            <MapController
-              onMapReady={this.handleMapReady}
-              onCameraMove={onCameraMove}
-              onCameraIdle={onCameraIdle}
-              onReady={onReady}
-            />
-            <UserLocationMarker enabled={userLocationEnabled} />
-            {mapChildren}
-          </Map>
-        </View>
-        {overlayChildren}
+  return (
+    <View style={style}>
+      <View style={mapContainerStyle}>
+        <Map
+          mapId={mapId}
+          defaultCenter={defaultCenter}
+          defaultZoom={initialZoom}
+          minZoom={minZoom}
+          maxZoom={maxZoom}
+          gestureHandling={gestureHandling}
+          disableDefaultUI
+          tilt={pitchEnabled === false ? 0 : undefined}
+          style={mapStyle}
+        >
+          <UserLocationMarker enabled={userLocationEnabled} />
+          {mapChildren}
+        </Map>
       </View>
-    );
-  }
-}
+      {overlayChildren}
+    </View>
+  );
+});
