@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useMap } from '@vis.gl/react-google-maps';
+import { useMapId } from '../MapIdContext.web';
 import type { PolylineProps } from './Polyline';
 
 const ANIMATION_DURATION = 1500;
@@ -42,7 +43,8 @@ export function Polyline({
   zIndex,
 }: PolylineProps) {
   const resolvedZIndex = zIndex ?? (animated ? 1 : 0);
-  const map = useMap();
+  const mapId = useMapId();
+  const map = useMap(mapId);
   const polylinesRef = useRef<google.maps.Polyline[]>([]);
   const animationRef = useRef<number>(0);
 

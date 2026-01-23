@@ -3,6 +3,7 @@ import {
   forwardRef,
   isValidElement,
   useEffect,
+  useId,
   useImperativeHandle,
   useRef,
   useState,
@@ -15,6 +16,7 @@ import { View } from 'react-native';
 import { Map, useMap } from '@vis.gl/react-google-maps';
 import { Marker } from './components/Marker.web';
 import { Polyline } from './components/Polyline.web';
+import { MapIdContext } from './MapIdContext.web';
 
 import type {
   MapViewProps,
@@ -117,7 +119,8 @@ export const MapView = forwardRef<MapViewRef, MapViewProps>(function MapView(
     style,
   } = props;
 
-  const map = useMap();
+  const id = useId();
+  const map = useMap(id);
   const readyFired = useRef(false);
 
   useImperativeHandle(
@@ -263,6 +266,7 @@ export const MapView = forwardRef<MapViewRef, MapViewProps>(function MapView(
     <View style={style}>
       <View style={mapContainerStyle}>
         <Map
+          id={id}
           mapId={mapId}
           defaultCenter={defaultCenter}
           defaultZoom={initialZoom}
@@ -273,8 +277,10 @@ export const MapView = forwardRef<MapViewRef, MapViewProps>(function MapView(
           tilt={pitchEnabled === false ? 0 : undefined}
           style={mapStyle}
         >
-          <UserLocationMarker enabled={userLocationEnabled} />
-          {mapChildren}
+          <MapIdContext.Provider value={id}>
+            <UserLocationMarker enabled={userLocationEnabled} />
+            {mapChildren}
+          </MapIdContext.Provider>
         </Map>
       </View>
       {overlayChildren}
