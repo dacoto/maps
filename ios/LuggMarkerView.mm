@@ -13,10 +13,12 @@ using namespace facebook::react;
 @end
 
 @implementation LuggMarkerView {
+  NSString *_name;
   CLLocationCoordinate2D _coordinate;
   NSString *_title;
   NSString *_markerDescription;
   CGPoint _anchor;
+  NSInteger _zIndex;
   BOOL _didLayout;
   UIView *_iconView;
 }
@@ -34,6 +36,7 @@ using namespace facebook::react;
 
     _coordinate = CLLocationCoordinate2DMake(0, 0);
     _anchor = CGPointMake(0.5, 1.0);
+    _zIndex = 0;
     _didLayout = NO;
 
     _iconView = [[UIView alloc] init];
@@ -52,12 +55,14 @@ using namespace facebook::react;
   const auto &newViewProps =
       *std::static_pointer_cast<LuggMarkerViewProps const>(props);
 
+  _name = [NSString stringWithUTF8String:newViewProps.name.c_str()];
   _coordinate = CLLocationCoordinate2DMake(newViewProps.coordinate.latitude,
                                            newViewProps.coordinate.longitude);
   _title = [NSString stringWithUTF8String:newViewProps.title.c_str()];
   _markerDescription =
       [NSString stringWithUTF8String:newViewProps.description.c_str()];
   _anchor = CGPointMake(newViewProps.anchor.x, newViewProps.anchor.y);
+  _zIndex = newViewProps.zIndex.value_or(0);
 }
 
 - (void)finalizeUpdates:(RNComponentViewUpdateMask)updateMask {
@@ -109,6 +114,10 @@ using namespace facebook::react;
   }
 }
 
+- (NSString *)name {
+  return _name;
+}
+
 - (CLLocationCoordinate2D)coordinate {
   return _coordinate;
 }
@@ -123,6 +132,10 @@ using namespace facebook::react;
 
 - (CGPoint)anchor {
   return _anchor;
+}
+
+- (NSInteger)zIndex {
+  return _zIndex;
 }
 
 - (BOOL)hasCustomView {

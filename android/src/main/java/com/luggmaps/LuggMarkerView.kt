@@ -1,7 +1,6 @@
 package com.luggmaps
 
 import android.content.Context
-import android.util.Log
 import android.view.View
 import androidx.core.view.isNotEmpty
 import com.facebook.react.views.view.ReactViewGroup
@@ -32,6 +31,9 @@ class LuggMarkerView(context: Context) : ReactViewGroup(context) {
   var anchorX: Float = 0.5f
     private set
   var anchorY: Float = 1.0f
+    private set
+
+  var zIndex: Float = 0f
     private set
 
   var didLayout: Boolean = false
@@ -112,6 +114,10 @@ class LuggMarkerView(context: Context) : ReactViewGroup(context) {
   fun setAnchor(x: Double, y: Double) {
     anchorX = x.toFloat()
     anchorY = y.toFloat()
+  }
+
+  fun setZIndex(zIndex: Float) {
+    this.zIndex = zIndex
   }
 
   fun setName(name: String?) {

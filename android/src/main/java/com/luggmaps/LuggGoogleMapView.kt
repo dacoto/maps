@@ -1,7 +1,6 @@
 package com.luggmaps
 
 import android.annotation.SuppressLint
-import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import com.facebook.react.uimanager.PixelUtil.dpToPx
@@ -103,7 +102,6 @@ class LuggGoogleMapView(private val reactContext: ThemedReactContext) :
   override fun removeViewAt(index: Int) {
     val view = getChildAt(index)
     if (view is LuggMarkerView) {
-      Log.d(TAG, "removing markerView: ${view.name}")
       view.marker?.remove()
       view.marker = null
     } else if (view is LuggPolylineView) {
@@ -123,7 +121,6 @@ class LuggGoogleMapView(private val reactContext: ThemedReactContext) :
   }
 
   fun onDropViewInstance() {
-    Log.d(TAG, "dropping mapView instance")
     pendingMarkerViews.clear()
     pendingPolylineViews.clear()
     polylineAnimators.values.forEach { it.destroy() }
@@ -282,6 +279,7 @@ class LuggGoogleMapView(private val reactContext: ThemedReactContext) :
       title = markerView.title
       snippet = markerView.description
       setAnchor(markerView.anchorX, markerView.anchorY)
+      zIndex = markerView.zIndex
       if (!markerView.hasCustomView) {
         iconView = null
       }
@@ -291,7 +289,6 @@ class LuggGoogleMapView(private val reactContext: ThemedReactContext) :
   private fun processPendingMarkers() {
     if (googleMap == null) return
 
-    Log.d(TAG, "processing pending markers ${pendingMarkerViews.size}")
     pendingMarkerViews.forEach { addMarkerViewToMap(it) }
     pendingMarkerViews.clear()
   }
@@ -312,13 +309,13 @@ class LuggGoogleMapView(private val reactContext: ThemedReactContext) :
       .title(markerView.title)
       .snippet(markerView.description)
 
-    Log.d(TAG, "adding marker: ${markerView.name} customview: ${markerView.hasCustomView}")
     if (markerView.hasCustomView) {
       options.iconView(iconView)
     }
 
     val marker = map.addMarker(options) as AdvancedMarker
     marker.setAnchor(markerView.anchorX, markerView.anchorY)
+    marker.zIndex = markerView.zIndex
 
     markerView.marker = marker
   }
