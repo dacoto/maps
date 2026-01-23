@@ -4,6 +4,7 @@ import {
   isValidElement,
   useEffect,
   useRef,
+  useState,
   type CSSProperties,
   type ReactElement,
   type ReactNode,
@@ -53,7 +54,56 @@ interface MapControllerProps {
   onCameraMove?: (event: NativeSyntheticEvent<CameraEventPayload>) => void;
   onCameraIdle?: (event: NativeSyntheticEvent<CameraEventPayload>) => void;
   onReady?: () => void;
-  userLocationEnabled?: boolean;
+}
+
+interface UserLocationMarkerProps {
+  enabled?: boolean;
+}
+
+const userLocationDotStyle: CSSProperties = {
+  width: 16,
+  height: 16,
+  backgroundColor: '#4285F4',
+  border: '2px solid white',
+  borderRadius: '50%',
+  boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
+};
+
+function UserLocationMarker({ enabled }: UserLocationMarkerProps) {
+  const [coordinate, setCoordinate] = useState<Coordinate | null>(null);
+
+  useEffect(() => {
+    if (!enabled) {
+      setCoordinate(null);
+      return;
+    }
+
+    let watchId: number | null = null;
+
+    const updateLocation = (position: GeolocationPosition) => {
+      setCoordinate({
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+      });
+    };
+
+    navigator.geolocation.getCurrentPosition(updateLocation, () => {});
+    watchId = navigator.geolocation.watchPosition(updateLocation, () => {});
+
+    return () => {
+      if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId);
+      }
+    };
+  }, [enabled]);
+
+  if (!coordinate) return null;
+
+  return (
+    <Marker coordinate={coordinate} anchor={{ x: 0.5, y: 0.5 }}>
+      <div style={userLocationDotStyle} />
+    </Marker>
+  );
 }
 
 function MapController({
@@ -61,12 +111,9 @@ function MapController({
   onCameraMove,
   onCameraIdle,
   onReady,
-  userLocationEnabled,
 }: MapControllerProps) {
   const map = useMap();
   const readyFired = useRef(false);
-  const userLocationMarker =
-    useRef<google.maps.marker.AdvancedMarkerElement | null>(null);
 
   useEffect(() => {
     if (!map) return;
@@ -77,55 +124,6 @@ function MapController({
       onReady?.();
     }
   }, [map, onMapReady, onReady]);
-
-  useEffect(() => {
-    if (!map || !userLocationEnabled) {
-      if (userLocationMarker.current) {
-        userLocationMarker.current.map = null;
-        userLocationMarker.current = null;
-      }
-      return;
-    }
-
-    let watchId: number | null = null;
-
-    const updateLocation = (position: GeolocationPosition) => {
-      const { latitude, longitude } = position.coords;
-      const pos = { lat: latitude, lng: longitude };
-
-      if (!userLocationMarker.current) {
-        const dot = document.createElement('div');
-        dot.style.width = '16px';
-        dot.style.height = '16px';
-        dot.style.backgroundColor = '#4285F4';
-        dot.style.border = '2px solid white';
-        dot.style.borderRadius = '50%';
-        dot.style.boxShadow = '0 1px 4px rgba(0,0,0,0.3)';
-
-        userLocationMarker.current =
-          new google.maps.marker.AdvancedMarkerElement({
-            map,
-            position: pos,
-            content: dot,
-          });
-      } else {
-        userLocationMarker.current.position = pos;
-      }
-    };
-
-    navigator.geolocation.getCurrentPosition(updateLocation, () => {});
-    watchId = navigator.geolocation.watchPosition(updateLocation, () => {});
-
-    return () => {
-      if (watchId !== null) {
-        navigator.geolocation.clearWatch(watchId);
-      }
-      if (userLocationMarker.current) {
-        userLocationMarker.current.map = null;
-        userLocationMarker.current = null;
-      }
-    };
-  }, [map, userLocationEnabled]);
 
   useEffect(() => {
     if (!map) return;
@@ -195,11 +193,11 @@ export class MapView extends Component<MapViewProps> implements MapViewRef {
     const { zoom, duration = -1 } = options;
     const center = { lat: coordinate.latitude, lng: coordinate.longitude };
 
-    if (duration > 0) {
-      map.panTo(center);
+    if (duration === 0) {
+      map.setCenter(center);
       map.setZoom(zoom);
     } else {
-      map.setCenter(center);
+      map.panTo(center);
       map.setZoom(zoom);
     }
   }
@@ -305,8 +303,8 @@ export class MapView extends Component<MapViewProps> implements MapViewRef {
               onCameraMove={onCameraMove}
               onCameraIdle={onCameraIdle}
               onReady={onReady}
-              userLocationEnabled={userLocationEnabled}
             />
+            <UserLocationMarker enabled={userLocationEnabled} />
             {mapChildren}
           </Map>
         </View>
