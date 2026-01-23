@@ -147,7 +147,7 @@ export function Home() {
                 {cameraPosition.coordinate.longitude.toFixed(5)} (z
                 {cameraPosition.zoom.toFixed(1)})
                 {isIdle
-                  ? ' (idle)'
+                  ? ` (idle${cameraPosition.gesture ? ', gesture' : ''})`
                   : cameraPosition.gesture
                   ? ' (gesture)'
                   : ''}

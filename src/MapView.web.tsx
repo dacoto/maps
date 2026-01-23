@@ -141,9 +141,11 @@ function MapController({
     };
 
     let isDragging = false;
+    let wasGesture = false;
 
     const dragStartListener = map.addListener('dragstart', () => {
       isDragging = true;
+      wasGesture = true;
     });
 
     const dragEndListener = map.addListener('dragend', () => {
@@ -155,7 +157,8 @@ function MapController({
     });
 
     const idleListener = map.addListener('idle', () => {
-      onCameraIdle?.(createSyntheticEvent(createPayload(false)));
+      onCameraIdle?.(createSyntheticEvent(createPayload(wasGesture)));
+      wasGesture = false;
     });
 
     return () => {
