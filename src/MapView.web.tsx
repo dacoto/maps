@@ -7,9 +7,14 @@ import {
   useState,
   type CSSProperties,
 } from 'react';
-import type { NativeSyntheticEvent } from 'react-native';
-import { View } from 'react-native';
-import { Map, useMap } from '@vis.gl/react-google-maps';
+import type { NativeSyntheticEvent, ViewStyle } from 'react-native';
+import { View, StyleSheet } from 'react-native';
+import {
+  Map,
+  useMap,
+  type MapCameraChangedEvent,
+  type MapEvent,
+} from '@vis.gl/react-google-maps';
 import { Marker } from './components/Marker.web';
 import { MapIdContext } from './MapProvider.web';
 
@@ -112,6 +117,8 @@ export const MapView = forwardRef<MapViewRef, MapViewProps>(function MapView(
   const id = useId();
   const map = useMap(id);
   const readyFired = useRef(false);
+  const isDragging = useRef(false);
+  const wasGesture = useRef(false);
 
   useImperativeHandle(
     ref,
@@ -172,49 +179,40 @@ export const MapView = forwardRef<MapViewRef, MapViewProps>(function MapView(
     }
   }, [map, onReady]);
 
-  useEffect(() => {
-    if (!map) return;
+  const handleDragStart = () => {
+    isDragging.current = true;
+    wasGesture.current = true;
+  };
 
-    const createPayload = (gesture: boolean): CameraEventPayload => {
-      const center = map.getCenter();
-      return {
-        coordinate: {
-          latitude: center?.lat() ?? 0,
-          longitude: center?.lng() ?? 0,
-        },
-        zoom: map.getZoom() ?? 0,
-        gesture,
-      };
+  const handleDragEnd = () => {
+    isDragging.current = false;
+  };
+
+  const handleCameraChanged = (event: MapCameraChangedEvent) => {
+    const payload: CameraEventPayload = {
+      coordinate: {
+        latitude: event.detail.center.lat,
+        longitude: event.detail.center.lng,
+      },
+      zoom: event.detail.zoom,
+      gesture: isDragging.current,
     };
+    onCameraMove?.(createSyntheticEvent(payload));
+  };
 
-    let isDragging = false;
-    let wasGesture = false;
-
-    const dragStartListener = map.addListener('dragstart', () => {
-      isDragging = true;
-      wasGesture = true;
-    });
-
-    const dragEndListener = map.addListener('dragend', () => {
-      isDragging = false;
-    });
-
-    const centerListener = map.addListener('center_changed', () => {
-      onCameraMove?.(createSyntheticEvent(createPayload(isDragging)));
-    });
-
-    const idleListener = map.addListener('idle', () => {
-      onCameraIdle?.(createSyntheticEvent(createPayload(wasGesture)));
-      wasGesture = false;
-    });
-
-    return () => {
-      google.maps.event.removeListener(dragStartListener);
-      google.maps.event.removeListener(dragEndListener);
-      google.maps.event.removeListener(centerListener);
-      google.maps.event.removeListener(idleListener);
+  const handleIdle = (event: MapEvent) => {
+    const center = event.map.getCenter();
+    const payload: CameraEventPayload = {
+      coordinate: {
+        latitude: center?.lat() ?? 0,
+        longitude: center?.lng() ?? 0,
+      },
+      zoom: event.map.getZoom() ?? 0,
+      gesture: wasGesture.current,
     };
-  }, [map, onCameraMove, onCameraIdle]);
+    onCameraIdle?.(createSyntheticEvent(payload));
+    wasGesture.current = false;
+  };
 
   const gestureHandling =
     scrollEnabled === false && zoomEnabled === false
@@ -227,7 +225,7 @@ export const MapView = forwardRef<MapViewRef, MapViewProps>(function MapView(
     ? { lat: initialCoordinate.latitude, lng: initialCoordinate.longitude }
     : undefined;
 
-  const mapStyle: CSSProperties = {
+  const paddingStyle: ViewStyle = {
     paddingTop: padding?.top ?? 0,
     paddingLeft: padding?.left ?? 0,
     paddingRight: padding?.right ?? 0,
@@ -237,21 +235,27 @@ export const MapView = forwardRef<MapViewRef, MapViewProps>(function MapView(
   return (
     <MapIdContext.Provider value={id}>
       <View style={style}>
-        <Map
-          id={id}
-          mapId={mapId}
-          defaultCenter={defaultCenter}
-          defaultZoom={initialZoom}
-          minZoom={minZoom}
-          maxZoom={maxZoom}
-          gestureHandling={gestureHandling}
-          disableDefaultUI
-          tilt={pitchEnabled === false ? 0 : undefined}
-          style={mapStyle}
-        >
-          <UserLocationMarker enabled={userLocationEnabled} />
-          {children}
-        </Map>
+        <View style={[StyleSheet.absoluteFill, paddingStyle]}>
+          <Map
+            id={id}
+            mapId={mapId}
+            defaultCenter={defaultCenter}
+            defaultZoom={initialZoom}
+            minZoom={minZoom}
+            maxZoom={maxZoom}
+            gestureHandling={gestureHandling}
+            disableDefaultUI
+            isFractionalZoomEnabled
+            tilt={pitchEnabled === false ? 0 : undefined}
+            onDragstart={handleDragStart}
+            onDragend={handleDragEnd}
+            onCameraChanged={handleCameraChanged}
+            onIdle={handleIdle}
+          >
+            <UserLocationMarker enabled={userLocationEnabled} />
+            {children}
+          </Map>
+        </View>
       </View>
     </MapIdContext.Provider>
   );
