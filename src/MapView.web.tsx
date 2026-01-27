@@ -12,8 +12,8 @@ import {
   type ReactElement,
   type ReactNode,
 } from 'react';
-import type { NativeSyntheticEvent, ViewStyle } from 'react-native';
-import { View } from 'react-native';
+import type { NativeSyntheticEvent } from 'react-native';
+import { View, StyleSheet} from 'react-native';
 import { Map, useMap } from '@vis.gl/react-google-maps';
 import { Marker } from './components/Marker.web';
 import { Polyline } from './components/Polyline.web';
@@ -254,23 +254,20 @@ export const MapView = forwardRef<MapViewRef, MapViewProps>(function MapView(
     return { mapChildren: mapNodes, overlayChildren: overlayNodes };
   }, [children]);
 
-  const mapContainerStyle: ViewStyle = {
-    position: 'absolute',
-    top: padding?.top ?? 0,
-    left: padding?.left ?? 0,
-    right: padding?.right ?? 0,
-    bottom: padding?.bottom ?? 0,
-  };
-
   const mapStyle: CSSProperties = {
     width: '100%',
     height: '100%',
+    paddingTop: padding?.top ?? 0,
+    paddingLeft: padding?.left ?? 0,
+    paddingRight: padding?.right ?? 0,
+    paddingBottom: padding?.bottom ?? 0,
+    backgroundColor: 'red',
   };
 
   return (
     <MapIdContext.Provider value={id}>
       <View style={style}>
-        <View style={mapContainerStyle}>
+        <View style={StyleSheet.absoluteFill}>
           <Map
             id={id}
             mapId={mapId}
