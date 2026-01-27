@@ -73,36 +73,43 @@ export const Map = forwardRef<MapView, MapProps>(
     const bottomOffset = padding?.bottom ?? 0;
 
     return (
-      <MapView
-        ref={ref}
-        style={styles.map}
-        mapId="6939261d95ee48fd57332474"
-        initialCoordinate={{ latitude: 37.78, longitude: -122.43 }}
-        initialZoom={14}
-        padding={padding}
-        {...props}
-      >
-        {markers.map(renderMarker)}
-        <Route markerCoordinates={polylineCoordinates} />
-        <Marker
-          name="inline-marker"
-          coordinate={{ latitude: 37.782, longitude: -122.425 }}
-          zIndex={10}
+      <View style={styles.container}>
+        <MapView
+          ref={ref}
+          style={StyleSheet.absoluteFill}
+          mapId="6939261d95ee48fd57332474"
+          initialCoordinate={{ latitude: 37.78, longitude: -122.43 }}
+          initialZoom={14}
+          padding={padding}
+          {...props}
         >
-          <View style={styles.customMarker} />
-        </Marker>
+          {markers.map(renderMarker)}
+          <Route markerCoordinates={polylineCoordinates} />
+          <Marker
+            name="inline-marker"
+            coordinate={{ latitude: 37.782, longitude: -122.425 }}
+            zIndex={10}
+          >
+            <View style={styles.customMarker} />
+          </Marker>
+        </MapView>
         <View
           style={[
             styles.centerPin,
             { transform: [{ translateY: -bottomOffset / 2 }] },
           ]}
         />
-      </MapView>
+      </View>
     );
   }
 );
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   map: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   centerPin: {
     backgroundColor: 'blue',

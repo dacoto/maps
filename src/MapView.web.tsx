@@ -1,22 +1,16 @@
 import {
-  Children,
   forwardRef,
-  isValidElement,
   useEffect,
   useId,
   useImperativeHandle,
-  useMemo,
   useRef,
   useState,
   type CSSProperties,
-  type ReactElement,
-  type ReactNode,
 } from 'react';
 import type { NativeSyntheticEvent } from 'react-native';
-import { View, StyleSheet} from 'react-native';
+import { View } from 'react-native';
 import { Map, useMap } from '@vis.gl/react-google-maps';
 import { Marker } from './components/Marker.web';
-import { Polyline } from './components/Polyline.web';
 import { MapIdContext } from './MapProvider.web';
 
 import type {
@@ -27,11 +21,6 @@ import type {
   CameraEventPayload,
 } from './MapView.types';
 import type { Coordinate } from './types';
-
-const MAP_COMPONENT_TYPES = new Set([Marker, Polyline]);
-
-const isMapComponent = (child: ReactElement): boolean =>
-  MAP_COMPONENT_TYPES.has(child.type as typeof Marker | typeof Polyline);
 
 const createSyntheticEvent = <T,>(nativeEvent: T): NativeSyntheticEvent<T> =>
   ({
@@ -238,53 +227,31 @@ export const MapView = forwardRef<MapViewRef, MapViewProps>(function MapView(
     ? { lat: initialCoordinate.latitude, lng: initialCoordinate.longitude }
     : undefined;
 
-  const { mapChildren, overlayChildren } = useMemo(() => {
-    const mapNodes: ReactNode[] = [];
-    const overlayNodes: ReactNode[] = [];
-
-    Children.forEach(children, (child) => {
-      if (!isValidElement(child)) return;
-      if (isMapComponent(child)) {
-        mapNodes.push(child);
-      } else {
-        overlayNodes.push(child);
-      }
-    });
-
-    return { mapChildren: mapNodes, overlayChildren: overlayNodes };
-  }, [children]);
-
   const mapStyle: CSSProperties = {
-    width: '100%',
-    height: '100%',
     paddingTop: padding?.top ?? 0,
     paddingLeft: padding?.left ?? 0,
     paddingRight: padding?.right ?? 0,
     paddingBottom: padding?.bottom ?? 0,
-    backgroundColor: 'red',
   };
 
   return (
     <MapIdContext.Provider value={id}>
       <View style={style}>
-        <View style={StyleSheet.absoluteFill}>
-          <Map
-            id={id}
-            mapId={mapId}
-            defaultCenter={defaultCenter}
-            defaultZoom={initialZoom}
-            minZoom={minZoom}
-            maxZoom={maxZoom}
-            gestureHandling={gestureHandling}
-            disableDefaultUI
-            tilt={pitchEnabled === false ? 0 : undefined}
-            style={mapStyle}
-          >
-            <UserLocationMarker enabled={userLocationEnabled} />
-            {mapChildren}
-          </Map>
-        </View>
-        {overlayChildren}
+        <Map
+          id={id}
+          mapId={mapId}
+          defaultCenter={defaultCenter}
+          defaultZoom={initialZoom}
+          minZoom={minZoom}
+          maxZoom={maxZoom}
+          gestureHandling={gestureHandling}
+          disableDefaultUI
+          tilt={pitchEnabled === false ? 0 : undefined}
+          style={mapStyle}
+        >
+          <UserLocationMarker enabled={userLocationEnabled} />
+          {children}
+        </Map>
       </View>
     </MapIdContext.Provider>
   );
