@@ -241,9 +241,14 @@ class LuggGoogleMapView(private val reactContext: ThemedReactContext) :
     }
 
     if (markerView.hasCustomView) {
-      // Recreate marker with custom view
+      if (markerView.isPendingUpdate) return
+      markerView.isPendingUpdate = true
       markerView.marker?.remove()
-      addMarkerViewToMap(markerView)
+      markerView.marker = null
+      markerView.post {
+        markerView.isPendingUpdate = false
+        addMarkerViewToMap(markerView)
+      }
     } else {
       syncMarkerView(markerView)
     }
@@ -296,9 +301,6 @@ class LuggGoogleMapView(private val reactContext: ThemedReactContext) :
     }
 
     val position = LatLng(markerView.latitude, markerView.longitude)
-    val iconView = markerView.iconView
-
-    (iconView.parent as? ViewGroup)?.removeView(iconView)
 
     val options = AdvancedMarkerOptions()
       .position(position)
@@ -306,7 +308,8 @@ class LuggGoogleMapView(private val reactContext: ThemedReactContext) :
       .snippet(markerView.description)
 
     if (markerView.hasCustomView) {
-      options.iconView(iconView)
+      val wrapper = markerView.createIconViewWrapper()
+      options.iconView(wrapper)
     }
 
     val marker = map.addMarker(options) as AdvancedMarker
