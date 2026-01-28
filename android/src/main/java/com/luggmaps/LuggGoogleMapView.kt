@@ -146,10 +146,7 @@ class LuggGoogleMapView(private val reactContext: ThemedReactContext) :
       view.onCreate(null)
       view.onResume()
       view.getMapAsync(this)
-      mapWrapperView?.addView(
-        view,
-        LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
-      )
+      mapWrapperView?.addView(view)
     }
   }
 
