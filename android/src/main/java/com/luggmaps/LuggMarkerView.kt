@@ -1,10 +1,16 @@
 package com.luggmaps
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.view.View
 import android.view.ViewGroup
 import com.facebook.react.views.view.ReactViewGroup
 import com.google.android.gms.maps.model.AdvancedMarker
+import com.google.android.gms.maps.model.BitmapDescriptor
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import androidx.core.graphics.createBitmap
+import androidx.core.view.isNotEmpty
 
 interface LuggMarkerViewDelegate {
   fun markerViewDidUpdate(markerView: LuggMarkerView)
@@ -36,13 +42,16 @@ class LuggMarkerView(context: Context) : ReactViewGroup(context) {
   var zIndex: Float = 0f
     private set
 
+  var rasterize: Boolean = true
+    private set
+
   var didLayout: Boolean = false
     private set
 
   var isPendingUpdate: Boolean = false
 
   val hasCustomView: Boolean
-    get() = iconView.childCount > 0
+    get() = iconView.isNotEmpty()
 
   val iconView: ReactViewGroup = ReactViewGroup(context)
 
@@ -59,13 +68,21 @@ class LuggMarkerView(context: Context) : ReactViewGroup(context) {
     return Pair(maxWidth, maxHeight)
   }
 
-  fun createIconViewWrapper(): View {
+  private fun createIconBitmap(): BitmapDescriptor? {
+    val (width, height) = measureIconViewBounds()
+    if (width <= 0 || height <= 0) return null
+
+    val bitmap = createBitmap(width, height)
+    val canvas = Canvas(bitmap)
+    iconView.draw(canvas)
+    return BitmapDescriptorFactory.fromBitmap(bitmap)
+  }
+
+  private fun createIconViewWrapper(): View {
     val (width, height) = measureIconViewBounds()
 
-    // Remove iconView from any existing parent
     (iconView.parent as? ViewGroup)?.removeView(iconView)
 
-    // Create a new wrapper with fixed size
     return object : ReactViewGroup(context) {
       init {
         addView(iconView)
@@ -73,6 +90,42 @@ class LuggMarkerView(context: Context) : ReactViewGroup(context) {
 
       override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         setMeasuredDimension(width, height)
+      }
+    }
+  }
+
+  fun applyIconToMarker() {
+    val m = marker ?: return
+    if (!hasCustomView) return
+
+    if (rasterize) {
+      m.iconView = null
+      createIconBitmap()?.let { m.setIcon(it) }
+    } else {
+      m.iconView = createIconViewWrapper()
+    }
+  }
+
+  fun updateIcon(onAddMarker: () -> Unit) {
+    if (!hasCustomView) return
+    if (isPendingUpdate) return
+    isPendingUpdate = true
+
+    if (rasterize) {
+      post {
+        isPendingUpdate = false
+        if (marker == null) {
+          onAddMarker()
+        } else {
+          applyIconToMarker()
+        }
+      }
+    } else {
+      marker?.remove()
+      marker = null
+      post {
+        isPendingUpdate = false
+        onAddMarker()
       }
     }
   }
@@ -140,6 +193,10 @@ class LuggMarkerView(context: Context) : ReactViewGroup(context) {
 
   fun setZIndex(zIndex: Float) {
     this.zIndex = zIndex
+  }
+
+  fun setRasterize(rasterize: Boolean) {
+    this.rasterize = rasterize
   }
 
   fun setName(name: String?) {

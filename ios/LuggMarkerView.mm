@@ -19,6 +19,7 @@ using namespace facebook::react;
   NSString *_markerDescription;
   CGPoint _anchor;
   NSInteger _zIndex;
+  BOOL _rasterize;
   BOOL _didLayout;
   UIView *_iconView;
 }
@@ -37,6 +38,7 @@ using namespace facebook::react;
     _coordinate = CLLocationCoordinate2DMake(0, 0);
     _anchor = CGPointMake(0.5, 1.0);
     _zIndex = 0;
+    _rasterize = YES;
     _didLayout = NO;
 
     _iconView = [[UIView alloc] init];
@@ -63,6 +65,7 @@ using namespace facebook::react;
       [NSString stringWithUTF8String:newViewProps.description.c_str()];
   _anchor = CGPointMake(newViewProps.anchor.x, newViewProps.anchor.y);
   _zIndex = newViewProps.zIndex.value_or(0);
+  _rasterize = newViewProps.rasterize;
 }
 
 - (void)finalizeUpdates:(RNComponentViewUpdateMask)updateMask {
@@ -138,6 +141,10 @@ using namespace facebook::react;
   return _zIndex;
 }
 
+- (BOOL)rasterize {
+  return _rasterize;
+}
+
 - (BOOL)hasCustomView {
   return _iconView.subviews.count > 0;
 }
@@ -148,6 +155,21 @@ using namespace facebook::react;
 
 - (UIView *)iconView {
   return _iconView;
+}
+
+- (UIImage *)createIconImage {
+  CGSize size = _iconView.bounds.size;
+  if (size.width <= 0 || size.height <= 0) {
+    return nil;
+  }
+
+  UIGraphicsImageRendererFormat *format = [UIGraphicsImageRendererFormat defaultFormat];
+  format.scale = [UIScreen mainScreen].scale;
+  UIGraphicsImageRenderer *renderer = [[UIGraphicsImageRenderer alloc] initWithSize:size format:format];
+
+  return [renderer imageWithActions:^(UIGraphicsImageRendererContext *context) {
+    [self->_iconView.layer renderInContext:context.CGContext];
+  }];
 }
 
 - (void)prepareForRecycle {

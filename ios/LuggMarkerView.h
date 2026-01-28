@@ -20,11 +20,14 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, readonly, nullable) NSString *markerDescription;
 @property(nonatomic, readonly) CGPoint anchor;
 @property(nonatomic, readonly) NSInteger zIndex;
+@property(nonatomic, readonly) BOOL rasterize;
 @property(nonatomic, readonly) BOOL hasCustomView;
 @property(nonatomic, readonly) BOOL didLayout;
 @property(nonatomic, readonly) UIView *iconView;
 @property(nonatomic, weak, nullable) id<LuggMarkerViewDelegate> delegate;
 @property(nonatomic, strong, nullable) NSObject *marker;
+
+- (nullable UIImage *)createIconImage;
 
 @end
 

@@ -238,14 +238,7 @@ class LuggGoogleMapView(private val reactContext: ThemedReactContext) :
     }
 
     if (markerView.hasCustomView) {
-      if (markerView.isPendingUpdate) return
-      markerView.isPendingUpdate = true
-      markerView.marker?.remove()
-      markerView.marker = null
-      markerView.post {
-        markerView.isPendingUpdate = false
-        addMarkerViewToMap(markerView)
-      }
+      markerView.updateIcon { addMarkerViewToMap(markerView) }
     } else {
       syncMarkerView(markerView)
     }
@@ -278,9 +271,6 @@ class LuggGoogleMapView(private val reactContext: ThemedReactContext) :
       snippet = markerView.description
       setAnchor(markerView.anchorX, markerView.anchorY)
       zIndex = markerView.zIndex
-      if (!markerView.hasCustomView) {
-        iconView = null
-      }
     }
   }
 
@@ -304,16 +294,12 @@ class LuggGoogleMapView(private val reactContext: ThemedReactContext) :
       .title(markerView.title)
       .snippet(markerView.description)
 
-    if (markerView.hasCustomView) {
-      val wrapper = markerView.createIconViewWrapper()
-      options.iconView(wrapper)
-    }
-
     val marker = map.addMarker(options) as AdvancedMarker
     marker.setAnchor(markerView.anchorX, markerView.anchorY)
     marker.zIndex = markerView.zIndex
 
     markerView.marker = marker
+    markerView.applyIconToMarker()
   }
 
   // endregion
