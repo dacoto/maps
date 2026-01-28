@@ -18,7 +18,7 @@ import {
   type PositionChangeEvent,
 } from '@lodev09/react-native-true-sheet';
 
-import { Button, Map } from './components';
+import { Button, Map, type VehicleImages } from './components';
 import { randomFrom, randomLetter } from './utils';
 import {
   MARKER_COLORS,
@@ -28,7 +28,11 @@ import {
 } from './markers';
 import { useLocationPermission } from './useLocationPermission';
 
-export function Home() {
+interface HomeProps {
+  vehicleImages: VehicleImages;
+}
+
+export function Home({ vehicleImages }: HomeProps) {
   const mapRef = useRef<MapView>(null);
   const sheetRef = useRef<TrueSheet>(null);
   const { height: screenHeight } = useWindowDimensions();
@@ -98,14 +102,19 @@ export function Home() {
   const moveToRandomMarker = () => {
     if (markers.length === 0) return;
     const marker = randomFrom(markers);
-    mapRef.current?.moveCamera(marker.coordinate, {
-      zoom: 14,
-    });
+    mapRef.current?.moveCamera(marker.coordinate);
   };
 
   const fitAllMarkers = () => {
     const coordinates = markers.map((m) => m.coordinate);
-    mapRef.current?.fitCoordinates(coordinates);
+    mapRef.current?.fitCoordinates(coordinates, {
+      padding: {
+        top: 60,
+        left: 40,
+        right: 40,
+        bottom: 40,
+      },
+    });
   };
 
   const apiKey = process.env.GOOGLE_MAPS_API_KEY;
@@ -119,10 +128,11 @@ export function Home() {
               ref={mapRef}
               provider={provider}
               markers={markers}
+              vehicleImages={vehicleImages}
               padding={{
                 top: 0,
-                left: 40,
-                right: 40,
+                left: 0,
+                right: 0,
                 bottom: sheetHeight,
               }}
               userLocationEnabled={locationPermission}

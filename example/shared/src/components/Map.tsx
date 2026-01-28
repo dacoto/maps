@@ -1,15 +1,23 @@
-import { forwardRef } from 'react';
+import { forwardRef, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { MapView, Marker, type MapViewProps } from '@lugg/maps';
+import {
+  MapView,
+  Marker,
+  type MapViewProps,
+  type CameraEventPayload,
+} from '@lugg/maps';
+import type { NativeSyntheticEvent } from 'react-native';
 
 import { MarkerIcon } from './MarkerIcon';
 import { MarkerText } from './MarkerText';
 import { MarkerImage } from './MarkerImage';
+import { CrewMarker, type VehicleImages } from './CrewMarker';
 import type { MarkerData } from './index';
-import { Route } from './Route';
+import { Route, smoothCoordinates } from './Route';
 
 interface MapProps extends MapViewProps {
   markers: MarkerData[];
+  vehicleImages: VehicleImages;
 }
 
 const renderMarker = (marker: MarkerData) => {
@@ -67,10 +75,24 @@ const renderMarker = (marker: MarkerData) => {
   }
 };
 
+const INITIAL_ZOOM = 14;
+
 export const Map = forwardRef<MapView, MapProps>(
-  ({ markers, padding, ...props }, ref) => {
-    const polylineCoordinates = markers.map((m) => m.coordinate);
+  ({ markers, padding, vehicleImages, ...props }, ref) => {
+    const [zoom, setZoom] = useState(INITIAL_ZOOM);
+    const polylineCoordinates = useMemo(
+      () => markers.map((m) => m.coordinate),
+      [markers]
+    );
+    const smoothedRoute = useMemo(
+      () => smoothCoordinates(polylineCoordinates),
+      [polylineCoordinates]
+    );
     const bottomOffset = padding?.bottom ?? 0;
+
+    const handleCameraMove = (e: NativeSyntheticEvent<CameraEventPayload>) => {
+      setZoom(e.nativeEvent.zoom);
+    };
 
     return (
       <View style={styles.container}>
@@ -79,19 +101,24 @@ export const Map = forwardRef<MapView, MapProps>(
           style={StyleSheet.absoluteFill}
           mapId="6939261d95ee48fd57332474"
           initialCoordinate={{ latitude: 37.78, longitude: -122.43 }}
-          initialZoom={14}
+          initialZoom={INITIAL_ZOOM}
           padding={padding}
+          onCameraMove={handleCameraMove}
           {...props}
         >
           {markers.map(renderMarker)}
-          <Route markerCoordinates={polylineCoordinates} />
-          <Marker
+          <Route coordinates={smoothedRoute} />
+          <CrewMarker
+            route={smoothedRoute}
+            images={vehicleImages}
+            zoom={zoom}
+          />
+          <MarkerText
             name="inline-marker"
             coordinate={{ latitude: 37.782, longitude: -122.425 }}
-            zIndex={10}
-          >
-            <View style={styles.customMarker} />
-          </Marker>
+            text="LO"
+            color="#34A853"
+          />
         </MapView>
         <View
           style={[

@@ -245,8 +245,10 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
   marker.zIndex = (int)markerView.zIndex;
   if (markerView.hasCustomView) {
     UIView *iconView = markerView.iconView;
-    [iconView removeFromSuperview];
-    marker.iconView = iconView;
+    if (marker.iconView != iconView) {
+      [iconView removeFromSuperview];
+      marker.iconView = iconView;
+    }
     marker.groundAnchor = markerView.anchor;
   } else {
     marker.iconView = nil;
@@ -396,10 +398,11 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
     return;
   }
 
+  float targetZoom = zoom > 0 ? (float)zoom : _mapView.camera.zoom;
   GMSCameraPosition *camera =
       [GMSCameraPosition cameraWithLatitude:latitude
                                   longitude:longitude
-                                       zoom:(float)zoom];
+                                       zoom:targetZoom];
   if (duration < 0) {
     [_mapView animateToCameraPosition:camera];
   } else if (duration > 0) {
