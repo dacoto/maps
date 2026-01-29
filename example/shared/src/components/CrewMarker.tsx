@@ -144,6 +144,7 @@ export function CrewMarker({
       coordinate={route[0]}
       anchor={DEFAULT_ANCHOR}
       animatedProps={animatedProps}
+      rasterize={false}
     >
       <VehicleIcon bearing={bearingValue} loaded={loaded} />
     </AnimatedMarker>

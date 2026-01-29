@@ -48,8 +48,6 @@ class LuggMarkerView(context: Context) : ReactViewGroup(context) {
   var didLayout: Boolean = false
     private set
 
-  var isPendingUpdate: Boolean = false
-
   val hasCustomView: Boolean
     get() = iconView.isNotEmpty()
 
@@ -108,12 +106,8 @@ class LuggMarkerView(context: Context) : ReactViewGroup(context) {
 
   fun updateIcon(onAddMarker: () -> Unit) {
     if (!hasCustomView) return
-    if (isPendingUpdate) return
-    isPendingUpdate = true
-
     if (rasterize) {
       post {
-        isPendingUpdate = false
         if (marker == null) {
           onAddMarker()
         } else {
@@ -123,10 +117,7 @@ class LuggMarkerView(context: Context) : ReactViewGroup(context) {
     } else {
       marker?.remove()
       marker = null
-      post {
-        isPendingUpdate = false
-        onAddMarker()
-      }
+      post { onAddMarker() }
     }
   }
 
