@@ -13,7 +13,7 @@ export function MarkerText({
   ...rest
 }: MarkerTextProps) {
   return (
-    <Marker anchor={anchor} {...rest}>
+    <Marker key={text} anchor={anchor} {...rest}>
       <View style={[styles.container, { backgroundColor: color }]}>
         <Text style={styles.text}>{text}</Text>
       </View>

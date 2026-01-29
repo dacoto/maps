@@ -161,7 +161,6 @@ export function CrewMarker({
       anchor={DEFAULT_ANCHOR}
       coordinate={currentPosition}
       zIndex={getZIndex(currentPosition)}
-      rasterize={false}
     >
       <VehicleIcon bearing={bearingValue} loaded={loaded} images={images} />
     </Marker>
