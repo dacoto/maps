@@ -251,9 +251,9 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
       }
       CGFloat scale = markerView.scale;
       CGFloat radians = markerView.rotate * M_PI / 180.0;
-      iconView.transform = CGAffineTransformConcat(
-          CGAffineTransformMakeScale(scale, scale),
-          CGAffineTransformMakeRotation(radians));
+      iconView.transform =
+          CGAffineTransformConcat(CGAffineTransformMakeScale(scale, scale),
+                                  CGAffineTransformMakeRotation(radians));
       marker.rotation = 0;
     }
     marker.groundAnchor = markerView.anchor;

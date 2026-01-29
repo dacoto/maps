@@ -264,7 +264,8 @@ using namespace luggmaps::events;
 
   UIView *iconView = markerView.iconView;
   CGRect frame = iconView.frame;
-  if (frame.size.width <= 0 || frame.size.height <= 0) return;
+  if (frame.size.width <= 0 || frame.size.height <= 0)
+    return;
 
   CGFloat scale = markerView.scale;
   CGPoint anchor = markerView.anchor;
@@ -274,11 +275,10 @@ using namespace luggmaps::events;
   } else {
     iconView.layer.anchorPoint = anchor;
     iconView.transform = CGAffineTransformMakeScale(scale, scale);
-    iconView.frame = CGRectMake(
-        frame.size.width * (0.5 - anchor.x) * (scale - 1),
-        frame.size.height * (0.5 - anchor.y) * (scale - 1),
-        frame.size.width,
-        frame.size.height);
+    iconView.frame =
+        CGRectMake(frame.size.width * (0.5 - anchor.x) * (scale - 1),
+                   frame.size.height * (0.5 - anchor.y) * (scale - 1),
+                   frame.size.width, frame.size.height);
   }
 
   annotationView.bounds =
