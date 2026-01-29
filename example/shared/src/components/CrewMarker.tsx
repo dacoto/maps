@@ -1,10 +1,5 @@
 import { useEffect, useRef } from 'react';
-import {
-  Image,
-  Platform,
-  StyleSheet,
-  type ImageSourcePropType,
-} from 'react-native';
+import { StyleSheet } from 'react-native';
 import { Marker, type Coordinate } from '@lugg/maps';
 import Animated, {
   Easing,
@@ -17,12 +12,9 @@ import Animated, {
 } from 'react-native-reanimated';
 import { getRhumbLineBearing } from 'geolib';
 
-const AnimatedMarker = Animated.createAnimatedComponent(Marker);
+import { PickupIcon } from './PickupIcon';
 
-export interface VehicleImages {
-  driving: ImageSourcePropType;
-  loaded: ImageSourcePropType;
-}
+const AnimatedMarker = Animated.createAnimatedComponent(Marker);
 
 const IMAGE_WIDTH = 45;
 const IMAGE_HEIGHT = 80;
@@ -36,7 +28,6 @@ const SEGMENT_DURATION = 2000;
 interface CrewMarkerProps {
   route: Coordinate[];
   loaded?: boolean;
-  images: VehicleImages;
   speed?: number;
   zoom?: number;
 }
@@ -59,19 +50,16 @@ const getBearing = (from: Coordinate, to: Coordinate, currentBearing = 0) => {
 interface VehicleIconProps {
   bearing: SharedValue<number>;
   loaded: boolean;
-  images: VehicleImages;
 }
 
-const VehicleIcon = ({ bearing, loaded, images }: VehicleIconProps) => {
-  const vehicleImage = loaded ? images.loaded : images.driving;
-
+const VehicleIcon = ({ bearing, loaded }: VehicleIconProps) => {
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ rotate: `${bearing.value}deg` }],
   }));
 
   return (
     <Animated.View style={[styles.root, animatedStyle]}>
-      <Image source={vehicleImage} style={styles.image} resizeMode="contain" />
+      <PickupIcon loaded={loaded} />
     </Animated.View>
   );
 };
@@ -81,7 +69,6 @@ const BASE_ZOOM = 14;
 export function CrewMarker({
   route,
   loaded = false,
-  images,
   speed = 1,
   zoom = BASE_ZOOM,
 }: CrewMarkerProps) {
@@ -153,8 +140,12 @@ export function CrewMarker({
   if (!route[0]) return null;
 
   return (
-    <AnimatedMarker anchor={DEFAULT_ANCHOR} animatedProps={animatedProps}>
-      <VehicleIcon bearing={bearingValue} loaded={loaded} images={images} />
+    <AnimatedMarker
+      coordinate={route[0]}
+      anchor={DEFAULT_ANCHOR}
+      animatedProps={animatedProps}
+    >
+      <VehicleIcon bearing={bearingValue} loaded={loaded} />
     </AnimatedMarker>
   );
 }
@@ -165,15 +156,5 @@ const styles = StyleSheet.create({
     height: CONTAINER_SIZE,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  image: {
-    width: IMAGE_WIDTH,
-    height: IMAGE_HEIGHT,
-    ...(Platform.OS !== 'web' && {
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.12,
-      shadowRadius: 8,
-    }),
   },
 });

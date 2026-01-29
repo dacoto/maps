@@ -3,7 +3,8 @@ export { Map } from './Map';
 export { MarkerIcon } from './MarkerIcon';
 export { MarkerText } from './MarkerText';
 export { MarkerImage } from './MarkerImage';
-export { CrewMarker, type VehicleImages } from './CrewMarker';
+export { CrewMarker } from './CrewMarker';
+export { PickupIcon } from './PickupIcon';
 
 export type MarkerData = {
   id: string;

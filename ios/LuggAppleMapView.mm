@@ -269,7 +269,8 @@ using namespace luggmaps::events;
   if (frame.size.width > 0 && frame.size.height > 0) {
     if (markerView.rasterize) {
       annotationView.image = [markerView createIconImage];
-      annotationView.frame = CGRectMake(0, 0, frame.size.width, frame.size.height);
+      annotationView.frame =
+          CGRectMake(0, 0, frame.size.width, frame.size.height);
     } else {
       annotationView.frame = frame;
     }
@@ -494,7 +495,8 @@ using namespace luggmaps::events;
   }
 
   if (frame.size.width > 0 && frame.size.height > 0) {
-    annotationView.frame = CGRectMake(0, 0, frame.size.width, frame.size.height);
+    annotationView.frame =
+        CGRectMake(0, 0, frame.size.width, frame.size.height);
 
     CGPoint anchor = markerView.anchor;
     annotationView.centerOffset =

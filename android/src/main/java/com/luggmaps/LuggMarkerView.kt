@@ -5,12 +5,12 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.graphics.createBitmap
+import androidx.core.view.isNotEmpty
 import com.facebook.react.views.view.ReactViewGroup
 import com.google.android.gms.maps.model.AdvancedMarker
 import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
-import androidx.core.graphics.createBitmap
-import androidx.core.view.isNotEmpty
 
 interface LuggMarkerViewDelegate {
   fun markerViewDidUpdate(markerView: LuggMarkerView)
@@ -212,5 +212,4 @@ class LuggMarkerView(context: Context) : ReactViewGroup(context) {
     delegate = null
     iconView.removeAllViews()
   }
-
 }

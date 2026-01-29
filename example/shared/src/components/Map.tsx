@@ -11,13 +11,12 @@ import type { NativeSyntheticEvent } from 'react-native';
 import { MarkerIcon } from './MarkerIcon';
 import { MarkerText } from './MarkerText';
 import { MarkerImage } from './MarkerImage';
-import { CrewMarker, type VehicleImages } from './CrewMarker';
+import { CrewMarker } from './CrewMarker';
 import type { MarkerData } from './index';
 import { Route, smoothCoordinates } from './Route';
 
 interface MapProps extends MapViewProps {
   markers: MarkerData[];
-  vehicleImages: VehicleImages;
 }
 
 const renderMarker = (marker: MarkerData) => {
@@ -78,7 +77,7 @@ const renderMarker = (marker: MarkerData) => {
 const INITIAL_ZOOM = 14;
 
 export const Map = forwardRef<MapView, MapProps>(
-  ({ markers, padding, vehicleImages, ...props }, ref) => {
+  ({ markers, padding, ...props }, ref) => {
     const [zoom, setZoom] = useState(INITIAL_ZOOM);
     const polylineCoordinates = useMemo(
       () => markers.map((m) => m.coordinate),
@@ -108,11 +107,7 @@ export const Map = forwardRef<MapView, MapProps>(
         >
           {markers.map(renderMarker)}
           <Route coordinates={smoothedRoute} />
-          <CrewMarker
-            route={smoothedRoute}
-            images={vehicleImages}
-            zoom={zoom}
-          />
+          <CrewMarker route={smoothedRoute} zoom={zoom} />
           <MarkerText
             name="inline-marker"
             coordinate={{ latitude: 37.782, longitude: -122.425 }}

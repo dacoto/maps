@@ -18,7 +18,7 @@ import {
   type PositionChangeEvent,
 } from '@lodev09/react-native-true-sheet';
 
-import { Button, Map, type VehicleImages } from './components';
+import { Button, Map } from './components';
 import { randomFrom, randomLetter } from './utils';
 import {
   MARKER_COLORS,
@@ -28,11 +28,7 @@ import {
 } from './markers';
 import { useLocationPermission } from './useLocationPermission';
 
-interface HomeProps {
-  vehicleImages: VehicleImages;
-}
-
-export function Home({ vehicleImages }: HomeProps) {
+export function Home() {
   const mapRef = useRef<MapView>(null);
   const sheetRef = useRef<TrueSheet>(null);
   const { height: screenHeight } = useWindowDimensions();
@@ -128,7 +124,6 @@ export function Home({ vehicleImages }: HomeProps) {
               ref={mapRef}
               provider={provider}
               markers={markers}
-              vehicleImages={vehicleImages}
               padding={{
                 top: 0,
                 left: 0,

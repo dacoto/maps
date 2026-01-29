@@ -163,9 +163,11 @@ using namespace facebook::react;
     return nil;
   }
 
-  UIGraphicsImageRendererFormat *format = [UIGraphicsImageRendererFormat defaultFormat];
+  UIGraphicsImageRendererFormat *format =
+      [UIGraphicsImageRendererFormat defaultFormat];
   format.scale = [UIScreen mainScreen].scale;
-  UIGraphicsImageRenderer *renderer = [[UIGraphicsImageRenderer alloc] initWithSize:size format:format];
+  UIGraphicsImageRenderer *renderer =
+      [[UIGraphicsImageRenderer alloc] initWithSize:size format:format];
 
   return [renderer imageWithActions:^(UIGraphicsImageRendererContext *context) {
     [self->_iconView.layer renderInContext:context.CGContext];
