@@ -1,11 +1,8 @@
 import { useEffect, useRef } from 'react';
-import { StyleSheet } from 'react-native';
 import { Marker, type Coordinate } from '@lugg/maps';
 import Animated, {
   Easing,
-  type SharedValue,
   useAnimatedProps,
-  useAnimatedStyle,
   useDerivedValue,
   useSharedValue,
   withTiming,
@@ -16,13 +13,7 @@ import { PickupIcon } from './PickupIcon';
 
 const AnimatedMarker = Animated.createAnimatedComponent(Marker);
 
-const IMAGE_WIDTH = 45;
-const IMAGE_HEIGHT = 80;
-// Container must be square and large enough to fit rotated image (diagonal)
-const CONTAINER_SIZE = Math.ceil(
-  Math.sqrt(IMAGE_WIDTH * IMAGE_WIDTH + IMAGE_HEIGHT * IMAGE_HEIGHT)
-);
-const DEFAULT_ANCHOR = { x: 0.5, y: 0.4 };
+const DEFAULT_ANCHOR = { x: 0.5, y: 0.5 };
 const SEGMENT_DURATION = 2000;
 
 interface CrewMarkerProps {
@@ -47,24 +38,19 @@ const getBearing = (from: Coordinate, to: Coordinate, currentBearing = 0) => {
   return newBearing;
 };
 
-interface VehicleIconProps {
-  bearing: SharedValue<number>;
-  loaded: boolean;
-}
-
-const VehicleIcon = ({ bearing, loaded }: VehicleIconProps) => {
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ rotate: `${bearing.value}deg` }],
-  }));
-
-  return (
-    <Animated.View style={[styles.root, animatedStyle]}>
-      <PickupIcon loaded={loaded} />
-    </Animated.View>
-  );
-};
-
 const BASE_ZOOM = 14;
+const MIN_SCALE = 0.5;
+const MAX_SCALE = 1.5;
+const SCALE_MIN_ZOOM = 10;
+const SCALE_MAX_ZOOM = 18;
+
+const getScaleForZoom = (zoom: number) => {
+  'worklet';
+  if (zoom <= SCALE_MIN_ZOOM) return MIN_SCALE;
+  if (zoom >= SCALE_MAX_ZOOM) return MAX_SCALE;
+  const t = (zoom - SCALE_MIN_ZOOM) / (SCALE_MAX_ZOOM - SCALE_MIN_ZOOM);
+  return MIN_SCALE + t * (MAX_SCALE - MIN_SCALE);
+};
 
 export function CrewMarker({
   route,
@@ -75,9 +61,14 @@ export function CrewMarker({
   const latitude = useSharedValue(route[0]?.latitude ?? 0);
   const longitude = useSharedValue(route[0]?.longitude ?? 0);
   const bearingValue = useSharedValue(0);
+  const scaleValue = useSharedValue(getScaleForZoom(zoom));
   const currentBearingRef = useRef(0);
   const segmentIndexRef = useRef(0);
   const animationRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    scaleValue.value = withTiming(getScaleForZoom(zoom), { duration: 200 });
+  }, [zoom, scaleValue]);
 
   const zIndex = useDerivedValue(() => {
     return Math.round((90 - latitude.value) * 10000);
@@ -89,7 +80,12 @@ export function CrewMarker({
       longitude: longitude.value,
     },
     zIndex: zIndex.value,
+    rotate: bearingValue.value,
+    scale: scaleValue.value,
   }));
+
+  const zoomRef = useRef(zoom);
+  zoomRef.current = zoom;
 
   useEffect(() => {
     if (route.length < 2) return;
@@ -116,8 +112,7 @@ export function CrewMarker({
         easing: Easing.out(Easing.ease),
       });
 
-      const zoomScale = Math.pow(2, zoom - BASE_ZOOM);
-      const duration = (SEGMENT_DURATION / speed) * zoomScale;
+      const duration = SEGMENT_DURATION / speed;
 
       latitude.value = withTiming(to.latitude, { duration });
       longitude.value = withTiming(to.longitude, { duration });
@@ -135,7 +130,7 @@ export function CrewMarker({
         clearTimeout(animationRef.current);
       }
     };
-  }, [route, speed, zoom, bearingValue, latitude, longitude]);
+  }, [route, speed, bearingValue, latitude, longitude]);
 
   if (!route[0]) return null;
 
@@ -146,16 +141,7 @@ export function CrewMarker({
       animatedProps={animatedProps}
       rasterize={false}
     >
-      <VehicleIcon bearing={bearingValue} loaded={loaded} />
+      <PickupIcon loaded={loaded} />
     </AnimatedMarker>
   );
 }
-
-const styles = StyleSheet.create({
-  root: {
-    width: CONTAINER_SIZE,
-    height: CONTAINER_SIZE,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});

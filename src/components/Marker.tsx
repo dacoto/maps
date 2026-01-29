@@ -30,8 +30,19 @@ export interface MarkerProps {
    */
   zIndex?: number;
   /**
+   * Rotation angle in degrees clockwise from north.
+   * @default 0
+   */
+  rotate?: number;
+  /**
+   * Scale factor for the marker.
+   * @default 1
+   */
+  scale?: number;
+  /**
    * Rasterize custom marker view to bitmap for better performance.
    * Set to false if you need live view updates (e.g., animations).
+   * @platform ios, android
    * @default true
    */
   rasterize?: boolean;
@@ -50,6 +61,8 @@ export class Marker extends React.Component<MarkerProps> {
       description,
       anchor,
       zIndex,
+      rotate = 0,
+      scale = 1,
       rasterize = true,
       children,
     } = this.props;
@@ -62,6 +75,8 @@ export class Marker extends React.Component<MarkerProps> {
         title={title}
         description={description}
         anchor={anchor}
+        rotate={rotate}
+        scale={scale}
         rasterize={rasterize}
       >
         {children}

@@ -18,6 +18,8 @@ interface LuggMarkerViewDelegate {
 }
 
 class LuggMarkerView(context: Context) : ReactViewGroup(context) {
+  private var scaleUpdateRunnable: Runnable? = null
+
   var name: String? = null
     private set
 
@@ -40,6 +42,15 @@ class LuggMarkerView(context: Context) : ReactViewGroup(context) {
     private set
 
   var zIndex: Float = 0f
+    private set
+
+  var rotate: Float = 0f
+    private set
+
+  var scale: Float = 1f
+    private set
+
+  var scaleChanged: Boolean = false
     private set
 
   var rasterize: Boolean = true
@@ -70,16 +81,26 @@ class LuggMarkerView(context: Context) : ReactViewGroup(context) {
     val (width, height) = measureIconViewBounds()
     if (width <= 0 || height <= 0) return null
 
-    val bitmap = createBitmap(width, height)
+    val scaledWidth = (width * scale).toInt()
+    val scaledHeight = (height * scale).toInt()
+
+    val bitmap = createBitmap(scaledWidth, scaledHeight)
     val canvas = Canvas(bitmap)
+    canvas.scale(scale, scale)
     iconView.draw(canvas)
     return BitmapDescriptorFactory.fromBitmap(bitmap)
   }
 
   private fun createIconViewWrapper(): View {
     val (width, height) = measureIconViewBounds()
+    val scaledWidth = (width * scale).toInt()
+    val scaledHeight = (height * scale).toInt()
 
     (iconView.parent as? ViewGroup)?.removeView(iconView)
+    iconView.scaleX = scale
+    iconView.scaleY = scale
+    iconView.pivotX = 0f
+    iconView.pivotY = 0f
 
     return object : ReactViewGroup(context) {
       init {
@@ -87,7 +108,7 @@ class LuggMarkerView(context: Context) : ReactViewGroup(context) {
       }
 
       override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        setMeasuredDimension(width, height)
+        setMeasuredDimension(scaledWidth, scaledHeight)
       }
     }
   }
@@ -97,11 +118,25 @@ class LuggMarkerView(context: Context) : ReactViewGroup(context) {
     if (!hasCustomView) return
 
     if (rasterize) {
-      m.iconView = null
       createIconBitmap()?.let { m.setIcon(it) }
     } else {
       m.iconView = createIconViewWrapper()
     }
+  }
+
+  fun applyScaleToMarker() {
+    val m = marker ?: return
+    if (!hasCustomView) return
+
+    scaleUpdateRunnable?.let { removeCallbacks(it) }
+    scaleUpdateRunnable = Runnable {
+      if (rasterize) {
+        createIconBitmap()?.let { m.setIcon(it) }
+      } else {
+        m.iconView = createIconViewWrapper()
+      }
+    }
+    post(scaleUpdateRunnable)
   }
 
   fun updateIcon(onAddMarker: () -> Unit) {
@@ -186,6 +221,19 @@ class LuggMarkerView(context: Context) : ReactViewGroup(context) {
     this.zIndex = zIndex
   }
 
+  fun setRotate(rotate: Float) {
+    this.rotate = rotate
+  }
+
+  fun setScale(scale: Float) {
+    scaleChanged = this.scale != scale
+    this.scale = scale
+  }
+
+  fun clearScaleChanged() {
+    scaleChanged = false
+  }
+
   fun setRasterize(rasterize: Boolean) {
     this.rasterize = rasterize
   }
@@ -199,6 +247,8 @@ class LuggMarkerView(context: Context) : ReactViewGroup(context) {
   }
 
   fun onDropViewInstance() {
+    scaleUpdateRunnable?.let { removeCallbacks(it) }
+    scaleUpdateRunnable = null
     didLayout = false
     delegate = null
     iconView.removeAllViews()

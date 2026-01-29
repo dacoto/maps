@@ -21,6 +21,8 @@ export interface NativeProps extends ViewProps {
   title?: string;
   description?: string;
   anchor?: Point;
+  rotate?: WithDefault<Double, 0>;
+  scale?: WithDefault<Double, 1>;
   rasterize?: WithDefault<boolean, true>;
 }
 

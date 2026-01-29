@@ -69,6 +69,16 @@ class LuggMarkerViewManager :
     view.setZIndex(zIndex)
   }
 
+  @ReactProp(name = "rotate", defaultDouble = 0.0)
+  override fun setRotate(view: LuggMarkerView, value: Double) {
+    view.setRotate(value.toFloat())
+  }
+
+  @ReactProp(name = "scale", defaultDouble = 1.0)
+  override fun setScale(view: LuggMarkerView, value: Double) {
+    view.setScale(value.toFloat())
+  }
+
   @ReactProp(name = "rasterize", defaultBoolean = true)
   override fun setRasterize(view: LuggMarkerView, value: Boolean) {
     view.setRasterize(value)

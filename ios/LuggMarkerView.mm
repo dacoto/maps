@@ -19,6 +19,8 @@ using namespace facebook::react;
   NSString *_markerDescription;
   CGPoint _anchor;
   NSInteger _zIndex;
+  CLLocationDegrees _rotate;
+  CGFloat _scale;
   BOOL _rasterize;
   BOOL _didLayout;
   UIView *_iconView;
@@ -38,6 +40,8 @@ using namespace facebook::react;
     _coordinate = CLLocationCoordinate2DMake(0, 0);
     _anchor = CGPointMake(0.5, 1.0);
     _zIndex = 0;
+    _rotate = 0;
+    _scale = 1;
     _rasterize = YES;
     _didLayout = NO;
 
@@ -65,6 +69,8 @@ using namespace facebook::react;
       [NSString stringWithUTF8String:newViewProps.description.c_str()];
   _anchor = CGPointMake(newViewProps.anchor.x, newViewProps.anchor.y);
   _zIndex = newViewProps.zIndex.value_or(0);
+  _rotate = newViewProps.rotate;
+  _scale = newViewProps.scale;
   _rasterize = newViewProps.rasterize;
 }
 
@@ -141,6 +147,14 @@ using namespace facebook::react;
   return _zIndex;
 }
 
+- (CLLocationDegrees)rotate {
+  return _rotate;
+}
+
+- (CGFloat)scale {
+  return _scale;
+}
+
 - (BOOL)rasterize {
   return _rasterize;
 }
@@ -174,11 +188,38 @@ using namespace facebook::react;
   }];
 }
 
+- (UIImage *)createScaledIconImage {
+  CGSize size = _iconView.bounds.size;
+  if (size.width <= 0 || size.height <= 0) {
+    return nil;
+  }
+
+  CGSize scaledSize = CGSizeMake(size.width * _scale, size.height * _scale);
+
+  UIGraphicsImageRendererFormat *format =
+      [UIGraphicsImageRendererFormat defaultFormat];
+  format.scale = [UIScreen mainScreen].scale;
+  UIGraphicsImageRenderer *renderer =
+      [[UIGraphicsImageRenderer alloc] initWithSize:scaledSize format:format];
+
+  return [renderer imageWithActions:^(UIGraphicsImageRendererContext *context) {
+    CGContextScaleCTM(context.CGContext, self->_scale, self->_scale);
+    [self->_iconView.layer renderInContext:context.CGContext];
+  }];
+}
+
+- (void)resetIconViewTransform {
+  _iconView.transform = CGAffineTransformIdentity;
+  _iconView.layer.anchorPoint = CGPointMake(0.5, 0.5);
+  _iconView.frame = CGRectMake(0, 0, _iconView.bounds.size.width, _iconView.bounds.size.height);
+}
+
 - (void)prepareForRecycle {
   [super prepareForRecycle];
   _didLayout = NO;
   self.marker = nil;
   self.delegate = nil;
+  [self resetIconViewTransform];
   for (UIView *subview in _iconView.subviews) {
     [subview removeFromSuperview];
   }
