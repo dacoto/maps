@@ -12,7 +12,8 @@ NS_ASSUME_NONNULL_BEGIN
                           (CLLocationCoordinate2D)centerCoordinate
                                       zoomLevel:(double)zoomLevel;
 
-/// Returns the zoom level based on the full map region, not affected by layoutMargins
+/// Returns the zoom level based on the full map region, not affected by
+/// layoutMargins
 - (double)zoomLevel;
 
 @end

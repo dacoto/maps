@@ -203,10 +203,7 @@ using namespace luggmaps::events;
                      animated:(BOOL)animated {
   CLLocationCoordinate2D center =
       CLLocationCoordinate2DMake(latitude, longitude);
-  NSLog(@"[Maps] setCameraWithLatitude: before zoom=%.2f", _mapView.zoomLevel);
   [_mapView setCenterCoordinate:center zoomLevel:zoom animated:animated];
-  NSLog(@"[Maps] setCameraWithLatitude: after zoom=%.2f (requested=%.2f)",
-        _mapView.zoomLevel, zoom);
 }
 
 - (CLLocationDistance)cameraDistanceForZoomLevel:(double)zoomLevel {
@@ -278,7 +275,6 @@ using namespace luggmaps::events;
 
       // Convert pixel offset to coordinate offset
       if (deltaX != 0 || deltaY != 0) {
-        double zoomBefore = _mapView.zoomLevel;
         CLLocationCoordinate2D currentCenter = _mapView.centerCoordinate;
         CGPoint centerPoint = [_mapView convertCoordinate:currentCenter
                                             toPointToView:_mapView];
@@ -287,8 +283,6 @@ using namespace luggmaps::events;
         CLLocationCoordinate2D newCenter = [_mapView convertPoint:newPoint
                                              toCoordinateFromView:_mapView];
         [_mapView setCenterCoordinate:newCenter animated:NO];
-        NSLog(@"[Maps] padding changed: deltaX=%.2f deltaY=%.2f zoomBefore=%.2f zoomAfter=%.2f",
-              deltaX, deltaY, zoomBefore, _mapView.zoomLevel);
       }
     } else {
       _mapView.layoutMargins = UIEdgeInsetsMake(
@@ -531,8 +525,6 @@ using namespace luggmaps::events;
 }
 
 - (void)mapView:(MKMapView *)mapView regionDidChangeAnimated:(BOOL)animated {
-  NSLog(@"[Maps] regionDidChangeAnimated: zoom=%.2f animated=%d",
-        mapView.zoomLevel, animated);
   BOOL wasDragging = _isDragging;
   _isDragging = NO;
   if (wasDragging) {
@@ -623,8 +615,6 @@ using namespace luggmaps::events;
   }
 
   double targetZoom = zoom > 0 ? zoom : _mapView.zoomLevel;
-  NSLog(@"[Maps] moveCamera: zoom=%.2f targetZoom=%.2f currentZoom=%.2f",
-        zoom, targetZoom, _mapView.zoomLevel);
 
   if (duration < 0) {
     [self setCameraWithLatitude:latitude
