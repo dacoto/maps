@@ -203,7 +203,10 @@ using namespace luggmaps::events;
                      animated:(BOOL)animated {
   CLLocationCoordinate2D center =
       CLLocationCoordinate2DMake(latitude, longitude);
+  NSLog(@"[Maps] setCameraWithLatitude: before zoom=%.2f", _mapView.zoomLevel);
   [_mapView setCenterCoordinate:center zoomLevel:zoom animated:animated];
+  NSLog(@"[Maps] setCameraWithLatitude: after zoom=%.2f (requested=%.2f)",
+        _mapView.zoomLevel, zoom);
 }
 
 - (CLLocationDistance)cameraDistanceForZoomLevel:(double)zoomLevel {
@@ -235,6 +238,8 @@ using namespace luggmaps::events;
 
 - (void)updateProps:(Props::Shared const &)props
            oldProps:(Props::Shared const &)oldProps {
+  const auto &oldViewProps =
+      *std::static_pointer_cast<LuggAppleMapViewProps const>(oldProps);
   const auto &newViewProps =
       *std::static_pointer_cast<LuggAppleMapViewProps const>(props);
 
@@ -244,9 +249,52 @@ using namespace luggmaps::events;
     _mapView.rotateEnabled = newViewProps.rotateEnabled;
     _mapView.pitchEnabled = newViewProps.pitchEnabled;
     _mapView.showsUserLocation = newViewProps.userLocationEnabled;
-    _mapView.layoutMargins = UIEdgeInsetsMake(
-        newViewProps.padding.top, newViewProps.padding.left,
-        newViewProps.padding.bottom, newViewProps.padding.right);
+
+    // Check if padding changed
+    BOOL paddingChanged =
+        oldViewProps.padding.top != newViewProps.padding.top ||
+        oldViewProps.padding.left != newViewProps.padding.left ||
+        oldViewProps.padding.bottom != newViewProps.padding.bottom ||
+        oldViewProps.padding.right != newViewProps.padding.right;
+
+    if (paddingChanged) {
+      // Calculate the offset difference to keep visual center stable
+      CGFloat oldOffsetX =
+          (oldViewProps.padding.left - oldViewProps.padding.right) / 2.0;
+      CGFloat oldOffsetY =
+          (oldViewProps.padding.top - oldViewProps.padding.bottom) / 2.0;
+      CGFloat newOffsetX =
+          (newViewProps.padding.left - newViewProps.padding.right) / 2.0;
+      CGFloat newOffsetY =
+          (newViewProps.padding.top - newViewProps.padding.bottom) / 2.0;
+
+      CGFloat deltaX = newOffsetX - oldOffsetX;
+      CGFloat deltaY = newOffsetY - oldOffsetY;
+
+      // Apply new padding first
+      _mapView.layoutMargins = UIEdgeInsetsMake(
+          newViewProps.padding.top, newViewProps.padding.left,
+          newViewProps.padding.bottom, newViewProps.padding.right);
+
+      // Convert pixel offset to coordinate offset
+      if (deltaX != 0 || deltaY != 0) {
+        double zoomBefore = _mapView.zoomLevel;
+        CLLocationCoordinate2D currentCenter = _mapView.centerCoordinate;
+        CGPoint centerPoint = [_mapView convertCoordinate:currentCenter
+                                            toPointToView:_mapView];
+        CGPoint newPoint =
+            CGPointMake(centerPoint.x - deltaX, centerPoint.y - deltaY);
+        CLLocationCoordinate2D newCenter = [_mapView convertPoint:newPoint
+                                             toCoordinateFromView:_mapView];
+        [_mapView setCenterCoordinate:newCenter animated:NO];
+        NSLog(@"[Maps] padding changed: deltaX=%.2f deltaY=%.2f zoomBefore=%.2f zoomAfter=%.2f",
+              deltaX, deltaY, zoomBefore, _mapView.zoomLevel);
+      }
+    } else {
+      _mapView.layoutMargins = UIEdgeInsetsMake(
+          newViewProps.padding.top, newViewProps.padding.left,
+          newViewProps.padding.bottom, newViewProps.padding.right);
+    }
 
     _minZoom = newViewProps.minZoom;
     _maxZoom = newViewProps.maxZoom;
@@ -483,6 +531,8 @@ using namespace luggmaps::events;
 }
 
 - (void)mapView:(MKMapView *)mapView regionDidChangeAnimated:(BOOL)animated {
+  NSLog(@"[Maps] regionDidChangeAnimated: zoom=%.2f animated=%d",
+        mapView.zoomLevel, animated);
   BOOL wasDragging = _isDragging;
   _isDragging = NO;
   if (wasDragging) {
@@ -573,6 +623,8 @@ using namespace luggmaps::events;
   }
 
   double targetZoom = zoom > 0 ? zoom : _mapView.zoomLevel;
+  NSLog(@"[Maps] moveCamera: zoom=%.2f targetZoom=%.2f currentZoom=%.2f",
+        zoom, targetZoom, _mapView.zoomLevel);
 
   if (duration < 0) {
     [self setCameraWithLatitude:latitude
