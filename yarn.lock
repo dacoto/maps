@@ -3320,9 +3320,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@lodev09/react-native-true-sheet@npm:^3.7.0":
-  version: 3.7.0
-  resolution: "@lodev09/react-native-true-sheet@npm:3.7.0"
+"@lodev09/react-native-true-sheet@npm:^3.8.1":
+  version: 3.8.1
+  resolution: "@lodev09/react-native-true-sheet@npm:3.8.1"
   peerDependencies:
     "@gorhom/bottom-sheet": ">=5"
     "@react-navigation/native": ">=7"
@@ -3339,7 +3339,7 @@ __metadata:
       optional: true
     react-native-worklets:
       optional: true
-  checksum: 10c0/5180146284efee11155d7628aa750094c23f83bb775c9279b6546d8b9d5f02fd99dac11f541e97fc0ca782e37dd0fc21aeefdfeb257a139b9d82453ff20895f8
+  checksum: 10c0/376f9541431ba7134350efe4961762bc021fec057636f893b2ce83d8187436388c5c55e0bda1be2144047244cad2a9e97a8a33eb60a653fe33488a47711d9bd7
   languageName: node
   linkType: hard
 
@@ -3350,7 +3350,7 @@ __metadata:
     "@babel/core": "npm:^7.25.2"
     "@babel/preset-env": "npm:^7.25.3"
     "@babel/runtime": "npm:^7.25.0"
-    "@lodev09/react-native-true-sheet": "npm:^3.7.0"
+    "@lodev09/react-native-true-sheet": "npm:^3.8.1"
     "@lugg/maps": "workspace:*"
     "@lugg/shared-example": "workspace:*"
     "@react-native-community/cli": "npm:20.0.0"
@@ -3377,7 +3377,7 @@ __metadata:
   dependencies:
     "@babel/core": "npm:^7.25.2"
     "@gorhom/bottom-sheet": "npm:^5.2.8"
-    "@lodev09/react-native-true-sheet": "npm:^3.7.0"
+    "@lodev09/react-native-true-sheet": "npm:^3.8.1"
     "@lugg/maps": "workspace:*"
     "@lugg/shared-example": "workspace:*"
     "@types/react": "npm:~19.1.0"

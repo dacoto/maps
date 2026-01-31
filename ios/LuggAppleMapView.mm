@@ -172,10 +172,12 @@ using namespace luggmaps::events;
 
   [_mapWrapperView addSubview:_mapView];
 
-  CLLocationCoordinate2D center = CLLocationCoordinate2DMake(
-      viewProps.initialCoordinate.latitude, viewProps.initialCoordinate.longitude);
-  MKCoordinateRegion region = [_mapView regionForCenterCoordinate:center
-                                                        zoomLevel:viewProps.initialZoom];
+  CLLocationCoordinate2D center =
+      CLLocationCoordinate2DMake(viewProps.initialCoordinate.latitude,
+                                 viewProps.initialCoordinate.longitude);
+  MKCoordinateRegion region =
+      [_mapView regionForCenterCoordinate:center
+                                zoomLevel:viewProps.initialZoom];
   [_mapView setRegion:region animated:NO];
 
   // Add annotations for any markers that were mounted before map was ready

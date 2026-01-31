@@ -75,10 +75,6 @@ function HomeContent() {
     []
   );
 
-  const handleMapReady = useCallback(() => {
-    sheetRef.current?.present();
-  }, []);
-
   const addMarker = () => {
     if (!cameraPosition) return;
 
@@ -133,13 +129,13 @@ function HomeContent() {
         <View style={styles.container}>
           {showMap && (
             <Map
+              key={provider}
               ref={mapRef}
               provider={provider}
               markers={markers}
               animatedProps={animatedProps}
               animatedPaddingBottom={animatedPaddingBottom}
               userLocationEnabled={locationPermission}
-              onReady={handleMapReady}
               onCameraMove={handleCameraMove}
               onCameraIdle={handleCameraIdle}
             />
@@ -147,10 +143,11 @@ function HomeContent() {
 
           <ReanimatedTrueSheet
             ref={sheetRef}
-            detents={[0.1, 'auto', 1]}
+            detents={['auto']}
             dimmed={false}
             backgroundBlur="system-material-light"
             dismissible={false}
+            initialDetentIndex={0}
           >
             {cameraPosition && (
               <Text style={styles.positionText}>
