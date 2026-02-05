@@ -11,6 +11,21 @@ example/
 └── shared/   # Shared components used by both examples
 ```
 
+## Setup
+
+Copy the example env file and add your Google Maps API key:
+
+```sh
+cp bare/.env.example bare/.env
+cp expo/.env.example expo/.env
+```
+
+Edit both `.env` files with your API key:
+
+```
+GOOGLE_MAPS_API_KEY=your_api_key_here
+```
+
 ## Running
 
 From the repo root:
