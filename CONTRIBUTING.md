@@ -9,7 +9,8 @@ We want this community to be friendly and respectful to each other. Please follo
 This project is a monorepo managed using [Yarn workspaces](https://yarnpkg.com/features/workspaces). It contains the following packages:
 
 - The library package in the root directory.
-- An example app in the `example/bare/` directory.
+- A bare React Native example app in `example/bare/`.
+- An Expo example app in `example/expo/`.
 
 To get started with the project, make sure you have the correct version of [Node.js](https://nodejs.org/) installed. See the [`.nvmrc`](./.nvmrc) file for the version used in this project.
 
@@ -23,13 +24,14 @@ yarn
 
 ### Environment variables
 
-The example app requires a Google Maps API key. Copy the example env file and add your key:
+The example apps require a Google Maps API key. Copy the example env files and add your key:
 
 ```sh
 cp example/bare/.env.example example/bare/.env
+cp example/expo/.env.example example/expo/.env
 ```
 
-Then edit `example/bare/.env` with your API key:
+Then edit both `.env` files with your API key:
 
 ```
 GOOGLE_MAPS_API_KEY=your_api_key_here
@@ -129,9 +131,12 @@ The `package.json` file contains various scripts for common tasks:
 - `yarn typecheck`: type-check files with TypeScript.
 - `yarn lint`: lint files with [ESLint](https://eslint.org/).
 - `yarn test`: run unit tests with [Jest](https://jestjs.io/).
-- `yarn bare start`: start the Metro server for the example app.
-- `yarn bare android`: run the example app on Android.
-- `yarn bare ios`: run the example app on iOS.
+- `yarn bare start`: start the Metro server for the bare example app.
+- `yarn bare android`: run the bare example app on Android.
+- `yarn bare ios`: run the bare example app on iOS.
+- `yarn expo start`: start the Metro server for the Expo example app.
+- `yarn expo android`: run the Expo example app on Android.
+- `yarn expo ios`: run the Expo example app on iOS.
 
 ### Sending a pull request
 
