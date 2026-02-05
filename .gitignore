@@ -87,3 +87,7 @@ nitrogen/
 
 # Agents
 .claude
+
+# Environment
+.env
+.env.local
