@@ -228,9 +228,9 @@ using namespace luggmaps::events;
   _theme = newViewProps.theme;
 
   _oldEdgeInsets = _edgeInsets;
-  _edgeInsets =
-      UIEdgeInsetsMake(newViewProps.edgeInsets.top, newViewProps.edgeInsets.left,
-                       newViewProps.edgeInsets.bottom, newViewProps.edgeInsets.right);
+  _edgeInsets = UIEdgeInsetsMake(
+      newViewProps.edgeInsets.top, newViewProps.edgeInsets.left,
+      newViewProps.edgeInsets.bottom, newViewProps.edgeInsets.right);
 
   [super updateProps:props oldProps:oldProps];
 }
@@ -239,7 +239,8 @@ using namespace luggmaps::events;
   [super finalizeUpdates:updateMask];
 
   if (updateMask & RNComponentViewUpdateMaskProps) {
-    if (!_provider) return;
+    if (!_provider)
+      return;
 
     [self applyProps];
     [_provider setEdgeInsets:_edgeInsets oldEdgeInsets:_oldEdgeInsets];

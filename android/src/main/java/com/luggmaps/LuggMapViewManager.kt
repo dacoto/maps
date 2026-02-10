@@ -172,7 +172,14 @@ class LuggMapViewManager :
         coords.add(LatLng(lat, lng))
       }
     }
-    view.fitCoordinates(coords, edgeInsetsTop.toInt(), edgeInsetsLeft.toInt(), edgeInsetsBottom.toInt(), edgeInsetsRight.toInt(), duration.toInt())
+    view.fitCoordinates(
+      coords,
+      edgeInsetsTop.toInt(),
+      edgeInsetsLeft.toInt(),
+      edgeInsetsBottom.toInt(),
+      edgeInsetsRight.toInt(),
+      duration.toInt()
+    )
   }
 
   companion object {

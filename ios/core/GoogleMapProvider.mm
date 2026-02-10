@@ -127,15 +127,15 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
     return;
 
   switch (_theme) {
-    case 1: // Dark
-      _mapView.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
-      break;
-    case 0: // Light
-      _mapView.overrideUserInterfaceStyle = UIUserInterfaceStyleLight;
-      break;
-    default: // System
-      _mapView.overrideUserInterfaceStyle = UIUserInterfaceStyleUnspecified;
-      break;
+  case 1: // Dark
+    _mapView.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
+    break;
+  case 0: // Light
+    _mapView.overrideUserInterfaceStyle = UIUserInterfaceStyleLight;
+    break;
+  default: // System
+    _mapView.overrideUserInterfaceStyle = UIUserInterfaceStyleUnspecified;
+    break;
   }
 }
 
@@ -153,14 +153,13 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
   [_mapView setMinZoom:_mapView.minZoom maxZoom:max];
 }
 
-- (void)setEdgeInsets:(UIEdgeInsets)edgeInsets oldEdgeInsets:(UIEdgeInsets)oldEdgeInsets {
-  UIEdgeInsets rounded = UIEdgeInsetsMake(
-    round(edgeInsets.top),
-    round(edgeInsets.left),
-    round(edgeInsets.bottom),
-    round(edgeInsets.right)
-  );
-  if (UIEdgeInsetsEqualToEdgeInsets(_edgeInsets, rounded)) return;
+- (void)setEdgeInsets:(UIEdgeInsets)edgeInsets
+        oldEdgeInsets:(UIEdgeInsets)oldEdgeInsets {
+  UIEdgeInsets rounded =
+      UIEdgeInsetsMake(round(edgeInsets.top), round(edgeInsets.left),
+                       round(edgeInsets.bottom), round(edgeInsets.right));
+  if (UIEdgeInsetsEqualToEdgeInsets(_edgeInsets, rounded))
+    return;
   _edgeInsets = rounded;
   _mapView.padding = rounded;
 }
@@ -438,8 +437,8 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
     bounds = [bounds includingCoordinate:CLLocationCoordinate2DMake(lat, lng)];
   }
 
-  UIEdgeInsets insets =
-      UIEdgeInsetsMake(edgeInsetsTop, edgeInsetsLeft, edgeInsetsBottom, edgeInsetsRight);
+  UIEdgeInsets insets = UIEdgeInsetsMake(edgeInsetsTop, edgeInsetsLeft,
+                                         edgeInsetsBottom, edgeInsetsRight);
   GMSCameraUpdate *cameraUpdate = [GMSCameraUpdate fitBounds:bounds
                                               withEdgeInsets:insets];
 

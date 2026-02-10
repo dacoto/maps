@@ -108,7 +108,8 @@ export const Map = forwardRef<MapView, MapProps>(
     );
 
     const centerPinStyle = useAnimatedStyle(() => {
-      const bottomOffset = animatedEdgeInsetsBottom?.value ?? edgeInsets?.bottom ?? 0;
+      const bottomOffset =
+        animatedEdgeInsetsBottom?.value ?? edgeInsets?.bottom ?? 0;
       return {
         transform: [{ translateY: -bottomOffset / 2 }],
       };

@@ -105,15 +105,15 @@
 
 - (void)setTheme:(NSInteger)theme {
   switch (theme) {
-    case 1: // Dark
-      _mapView.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
-      break;
-    case 0: // Light
-      _mapView.overrideUserInterfaceStyle = UIUserInterfaceStyleLight;
-      break;
-    default: // System
-      _mapView.overrideUserInterfaceStyle = UIUserInterfaceStyleUnspecified;
-      break;
+  case 1: // Dark
+    _mapView.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
+    break;
+  case 0: // Light
+    _mapView.overrideUserInterfaceStyle = UIUserInterfaceStyleLight;
+    break;
+  default: // System
+    _mapView.overrideUserInterfaceStyle = UIUserInterfaceStyleUnspecified;
+    break;
   }
 }
 
@@ -127,7 +127,8 @@
   [self applyZoomRange];
 }
 
-- (void)setEdgeInsets:(UIEdgeInsets)edgeInsets oldEdgeInsets:(UIEdgeInsets)oldEdgeInsets {
+- (void)setEdgeInsets:(UIEdgeInsets)edgeInsets
+        oldEdgeInsets:(UIEdgeInsets)oldEdgeInsets {
   CGFloat oldOffsetX = (oldEdgeInsets.left - oldEdgeInsets.right) / 2.0;
   CGFloat oldOffsetY = (oldEdgeInsets.top - oldEdgeInsets.bottom) / 2.0;
   CGFloat newOffsetX = (edgeInsets.left - edgeInsets.right) / 2.0;
@@ -586,8 +587,8 @@
   }
   free(coords);
 
-  UIEdgeInsets insets =
-      UIEdgeInsetsMake(edgeInsetsTop, edgeInsetsLeft, edgeInsetsBottom, edgeInsetsRight);
+  UIEdgeInsets insets = UIEdgeInsetsMake(edgeInsetsTop, edgeInsetsLeft,
+                                         edgeInsetsBottom, edgeInsetsRight);
 
   if (duration < 0) {
     [_mapView setVisibleMapRect:mapRect edgePadding:insets animated:YES];
