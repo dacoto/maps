@@ -34,10 +34,11 @@ using namespace luggmaps::events;
   BOOL _rotateEnabled;
   BOOL _pitchEnabled;
   BOOL _userLocationEnabled;
-  NSString *_theme;
+  LuggMapViewTheme _theme;
   double _minZoom;
   double _maxZoom;
-  UIEdgeInsets _padding;
+  UIEdgeInsets _edgeInsets;
+  UIEdgeInsets _oldEdgeInsets;
 }
 
 + (ComponentDescriptorProvider)componentDescriptorProvider {
@@ -57,8 +58,8 @@ using namespace luggmaps::events;
     _rotateEnabled = YES;
     _pitchEnabled = YES;
     _userLocationEnabled = NO;
-    _theme = @"system";
-    _padding = UIEdgeInsetsZero;
+    _theme = LuggMapViewTheme::System;
+    _edgeInsets = UIEdgeInsetsZero;
   }
   return self;
 }
@@ -154,7 +155,7 @@ using namespace luggmaps::events;
                initialCoordinate:coordinate
                      initialZoom:viewProps.initialZoom];
 
-  [_provider setPadding:_padding oldPadding:UIEdgeInsetsZero];
+  [_provider setEdgeInsets:_edgeInsets oldEdgeInsets:UIEdgeInsetsZero];
 
   _initialized = YES;
 
@@ -198,15 +199,13 @@ using namespace luggmaps::events;
   [_provider setRotateEnabled:_rotateEnabled];
   [_provider setPitchEnabled:_pitchEnabled];
   [_provider setUserLocationEnabled:_userLocationEnabled];
-  [_provider setTheme:_theme];
+  [_provider setTheme:(NSInteger)_theme];
   [_provider setMinZoom:_minZoom];
   [_provider setMaxZoom:_maxZoom];
 }
 
 - (void)updateProps:(Props::Shared const &)props
            oldProps:(Props::Shared const &)oldProps {
-  const auto &oldViewProps =
-      *std::static_pointer_cast<LuggMapViewProps const>(oldProps);
   const auto &newViewProps =
       *std::static_pointer_cast<LuggMapViewProps const>(props);
 
@@ -218,7 +217,6 @@ using namespace luggmaps::events;
     _mapId = newMapId;
   }
 
-  // Cache props
   _zoomEnabled = newViewProps.zoomEnabled;
   _scrollEnabled = newViewProps.scrollEnabled;
   _rotateEnabled = newViewProps.rotateEnabled;
@@ -227,25 +225,25 @@ using namespace luggmaps::events;
   _minZoom = newViewProps.minZoom;
   _maxZoom = newViewProps.maxZoom;
 
-  if (newViewProps.theme == LuggMapViewTheme::Dark) {
-    _theme = @"dark";
-  } else if (newViewProps.theme == LuggMapViewTheme::Light) {
-    _theme = @"light";
-  } else {
-    _theme = @"system";
-  }
+  _theme = newViewProps.theme;
 
-  UIEdgeInsets oldPadding = _padding;
-  _padding =
-      UIEdgeInsetsMake(newViewProps.padding.top, newViewProps.padding.left,
-                       newViewProps.padding.bottom, newViewProps.padding.right);
-
-  if (_provider) {
-    [self applyProps];
-    [_provider setPadding:_padding oldPadding:oldPadding];
-  }
+  _oldEdgeInsets = _edgeInsets;
+  _edgeInsets =
+      UIEdgeInsetsMake(newViewProps.edgeInsets.top, newViewProps.edgeInsets.left,
+                       newViewProps.edgeInsets.bottom, newViewProps.edgeInsets.right);
 
   [super updateProps:props oldProps:oldProps];
+}
+
+- (void)finalizeUpdates:(RNComponentViewUpdateMask)updateMask {
+  [super finalizeUpdates:updateMask];
+
+  if (updateMask & RNComponentViewUpdateMaskProps) {
+    if (!_provider) return;
+
+    [self applyProps];
+    [_provider setEdgeInsets:_edgeInsets oldEdgeInsets:_oldEdgeInsets];
+  }
 }
 
 #pragma mark - Commands
@@ -261,16 +259,16 @@ using namespace luggmaps::events;
 }
 
 - (void)fitCoordinates:(NSArray *)coordinates
-            paddingTop:(double)paddingTop
-           paddingLeft:(double)paddingLeft
-         paddingBottom:(double)paddingBottom
-          paddingRight:(double)paddingRight
+         edgeInsetsTop:(double)edgeInsetsTop
+        edgeInsetsLeft:(double)edgeInsetsLeft
+      edgeInsetsBottom:(double)edgeInsetsBottom
+       edgeInsetsRight:(double)edgeInsetsRight
               duration:(double)duration {
   [_provider fitCoordinates:coordinates
-                 paddingTop:paddingTop
-                paddingLeft:paddingLeft
-              paddingBottom:paddingBottom
-               paddingRight:paddingRight
+              edgeInsetsTop:edgeInsetsTop
+             edgeInsetsLeft:edgeInsetsLeft
+           edgeInsetsBottom:edgeInsetsBottom
+            edgeInsetsRight:edgeInsetsRight
                    duration:duration];
 }
 
