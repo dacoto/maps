@@ -42,6 +42,7 @@ class LuggMapView(private val reactContext: ThemedReactContext) :
   private var initialLatitude: Double = 37.78
   private var initialLongitude: Double = -122.43
   private var initialZoom: Float = 14f
+  private var theme: String = "system"
 
   // region View Lifecycle
 
@@ -94,6 +95,7 @@ class LuggMapView(private val reactContext: ThemedReactContext) :
 
     val google = GoogleMapProvider(context)
     google.mapId = mapId
+    google.setTheme(theme)
     google.delegate = this
     provider = google
 
@@ -171,6 +173,7 @@ class LuggMapView(private val reactContext: ThemedReactContext) :
   }
 
   fun setTheme(value: String) {
+    theme = value
     provider?.setTheme(value)
   }
 

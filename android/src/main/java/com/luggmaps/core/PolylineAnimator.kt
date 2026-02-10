@@ -91,10 +91,10 @@ class PolylineAnimator {
     computeCumulativeDistances()
 
     val trailLength = animatedOptions.trailLength.coerceIn(0.01f, 1f)
-    val endValue = if (trailLength < 1f) 1f else 2.15f
+    val maxProgress = if (trailLength < 1f) 1f else 2.15f
 
-    animator = ValueAnimator.ofFloat(0f, endValue).apply {
-      duration = animatedOptions.duration
+    animator = ValueAnimator.ofFloat(0f, maxProgress).apply {
+      duration = (animatedOptions.duration * maxProgress).toLong()
       startDelay = animatedOptions.delay
       repeatCount = ValueAnimator.INFINITE
       interpolator = LinearInterpolator()
@@ -231,6 +231,8 @@ class PolylineAnimator {
     if (lastAdded == null || endCoord.latitude != lastAdded.latitude || endCoord.longitude != lastAdded.longitude) {
       reusablePoints.add(endCoord)
     }
+
+    if (reusablePoints.size < 2) return
 
     poly.points = reusablePoints
 
