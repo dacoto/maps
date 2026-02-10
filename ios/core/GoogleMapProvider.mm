@@ -14,6 +14,7 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
   GMSMapView *_mapView;
   BOOL _isMapReady;
   BOOL _isDragging;
+  NSString *_theme;
   NSMutableArray<LuggMarkerView *> *_pendingMarkerViews;
   NSMutableArray<LuggPolylineView *> *_pendingPolylineViews;
   NSMapTable<LuggPolylineView *, GMSPolylineAnimator *> *_polylineAnimators;
@@ -74,6 +75,8 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
 
   [wrapperView addSubview:_mapView];
 
+  [self applyTheme];
+
   _isMapReady = YES;
   [self processPendingMarkers];
   [self processPendingPolylines];
@@ -114,9 +117,17 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
 }
 
 - (void)setTheme:(NSString *)theme {
-  if ([theme isEqualToString:@"dark"]) {
+  _theme = [theme copy];
+  [self applyTheme];
+}
+
+- (void)applyTheme {
+  if (!_mapView)
+    return;
+
+  if ([_theme isEqualToString:@"dark"]) {
     _mapView.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
-  } else if ([theme isEqualToString:@"light"]) {
+  } else if ([_theme isEqualToString:@"light"]) {
     _mapView.overrideUserInterfaceStyle = UIUserInterfaceStyleLight;
   } else {
     _mapView.overrideUserInterfaceStyle = UIUserInterfaceStyleUnspecified;
