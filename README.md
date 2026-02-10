@@ -2,6 +2,11 @@
 
 Universal maps for your React Native apps 📍
 
+<img alt="@lugg/maps" src="docs/preview.gif" width="720" />
+
+> [!IMPORTANT]
+> This library is currently under heavy development. APIs may change without notice.
+
 ## Installation
 
 ```sh
