@@ -1,6 +1,6 @@
 {
   "name": "@lugg/maps",
-  "version": "0.2.0-alpha.22",
+  "version": "0.2.0-alpha.23",
   "description": "Universal maps for React Native.",
   "main": "./lib/module/index.js",
   "types": "./lib/typescript/src/index.d.ts",
