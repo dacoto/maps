@@ -4,6 +4,8 @@ import android.view.View
 import com.luggmaps.LuggMarkerView
 import com.luggmaps.LuggPolylineView
 
+data class EdgeInsets(val top: Int = 0, val left: Int = 0, val bottom: Int = 0, val right: Int = 0)
+
 interface MapProviderDelegate {
   fun mapProviderDidReady()
   fun mapProviderDidMoveCamera(latitude: Double, longitude: Double, zoom: Float, gesture: Boolean)
@@ -26,7 +28,7 @@ interface MapProvider {
   fun setTheme(value: String)
   fun setMinZoom(zoom: Double)
   fun setMaxZoom(zoom: Double)
-  fun setMapPadding(top: Int, left: Int, bottom: Int, right: Int)
+  fun setPadding(padding: EdgeInsets)
 
   // Children
   fun addMarkerView(markerView: LuggMarkerView)

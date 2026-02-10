@@ -62,10 +62,7 @@ class GoogleMapProvider(private val context: Context) :
   private var theme: String = "system"
 
   // Padding
-  private var paddingTop: Int = 0
-  private var paddingLeft: Int = 0
-  private var paddingBottom: Int = 0
-  private var paddingRight: Int = 0
+  private var padding: EdgeInsets = EdgeInsets()
 
   // region MapProvider
 
@@ -202,11 +199,8 @@ class GoogleMapProvider(private val context: Context) :
     }
   }
 
-  override fun setMapPadding(top: Int, left: Int, bottom: Int, right: Int) {
-    paddingTop = top
-    paddingLeft = left
-    paddingBottom = bottom
-    paddingRight = right
+  override fun setPadding(padding: EdgeInsets) {
+    this.padding = padding
     applyPadding()
   }
 
@@ -425,10 +419,10 @@ class GoogleMapProvider(private val context: Context) :
     val right = paddingRight.toFloat().dpToPx().toInt()
 
     map.setPadding(
-      this.paddingLeft + left,
-      this.paddingTop + top,
-      this.paddingRight + right,
-      this.paddingBottom + bottom
+      padding.left + left,
+      padding.top + top,
+      padding.right + right,
+      padding.bottom + bottom
     )
 
     val cameraUpdate = CameraUpdateFactory.newLatLngBounds(bounds, 0)
@@ -439,7 +433,7 @@ class GoogleMapProvider(private val context: Context) :
       else -> map.moveCamera(cameraUpdate)
     }
 
-    map.setPadding(this.paddingLeft, this.paddingTop, this.paddingRight, this.paddingBottom)
+    map.setPadding(padding.left, padding.top, padding.right, padding.bottom)
   }
 
   // endregion
@@ -463,7 +457,7 @@ class GoogleMapProvider(private val context: Context) :
   }
 
   private fun applyPadding() {
-    googleMap?.setPadding(paddingLeft, paddingTop, paddingRight, paddingBottom)
+    googleMap?.setPadding(padding.left, padding.top, padding.right, padding.bottom)
   }
 
   private fun applyTheme() {

@@ -4,8 +4,10 @@ import android.annotation.SuppressLint
 import android.view.View
 import android.view.View.VISIBLE
 import com.facebook.react.uimanager.ThemedReactContext
+import com.facebook.react.util.RNLog
 import com.facebook.react.views.view.ReactViewGroup
 import com.google.android.gms.maps.model.LatLng
+import com.luggmaps.core.EdgeInsets
 import com.luggmaps.core.GoogleMapProvider
 import com.luggmaps.core.MapProvider
 import com.luggmaps.core.MapProviderDelegate
@@ -37,12 +39,20 @@ class LuggMapView(private val reactContext: ThemedReactContext) :
   private var provider: MapProvider? = null
   private var mapWrapperView: LuggMapWrapperView? = null
 
-  // Cached initial props
+  // Cached props (applied during initializeProvider)
   private var mapId: String = GoogleMapProvider.DEMO_MAP_ID
   private var initialLatitude: Double = 37.78
   private var initialLongitude: Double = -122.43
   private var initialZoom: Float = 14f
   private var theme: String = "system"
+  private var zoomEnabled: Boolean = true
+  private var scrollEnabled: Boolean = true
+  private var rotateEnabled: Boolean = true
+  private var pitchEnabled: Boolean = true
+  private var userLocationEnabled: Boolean = false
+  private var minZoom: Double? = null
+  private var maxZoom: Double? = null
+  private var padding: EdgeInsets = EdgeInsets()
 
   // region View Lifecycle
 
@@ -95,9 +105,10 @@ class LuggMapView(private val reactContext: ThemedReactContext) :
 
     val google = GoogleMapProvider(context)
     google.mapId = mapId
-    google.setTheme(theme)
     google.delegate = this
     provider = google
+
+    applyProps()
 
     google.initializeMap(mapWrapperView!!, initialLatitude, initialLongitude, initialZoom)
 
@@ -130,6 +141,24 @@ class LuggMapView(private val reactContext: ThemedReactContext) :
 
   // region Property Setters
 
+  private fun applyProps() {
+    provider?.setZoomEnabled(zoomEnabled)
+    provider?.setScrollEnabled(scrollEnabled)
+    provider?.setRotateEnabled(rotateEnabled)
+    provider?.setPitchEnabled(pitchEnabled)
+    provider?.setUserLocationEnabled(userLocationEnabled)
+    provider?.setTheme(theme)
+    minZoom?.let { provider?.setMinZoom(it) }
+    maxZoom?.let { provider?.setMaxZoom(it) }
+    provider?.setPadding(padding)
+  }
+
+  fun setProvider(value: String?) {
+    if (value != null && value != "google") {
+      RNLog.w(reactContext, "LuggMapView: Only Google Maps is supported on Android")
+    }
+  }
+
   fun setMapId(value: String?) {
     if (value.isNullOrEmpty()) return
     mapId = value
@@ -145,30 +174,37 @@ class LuggMapView(private val reactContext: ThemedReactContext) :
   }
 
   fun setZoomEnabled(enabled: Boolean) {
+    zoomEnabled = enabled
     provider?.setZoomEnabled(enabled)
   }
 
   fun setScrollEnabled(enabled: Boolean) {
+    scrollEnabled = enabled
     provider?.setScrollEnabled(enabled)
   }
 
   fun setRotateEnabled(enabled: Boolean) {
+    rotateEnabled = enabled
     provider?.setRotateEnabled(enabled)
   }
 
   fun setPitchEnabled(enabled: Boolean) {
+    pitchEnabled = enabled
     provider?.setPitchEnabled(enabled)
   }
 
   fun setUserLocationEnabled(enabled: Boolean) {
+    userLocationEnabled = enabled
     provider?.setUserLocationEnabled(enabled)
   }
 
   fun setMinZoom(zoom: Double) {
+    minZoom = zoom
     provider?.setMinZoom(zoom)
   }
 
   fun setMaxZoom(zoom: Double) {
+    maxZoom = zoom
     provider?.setMaxZoom(zoom)
   }
 
@@ -177,8 +213,9 @@ class LuggMapView(private val reactContext: ThemedReactContext) :
     provider?.setTheme(value)
   }
 
-  fun setMapPadding(top: Int, left: Int, bottom: Int, right: Int) {
-    provider?.setMapPadding(top, left, bottom, right)
+  fun setPadding(top: Int, left: Int, bottom: Int, right: Int) {
+    padding = EdgeInsets(top, left, bottom, right)
+    provider?.setPadding(padding)
   }
 
   // endregion

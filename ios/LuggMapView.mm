@@ -107,7 +107,7 @@ using namespace luggmaps::events;
   [super didMoveToWindow];
   if (self.window) {
     if (!_provider && _mapWrapperView) {
-      [self initializeContent];
+      [self initializeProvider];
     }
     [_provider resumeAnimations];
   } else {
@@ -124,9 +124,9 @@ using namespace luggmaps::events;
   _initialized = NO;
 }
 
-#pragma mark - Content Initialization
+#pragma mark - Provider Initialization
 
-- (void)initializeContent {
+- (void)initializeProvider {
   if (_provider || !_mapWrapperView)
     return;
 
@@ -144,14 +144,7 @@ using namespace luggmaps::events;
   _provider.delegate = self;
 
   // Apply cached props before initialization
-  [_provider setZoomEnabled:_zoomEnabled];
-  [_provider setScrollEnabled:_scrollEnabled];
-  [_provider setRotateEnabled:_rotateEnabled];
-  [_provider setPitchEnabled:_pitchEnabled];
-  [_provider setUserLocationEnabled:_userLocationEnabled];
-  [_provider setTheme:_theme];
-  [_provider setMinZoom:_minZoom];
-  [_provider setMaxZoom:_maxZoom];
+  [self applyProps];
 
   CLLocationCoordinate2D coordinate =
       CLLocationCoordinate2DMake(viewProps.initialCoordinate.latitude,
@@ -199,6 +192,17 @@ using namespace luggmaps::events;
 
 #pragma mark - Property Setters
 
+- (void)applyProps {
+  [_provider setZoomEnabled:_zoomEnabled];
+  [_provider setScrollEnabled:_scrollEnabled];
+  [_provider setRotateEnabled:_rotateEnabled];
+  [_provider setPitchEnabled:_pitchEnabled];
+  [_provider setUserLocationEnabled:_userLocationEnabled];
+  [_provider setTheme:_theme];
+  [_provider setMinZoom:_minZoom];
+  [_provider setMaxZoom:_maxZoom];
+}
+
 - (void)updateProps:(Props::Shared const &)props
            oldProps:(Props::Shared const &)oldProps {
   const auto &oldViewProps =
@@ -206,7 +210,6 @@ using namespace luggmaps::events;
   const auto &newViewProps =
       *std::static_pointer_cast<LuggMapViewProps const>(props);
 
-  // Capture provider and mapId before content is created
   _providerType = newViewProps.provider;
 
   NSString *newMapId =
@@ -215,12 +218,22 @@ using namespace luggmaps::events;
     _mapId = newMapId;
   }
 
-  // Cache and forward props
+  // Cache props
   _zoomEnabled = newViewProps.zoomEnabled;
   _scrollEnabled = newViewProps.scrollEnabled;
   _rotateEnabled = newViewProps.rotateEnabled;
   _pitchEnabled = newViewProps.pitchEnabled;
   _userLocationEnabled = newViewProps.userLocationEnabled;
+  _minZoom = newViewProps.minZoom;
+  _maxZoom = newViewProps.maxZoom;
+
+  if (newViewProps.theme == LuggMapViewTheme::Dark) {
+    _theme = @"dark";
+  } else if (newViewProps.theme == LuggMapViewTheme::Light) {
+    _theme = @"light";
+  } else {
+    _theme = @"system";
+  }
 
   UIEdgeInsets oldPadding = _padding;
   _padding =
@@ -228,39 +241,8 @@ using namespace luggmaps::events;
                        newViewProps.padding.bottom, newViewProps.padding.right);
 
   if (_provider) {
-    [_provider setZoomEnabled:_zoomEnabled];
-    [_provider setScrollEnabled:_scrollEnabled];
-    [_provider setRotateEnabled:_rotateEnabled];
-    [_provider setPitchEnabled:_pitchEnabled];
-    [_provider setUserLocationEnabled:_userLocationEnabled];
-
-    if (oldViewProps.theme != newViewProps.theme) {
-      NSString *theme;
-      if (newViewProps.theme == LuggMapViewTheme::Dark) {
-        theme = @"dark";
-      } else if (newViewProps.theme == LuggMapViewTheme::Light) {
-        theme = @"light";
-      } else {
-        theme = @"system";
-      }
-      _theme = theme;
-      [_provider setTheme:_theme];
-    }
-
-    [_provider setMinZoom:newViewProps.minZoom];
-    [_provider setMaxZoom:newViewProps.maxZoom];
+    [self applyProps];
     [_provider setPadding:_padding oldPadding:oldPadding];
-  } else {
-    // Cache theme for later
-    if (newViewProps.theme == LuggMapViewTheme::Dark) {
-      _theme = @"dark";
-    } else if (newViewProps.theme == LuggMapViewTheme::Light) {
-      _theme = @"light";
-    } else {
-      _theme = @"system";
-    }
-    _minZoom = newViewProps.minZoom;
-    _maxZoom = newViewProps.maxZoom;
   }
 
   [super updateProps:props oldProps:oldProps];

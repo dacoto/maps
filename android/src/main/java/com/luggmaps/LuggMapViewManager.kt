@@ -66,7 +66,7 @@ class LuggMapViewManager :
 
   @ReactProp(name = "provider")
   override fun setProvider(view: LuggMapView, value: String?) {
-    // No-op on Android — always Google Maps
+    view.setProvider(value)
   }
 
   @ReactProp(name = "mapId")
@@ -135,7 +135,7 @@ class LuggMapViewManager :
       val left = if (it.hasKey("left")) it.getDouble("left").toFloat().dpToPx().toInt() else 0
       val bottom = if (it.hasKey("bottom")) it.getDouble("bottom").toFloat().dpToPx().toInt() else 0
       val right = if (it.hasKey("right")) it.getDouble("right").toFloat().dpToPx().toInt() else 0
-      view.setMapPadding(top, left, bottom, right)
+      view.setPadding(top, left, bottom, right)
     }
   }
 
