@@ -144,24 +144,29 @@ function HomeContent() {
           <ReanimatedTrueSheet
             ref={sheetRef}
             detents={['auto']}
+            style={styles.sheet}
             dimmed={false}
             dismissible={false}
             initialDetentIndex={0}
             anchor="left"
-            maxContentWidth={450}
+            maxContentWidth={500}
           >
-            {cameraPosition && (
-              <Text style={styles.positionText}>
-                {cameraPosition.coordinate.latitude.toFixed(5)},{' '}
-                {cameraPosition.coordinate.longitude.toFixed(5)} (z
-                {cameraPosition.zoom.toFixed(1)})
-                {isIdle
-                  ? ` (idle${cameraPosition.gesture ? ', gesture' : ''})`
-                  : cameraPosition.gesture
-                  ? ' (gesture)'
-                  : ''}
-              </Text>
-            )}
+            <Text style={styles.positionText}>
+              {cameraPosition ? (
+                <>
+                  {cameraPosition.coordinate.latitude.toFixed(5)},{' '}
+                  {cameraPosition.coordinate.longitude.toFixed(5)} (z
+                  {cameraPosition.zoom.toFixed(1)})
+                  {isIdle
+                    ? ` (idle${cameraPosition.gesture ? ', gesture' : ''})`
+                    : cameraPosition.gesture
+                    ? ' (gesture)'
+                    : ''}
+                </>
+              ) : (
+                'Loading...'
+              )}
+            </Text>
             <View style={styles.sheetContent}>
               <Button title="Add Marker" onPress={addMarker} />
               <Button
@@ -210,13 +215,14 @@ export function Home() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   positionText: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
     fontSize: 14,
     color: '#666',
   },
+  sheet: {
+    padding: 24,
+    gap: 12,
+  },
   sheetContent: {
-    padding: 16,
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 12,
