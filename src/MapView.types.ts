@@ -4,7 +4,6 @@ import type { MapProvider, Coordinate, EdgeInsets, MapTheme } from './types';
 
 /**
  * Options for moving the camera
- * @default duration -1
  */
 export interface MoveCameraOptions {
   zoom?: number;
@@ -13,7 +12,6 @@ export interface MoveCameraOptions {
 
 /**
  * Options for fitting coordinates in view
- * @default duration -1
  */
 export interface FitCoordinatesOptions {
   edgeInsets?: EdgeInsets;
@@ -103,6 +101,7 @@ export interface MapViewProps extends ViewProps {
   /**
    * Show native my-location button when userLocationEnabled is true (Android only).
    * @default false
+   * @platform android
    */
   myLocationButtonEnabled?: boolean;
   /**
