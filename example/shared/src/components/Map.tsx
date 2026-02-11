@@ -1,5 +1,5 @@
 import { forwardRef, useMemo, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import {
   MapView,
   Marker,
@@ -9,11 +9,16 @@ import {
 import type { NativeSyntheticEvent } from 'react-native';
 import Animated, {
   useAnimatedProps,
+  useAnimatedReaction,
   useAnimatedStyle,
+  useDerivedValue,
   type SharedValue,
 } from 'react-native-reanimated';
 
-const AnimatedMapView = Animated.createAnimatedComponent(MapView);
+const isWeb = Platform.OS === 'web';
+const AnimatedMapView = isWeb
+  ? MapView
+  : Animated.createAnimatedComponent(MapView);
 
 import { MarkerIcon } from './MarkerIcon';
 import { MarkerText } from './MarkerText';
@@ -106,22 +111,29 @@ export const Map = forwardRef<MapView, MapProps>(
       [polylineCoordinates]
     );
 
-    const animatedProps = useAnimatedProps(() => ({
-      edgeInsets: {
-        top: edgeInsets?.top ?? 0,
-        left: edgeInsets?.left ?? 0,
-        right: edgeInsets?.right ?? 0,
-        bottom: animatedEdgeInsetsBottom?.value ?? edgeInsets?.bottom ?? 0,
-      },
+    const animatedEdgeInsets = useDerivedValue(() => ({
+      top: edgeInsets?.top ?? 0,
+      left: edgeInsets?.left ?? 0,
+      right: edgeInsets?.right ?? 0,
+      bottom: animatedEdgeInsetsBottom?.value ?? edgeInsets?.bottom ?? 0,
     }));
 
-    const centerPinStyle = useAnimatedStyle(() => {
-      const bottomOffset =
-        animatedEdgeInsetsBottom?.value ?? edgeInsets?.bottom ?? 0;
-      return {
-        transform: [{ translateY: -bottomOffset / 2 }],
-      };
-    });
+    const [webEdgeInsets, setWebEdgeInsets] = useState(edgeInsets);
+
+    useAnimatedReaction(
+      () => animatedEdgeInsets.value,
+      (value) => {
+        if (isWeb) setWebEdgeInsets(value);
+      }
+    );
+
+    const animatedProps = useAnimatedProps(() => ({
+      edgeInsets: animatedEdgeInsets.value,
+    }));
+
+    const centerPinStyle = useAnimatedStyle(() => ({
+      transform: [{ translateY: -animatedEdgeInsets.value.bottom / 2 }],
+    }));
 
     const handleCameraMove = (e: NativeSyntheticEvent<CameraEventPayload>) => {
       onCameraMove?.(e);
@@ -141,8 +153,8 @@ export const Map = forwardRef<MapView, MapProps>(
           initialCoordinate={{ latitude: 37.78, longitude: -122.43 }}
           initialZoom={INITIAL_ZOOM}
           userLocationEnabled
-          edgeInsets={edgeInsets}
-          animatedProps={animatedProps}
+          edgeInsets={isWeb ? webEdgeInsets : edgeInsets}
+          animatedProps={!isWeb ? animatedProps : undefined}
           onCameraMove={handleCameraMove}
           onCameraIdle={handleCameraIdle}
           {...props}
