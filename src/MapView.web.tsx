@@ -99,7 +99,7 @@ export const MapView = forwardRef<MapViewRef, MapViewProps>(function MapView(
   ref
 ) {
   const {
-    mapId = google.maps.Map.DEMO_MAP_ID,
+    mapId = 'DEMO_MAP_ID',
     initialCoordinate,
     initialZoom = 10,
     minZoom,

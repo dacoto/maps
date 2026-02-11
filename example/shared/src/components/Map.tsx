@@ -149,7 +149,6 @@ export const Map = forwardRef<MapView, MapProps>(
         <AnimatedMapView
           ref={ref}
           style={StyleSheet.absoluteFill}
-          mapId="6939261d95ee48fd57332474"
           initialCoordinate={{ latitude: 37.78, longitude: -122.43 }}
           initialZoom={INITIAL_ZOOM}
           userLocationEnabled
