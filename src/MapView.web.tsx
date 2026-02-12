@@ -25,9 +25,10 @@ import type {
   MapViewRef,
   MoveCameraOptions,
   FitCoordinatesOptions,
+  SetEdgeInsetsOptions,
   CameraEventPayload,
 } from './MapView.types';
-import type { Coordinate } from './types';
+import type { Coordinate, EdgeInsets } from './types';
 
 const createSyntheticEvent = <T,>(nativeEvent: T): NativeSyntheticEvent<T> =>
   ({
@@ -126,15 +127,9 @@ export const MapView = forwardRef<MapViewRef, MapViewProps>(function MapView(
   const prevEdgeInsets = useRef(edgeInsets);
 
   const offsetCenter = useCallback(
-    (
-      coord: Coordinate,
-      zoom: number,
-      edgeInsetsOverride?: typeof edgeInsets,
-      reverse = false
-    ) => {
-      const p = edgeInsetsOverride ?? edgeInsets;
-      const div = map?.getDiv();
-      if (!p || !div) {
+    (coord: Coordinate, zoom: number, insets?: EdgeInsets, reverse = false) => {
+      const p = insets ?? prevEdgeInsets.current;
+      if (!p) {
         return { lat: coord.latitude, lng: coord.longitude };
       }
 
@@ -157,7 +152,41 @@ export const MapView = forwardRef<MapViewRef, MapViewProps>(function MapView(
 
       return { lat, lng };
     },
-    [map, edgeInsets]
+    []
+  );
+
+  const applyEdgeInsets = useCallback(
+    (newEdgeInsets: EdgeInsets, duration?: number) => {
+      if (!map) return;
+
+      const prev = prevEdgeInsets.current;
+      const center = map.getCenter();
+      const zoom = map.getZoom() ?? initialZoom;
+
+      if (center) {
+        const logicalCenter = offsetCenter(
+          { latitude: center.lat(), longitude: center.lng() },
+          zoom,
+          prev,
+          true
+        );
+        const newCenter = offsetCenter(
+          { latitude: logicalCenter.lat, longitude: logicalCenter.lng },
+          zoom,
+          newEdgeInsets,
+          false
+        );
+
+        if (duration === 0) {
+          map.moveCamera({ center: newCenter, zoom });
+        } else {
+          map.panTo(newCenter);
+        }
+      }
+
+      prevEdgeInsets.current = newEdgeInsets;
+    },
+    [map, initialZoom, offsetCenter]
   );
 
   useImperativeHandle(
@@ -190,7 +219,7 @@ export const MapView = forwardRef<MapViewRef, MapViewProps>(function MapView(
         const first = coordinates[0];
         if (!map || !first) return;
 
-        const { edgeInsets: fitEdgeInsets, duration = -1 } = options ?? {};
+        const { padding: fitPadding, duration = -1 } = options ?? {};
 
         if (coordinates.length === 1) {
           this.moveCamera(first, { zoom: initialZoom, duration });
@@ -202,15 +231,20 @@ export const MapView = forwardRef<MapViewRef, MapViewProps>(function MapView(
           bounds.extend({ lat: coord.latitude, lng: coord.longitude });
         });
 
+        const ei = prevEdgeInsets.current;
         map.fitBounds(bounds, {
-          top: (edgeInsets?.top ?? 0) + (fitEdgeInsets?.top ?? 0),
-          left: (edgeInsets?.left ?? 0) + (fitEdgeInsets?.left ?? 0),
-          bottom: (edgeInsets?.bottom ?? 0) + (fitEdgeInsets?.bottom ?? 0),
-          right: (edgeInsets?.right ?? 0) + (fitEdgeInsets?.right ?? 0),
+          top: (ei?.top ?? 0) + (fitPadding?.top ?? 0),
+          left: (ei?.left ?? 0) + (fitPadding?.left ?? 0),
+          bottom: (ei?.bottom ?? 0) + (fitPadding?.bottom ?? 0),
+          right: (ei?.right ?? 0) + (fitPadding?.right ?? 0),
         });
       },
+
+      setEdgeInsets(newEdgeInsets: EdgeInsets, options?: SetEdgeInsetsOptions) {
+        applyEdgeInsets(newEdgeInsets, options?.duration);
+      },
     }),
-    [map, initialZoom, edgeInsets, offsetCenter]
+    [map, initialZoom, offsetCenter, applyEdgeInsets]
   );
 
   useEffect(() => {
@@ -231,26 +265,9 @@ export const MapView = forwardRef<MapViewRef, MapViewProps>(function MapView(
       prev?.right !== edgeInsets.right;
 
     if (changed) {
-      const center = map.getCenter();
-      const zoom = map.getZoom() ?? initialZoom;
-      if (center) {
-        const logicalCenter = offsetCenter(
-          { latitude: center.lat(), longitude: center.lng() },
-          zoom,
-          prev,
-          true
-        );
-        const newCenter = offsetCenter(
-          { latitude: logicalCenter.lat, longitude: logicalCenter.lng },
-          zoom,
-          edgeInsets,
-          false
-        );
-        map.panTo(newCenter);
-      }
-      prevEdgeInsets.current = edgeInsets;
+      applyEdgeInsets(edgeInsets);
     }
-  }, [map, edgeInsets, initialZoom, offsetCenter]);
+  }, [map, edgeInsets, applyEdgeInsets]);
 
   const handleDragStart = () => {
     setIsDragging(true);

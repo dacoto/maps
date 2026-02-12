@@ -1,5 +1,5 @@
 import { forwardRef, useMemo, useState } from 'react';
-import { Platform, StyleSheet, View } from 'react-native';
+import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import {
   MapView,
   Marker,
@@ -8,29 +8,23 @@ import {
 } from '@lugg/maps';
 import type { NativeSyntheticEvent } from 'react-native';
 import Animated, {
-  useAnimatedProps,
-  useAnimatedReaction,
   useAnimatedStyle,
-  useDerivedValue,
   type SharedValue,
 } from 'react-native-reanimated';
 
-const isWeb = Platform.OS === 'web';
-const AnimatedMapView = isWeb
-  ? MapView
-  : Animated.createAnimatedComponent(MapView);
-
+import { CrewMarker } from './CrewMarker';
 import { MarkerIcon } from './MarkerIcon';
 import { MarkerText } from './MarkerText';
 import { MarkerImage } from './MarkerImage';
-import { CrewMarker } from './CrewMarker';
 import type { MarkerData } from './index';
 import { Route, smoothCoordinates } from './Route';
 
 interface MapProps extends MapViewProps {
   markers: MarkerData[];
-  animatedEdgeInsetsBottom?: SharedValue<number>;
+  animatedPosition?: SharedValue<number>;
 }
+
+const INITIAL_ZOOM = 14;
 
 const renderMarker = (marker: MarkerData) => {
   const {
@@ -71,7 +65,9 @@ const renderMarker = (marker: MarkerData) => {
     case 'custom':
       return (
         <Marker key={id} name={name} coordinate={coordinate} anchor={anchor}>
-          <View style={[styles.customMarker, { backgroundColor: color }]} />
+          <View
+            style={[styles.customMarker, { backgroundColor: color ?? 'gray' }]}
+          />
         </Marker>
       );
     default:
@@ -87,20 +83,19 @@ const renderMarker = (marker: MarkerData) => {
   }
 };
 
-const INITIAL_ZOOM = 14;
-
 export const Map = forwardRef<MapView, MapProps>(
   (
     {
       markers,
       edgeInsets,
-      animatedEdgeInsetsBottom,
+      animatedPosition,
       onCameraIdle,
       onCameraMove,
       ...props
     },
     ref
   ) => {
+    const { height: screenHeight } = useWindowDimensions();
     const [zoom, setZoom] = useState(INITIAL_ZOOM);
     const polylineCoordinates = useMemo(
       () => markers.map((m) => m.coordinate),
@@ -111,29 +106,14 @@ export const Map = forwardRef<MapView, MapProps>(
       [polylineCoordinates]
     );
 
-    const animatedEdgeInsets = useDerivedValue(() => ({
-      top: edgeInsets?.top ?? 0,
-      left: edgeInsets?.left ?? 0,
-      right: edgeInsets?.right ?? 0,
-      bottom: animatedEdgeInsetsBottom?.value ?? edgeInsets?.bottom ?? 0,
-    }));
-
-    const [webEdgeInsets, setWebEdgeInsets] = useState(edgeInsets);
-
-    useAnimatedReaction(
-      () => animatedEdgeInsets.value,
-      (value) => {
-        if (isWeb) setWebEdgeInsets(value);
-      }
-    );
-
-    const animatedProps = useAnimatedProps(() => ({
-      edgeInsets: animatedEdgeInsets.value,
-    }));
-
-    const centerPinStyle = useAnimatedStyle(() => ({
-      transform: [{ translateY: -animatedEdgeInsets.value.bottom / 2 }],
-    }));
+    const centerPinStyle = useAnimatedStyle(() => {
+      const bottom = animatedPosition
+        ? screenHeight - animatedPosition.value
+        : 0;
+      return {
+        transform: [{ translateY: -bottom / 2 }],
+      };
+    });
 
     const handleCameraMove = (e: NativeSyntheticEvent<CameraEventPayload>) => {
       onCameraMove?.(e);
@@ -146,14 +126,13 @@ export const Map = forwardRef<MapView, MapProps>(
 
     return (
       <View style={styles.container}>
-        <AnimatedMapView
+        <MapView
           ref={ref}
           style={StyleSheet.absoluteFill}
           initialCoordinate={{ latitude: 37.78, longitude: -122.43 }}
           initialZoom={INITIAL_ZOOM}
           userLocationEnabled
-          edgeInsets={isWeb ? webEdgeInsets : edgeInsets}
-          animatedProps={!isWeb ? animatedProps : undefined}
+          edgeInsets={edgeInsets}
           onCameraMove={handleCameraMove}
           onCameraIdle={handleCameraIdle}
           {...props}
@@ -167,7 +146,7 @@ export const Map = forwardRef<MapView, MapProps>(
             text="LO"
             color="#34A853"
           />
-        </AnimatedMapView>
+        </MapView>
         <Animated.View style={[styles.centerPin, centerPinStyle]} />
       </View>
     );
@@ -180,7 +159,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  map: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   centerPin: {
     backgroundColor: 'blue',
     height: 20,
@@ -188,7 +166,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   customMarker: {
-    backgroundColor: 'gray',
     height: 30,
     width: 30,
     borderRadius: 15,

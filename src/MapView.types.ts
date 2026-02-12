@@ -14,7 +14,14 @@ export interface MoveCameraOptions {
  * Options for fitting coordinates in view
  */
 export interface FitCoordinatesOptions {
-  edgeInsets?: EdgeInsets;
+  padding?: EdgeInsets;
+  duration?: number;
+}
+
+/**
+ * Options for setting edge insets
+ */
+export interface SetEdgeInsetsOptions {
   duration?: number;
 }
 
@@ -27,6 +34,7 @@ export interface MapViewRef {
     coordinates: Coordinate[],
     options?: FitCoordinatesOptions
   ): void;
+  setEdgeInsets(edgeInsets: EdgeInsets, options?: SetEdgeInsetsOptions): void;
 }
 
 /**
