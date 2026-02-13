@@ -144,9 +144,6 @@ using namespace luggmaps::events;
 
   _provider.delegate = self;
 
-  // Apply cached props before initialization
-  [self applyProps];
-
   CLLocationCoordinate2D coordinate =
       CLLocationCoordinate2DMake(viewProps.initialCoordinate.latitude,
                                  viewProps.initialCoordinate.longitude);
@@ -155,6 +152,8 @@ using namespace luggmaps::events;
                initialCoordinate:coordinate
                      initialZoom:viewProps.initialZoom];
 
+  // Apply cached props after map view is created
+  [self applyProps];
   [_provider setEdgeInsets:_edgeInsets oldEdgeInsets:UIEdgeInsetsZero];
 
   _initialized = YES;
