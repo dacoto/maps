@@ -234,7 +234,7 @@ class PolylineAnimator {
 
     if (reusablePoints.size < 2) return
 
-    poly.points = reusablePoints
+    poly.points = ArrayList(reusablePoints)
 
     if (strokeColors.size <= 1) {
       poly.color = strokeColors.firstOrNull() ?: Color.BLACK
