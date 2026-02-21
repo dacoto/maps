@@ -1,13 +1,15 @@
 #import "GoogleMapProvider.h"
 #import "../LuggMarkerView.h"
+#import "../LuggPolygonView.h"
 #import "../LuggPolylineView.h"
 #import "GMSPolylineAnimator.h"
 #import "PolylineAnimatorBase.h"
 
 static NSString *const kDemoMapId = @"DEMO_MAP_ID";
 
-@interface GoogleMapProvider () <LuggMarkerViewDelegate,
-                                 LuggPolylineViewDelegate>
+@interface GoogleMapProvider () <
+    LuggMarkerViewDelegate, LuggPolylineViewDelegate, LuggPolygonViewDelegate,
+    UIGestureRecognizerDelegate>
 @end
 
 @implementation GoogleMapProvider {
@@ -18,7 +20,12 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
   UIEdgeInsets _edgeInsets;
   NSMutableArray<LuggMarkerView *> *_pendingMarkerViews;
   NSMutableArray<LuggPolylineView *> *_pendingPolylineViews;
+  NSMutableArray<LuggPolygonView *> *_pendingPolygonViews;
   NSMapTable<LuggPolylineView *, GMSPolylineAnimator *> *_polylineAnimators;
+  NSMapTable<GMSPolygon *, LuggPolygonView *> *_polygonToViewMap;
+  UILongPressGestureRecognizer *_polygonPressGesture;
+  LuggPolygonView *_pressedPolygonView;
+  GMSPolygon *_pressedPolygon;
 
   // Edge insets animation
   CADisplayLink *_edgeInsetsDisplayLink;
@@ -36,7 +43,9 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
     _mapId = kDemoMapId;
     _pendingMarkerViews = [NSMutableArray array];
     _pendingPolylineViews = [NSMutableArray array];
+    _pendingPolygonViews = [NSMutableArray array];
     _polylineAnimators = [NSMapTable weakToStrongObjectsMapTable];
+    _polygonToViewMap = [NSMapTable strongToWeakObjectsMapTable];
   }
   return self;
 }
@@ -81,6 +90,14 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
   _mapView.paddingAdjustmentBehavior =
       kGMSMapViewPaddingAdjustmentBehaviorNever;
 
+  _polygonPressGesture = [[UILongPressGestureRecognizer alloc]
+      initWithTarget:self
+              action:@selector(handlePolygonPress:)];
+  _polygonPressGesture.minimumPressDuration = 0;
+  _polygonPressGesture.cancelsTouchesInView = NO;
+  _polygonPressGesture.delegate = self;
+  [_mapView addGestureRecognizer:_polygonPressGesture];
+
   [wrapperView addSubview:_mapView];
 
   [self applyTheme];
@@ -88,6 +105,7 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
   _isMapReady = YES;
   [self processPendingMarkers];
   [self processPendingPolylines];
+  [self processPendingPolygons];
 
   [_delegate mapProviderDidReady];
 }
@@ -96,7 +114,15 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
   [self stopEdgeInsetsAnimation];
   [_pendingMarkerViews removeAllObjects];
   [_pendingPolylineViews removeAllObjects];
+  [_pendingPolygonViews removeAllObjects];
   [_polylineAnimators removeAllObjects];
+  [_polygonToViewMap removeAllObjects];
+  if (_polygonPressGesture) {
+    [_mapView removeGestureRecognizer:_polygonPressGesture];
+    _polygonPressGesture = nil;
+  }
+  _pressedPolygonView = nil;
+  _pressedPolygon = nil;
   [_mapView clear];
   [_mapView removeFromSuperview];
   _mapView = nil;
@@ -254,6 +280,84 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
                               gesture:wasDragging];
 }
 
+- (void)handlePolygonPress:(UILongPressGestureRecognizer *)gesture {
+  if (gesture.state == UIGestureRecognizerStateBegan) {
+    CGPoint point = [gesture locationInView:_mapView];
+    CLLocationCoordinate2D coord =
+        [_mapView.projection coordinateForPoint:point];
+
+    for (GMSPolygon *polygon in _polygonToViewMap) {
+      LuggPolygonView *polygonView = [_polygonToViewMap objectForKey:polygon];
+      if (!polygonView || !polygonView.tappable)
+        continue;
+
+      if ([self coordinate:coord isInsidePolygon:polygonView.coordinates]) {
+        _pressedPolygon = polygon;
+        _pressedPolygonView = polygonView;
+        [self applyPolygonHighlight];
+        return;
+      }
+    }
+  } else if (gesture.state == UIGestureRecognizerStateEnded) {
+    if (_pressedPolygonView) {
+      [self restorePolygonHighlight];
+      [_pressedPolygonView emitPressEvent];
+      _pressedPolygonView = nil;
+      _pressedPolygon = nil;
+    }
+  } else if (gesture.state == UIGestureRecognizerStateCancelled ||
+             gesture.state == UIGestureRecognizerStateFailed) {
+    if (_pressedPolygonView) {
+      [self restorePolygonHighlight];
+      _pressedPolygonView = nil;
+      _pressedPolygon = nil;
+    }
+  }
+}
+
+- (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer
+    shouldRecognizeSimultaneouslyWithGestureRecognizer:
+        (UIGestureRecognizer *)otherGestureRecognizer {
+  return YES;
+}
+
+- (BOOL)coordinate:(CLLocationCoordinate2D)coord
+    isInsidePolygon:(NSArray<CLLocation *> *)coordinates {
+  if (coordinates.count == 0)
+    return NO;
+
+  NSUInteger count = coordinates.count;
+  BOOL inside = NO;
+  for (NSUInteger i = 0, j = count - 1; i < count; j = i++) {
+    CLLocationCoordinate2D pi = coordinates[i].coordinate;
+    CLLocationCoordinate2D pj = coordinates[j].coordinate;
+    if (((pi.latitude > coord.latitude) != (pj.latitude > coord.latitude)) &&
+        (coord.longitude < (pj.longitude - pi.longitude) *
+                                   (coord.latitude - pi.latitude) /
+                                   (pj.latitude - pi.latitude) +
+                               pi.longitude)) {
+      inside = !inside;
+    }
+  }
+  return inside;
+}
+
+- (void)applyPolygonHighlight {
+  UIColor *fill = _pressedPolygonView.fillColor;
+  UIColor *stroke = _pressedPolygonView.strokeColor;
+  CGFloat fillAlpha = 0, strokeAlpha = 0;
+  [fill getRed:NULL green:NULL blue:NULL alpha:&fillAlpha];
+  [stroke getRed:NULL green:NULL blue:NULL alpha:&strokeAlpha];
+  _pressedPolygon.fillColor = [fill colorWithAlphaComponent:fillAlpha * 0.5];
+  _pressedPolygon.strokeColor =
+      [stroke colorWithAlphaComponent:strokeAlpha * 0.5];
+}
+
+- (void)restorePolygonHighlight {
+  _pressedPolygon.fillColor = _pressedPolygonView.fillColor;
+  _pressedPolygon.strokeColor = _pressedPolygonView.strokeColor;
+}
+
 #pragma mark - MarkerViewDelegate
 
 - (void)markerViewDidLayout:(LuggMarkerView *)markerView {
@@ -268,6 +372,12 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
 
 - (void)polylineViewDidUpdate:(LuggPolylineView *)polylineView {
   [self syncPolylineView:polylineView];
+}
+
+#pragma mark - PolygonViewDelegate
+
+- (void)polygonViewDidUpdate:(LuggPolygonView *)polygonView {
+  [self syncPolygonView:polygonView];
 }
 
 #pragma mark - Marker Management
@@ -436,6 +546,79 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
   [animator update];
 
   [_polylineAnimators setObject:animator forKey:polylineView];
+}
+
+#pragma mark - Polygon Management
+
+- (void)addPolygonView:(LuggPolygonView *)polygonView {
+  polygonView.delegate = self;
+  [self syncPolygonView:polygonView];
+}
+
+- (void)removePolygonView:(LuggPolygonView *)polygonView {
+  GMSPolygon *polygon = (GMSPolygon *)polygonView.polygon;
+  if (polygon) {
+    [_polygonToViewMap removeObjectForKey:polygon];
+    polygon.map = nil;
+    polygonView.polygon = nil;
+  }
+}
+
+- (void)syncPolygonView:(LuggPolygonView *)polygonView {
+  if (!_mapView) {
+    if (![_pendingPolygonViews containsObject:polygonView]) {
+      [_pendingPolygonViews addObject:polygonView];
+    }
+    return;
+  }
+
+  if (!polygonView.polygon) {
+    [self addPolygonViewToMap:polygonView];
+    return;
+  }
+
+  GMSPolygon *polygon = (GMSPolygon *)polygonView.polygon;
+
+  GMSMutablePath *path = [GMSMutablePath path];
+  for (CLLocation *location in polygonView.coordinates) {
+    [path addCoordinate:location.coordinate];
+  }
+  polygon.path = path;
+  polygon.fillColor = polygonView.fillColor;
+  polygon.strokeColor = polygonView.strokeColor;
+  polygon.strokeWidth = polygonView.strokeWidth;
+  polygon.zIndex = (int)polygonView.zIndex;
+  polygon.tappable = NO;
+}
+
+- (void)processPendingPolygons {
+  if (!_mapView)
+    return;
+
+  for (LuggPolygonView *polygonView in _pendingPolygonViews) {
+    [self addPolygonViewToMap:polygonView];
+  }
+  [_pendingPolygonViews removeAllObjects];
+}
+
+- (void)addPolygonViewToMap:(LuggPolygonView *)polygonView {
+  if (!_mapView)
+    return;
+
+  GMSMutablePath *path = [GMSMutablePath path];
+  for (CLLocation *location in polygonView.coordinates) {
+    [path addCoordinate:location.coordinate];
+  }
+
+  GMSPolygon *polygon = [GMSPolygon polygonWithPath:path];
+  polygon.fillColor = polygonView.fillColor;
+  polygon.strokeColor = polygonView.strokeColor;
+  polygon.strokeWidth = polygonView.strokeWidth;
+  polygon.zIndex = (int)polygonView.zIndex;
+  polygon.tappable = NO;
+  polygon.map = _mapView;
+  polygonView.polygon = polygon;
+  [_polygonToViewMap setObject:polygonView forKey:polygon];
 }
 
 #pragma mark - Lifecycle

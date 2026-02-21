@@ -3,6 +3,7 @@ import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import {
   MapView,
   Marker,
+  Polygon,
   type MapViewProps,
   type CameraEventPayload,
 } from '@lugg/maps';
@@ -22,9 +23,23 @@ import { Route, smoothCoordinates } from './Route';
 interface MapProps extends MapViewProps {
   markers: MarkerData[];
   animatedPosition?: SharedValue<number>;
+  onPolygonPress?: () => void;
 }
 
 const INITIAL_ZOOM = 14;
+
+const CIRCLE_CENTER = { latitude: 37.78, longitude: -122.43 };
+const CIRCLE_RADIUS = 0.003;
+const CIRCLE_COORDS = Array.from({ length: 36 }, (_, i) => {
+  const angle = (i * 10 * Math.PI) / 180;
+  return {
+    latitude: CIRCLE_CENTER.latitude + CIRCLE_RADIUS * Math.cos(angle),
+    longitude:
+      CIRCLE_CENTER.longitude +
+      (CIRCLE_RADIUS * Math.sin(angle)) /
+        Math.cos((CIRCLE_CENTER.latitude * Math.PI) / 180),
+  };
+});
 
 const renderMarker = (marker: MarkerData) => {
   const {
@@ -91,6 +106,7 @@ export const Map = forwardRef<MapView, MapProps>(
       animatedPosition,
       onCameraIdle,
       onCameraMove,
+      onPolygonPress,
       ...props
     },
     ref
@@ -140,6 +156,13 @@ export const Map = forwardRef<MapView, MapProps>(
           {markers.map(renderMarker)}
           <Route coordinates={smoothedRoute} />
           <CrewMarker route={smoothedRoute} zoom={zoom} />
+          <Polygon
+            coordinates={CIRCLE_COORDS}
+            fillColor="rgba(66, 133, 244, 0.15)"
+            strokeColor="#4285F4"
+            strokeWidth={2}
+            onPress={onPolygonPress}
+          />
           <MarkerText
             name="inline-marker"
             coordinate={{ latitude: 37.782, longitude: -122.425 }}

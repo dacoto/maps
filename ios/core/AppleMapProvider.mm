@@ -1,5 +1,6 @@
 #import "AppleMapProvider.h"
 #import "../LuggMarkerView.h"
+#import "../LuggPolygonView.h"
 #import "../LuggPolylineView.h"
 #import "../extensions/MKMapView+Zoom.h"
 #import "MKPolylineAnimator.h"
@@ -18,8 +19,9 @@
 @implementation LuggAppleMapViewContent
 @end
 
-@interface AppleMapProvider () <LuggMarkerViewDelegate,
-                                LuggPolylineViewDelegate>
+@interface AppleMapProvider () <
+    LuggMarkerViewDelegate, LuggPolylineViewDelegate, LuggPolygonViewDelegate,
+    UIGestureRecognizerDelegate>
 @end
 
 @implementation AppleMapProvider {
@@ -29,6 +31,9 @@
   double _minZoom;
   double _maxZoom;
   NSMapTable<id<MKOverlay>, LuggPolylineView *> *_overlayToPolylineMap;
+  NSMapTable<id<MKOverlay>, LuggPolygonView *> *_overlayToPolygonMap;
+  UILongPressGestureRecognizer *_polygonPressGesture;
+  LuggPolygonView *_pressedPolygonView;
 
   // Edge insets animation
   CADisplayLink *_edgeInsetsDisplayLink;
@@ -43,6 +48,7 @@
 - (instancetype)init {
   if (self = [super init]) {
     _overlayToPolylineMap = [NSMapTable strongToWeakObjectsMapTable];
+    _overlayToPolygonMap = [NSMapTable strongToWeakObjectsMapTable];
   }
   return self;
 }
@@ -71,6 +77,14 @@
 
   [self applyZoomRange];
 
+  _polygonPressGesture = [[UILongPressGestureRecognizer alloc]
+      initWithTarget:self
+              action:@selector(handlePolygonPress:)];
+  _polygonPressGesture.minimumPressDuration = 0;
+  _polygonPressGesture.cancelsTouchesInView = NO;
+  _polygonPressGesture.delegate = self;
+  [_mapView addGestureRecognizer:_polygonPressGesture];
+
   [wrapperView addSubview:_mapView];
 
   MKCoordinateRegion region = [_mapView regionForCenterCoordinate:coordinate
@@ -84,6 +98,11 @@
 
 - (void)destroy {
   [self stopEdgeInsetsAnimation];
+  if (_polygonPressGesture) {
+    [_mapView removeGestureRecognizer:_polygonPressGesture];
+    _polygonPressGesture = nil;
+  }
+  _pressedPolygonView = nil;
   [_mapView removeFromSuperview];
   _mapView = nil;
   _isMapReady = NO;
@@ -227,6 +246,102 @@
   _mapView.cameraZoomRange = zoomRange;
 }
 
+- (LuggPolygonView *)hitTestPolygonAtPoint:(CGPoint)point {
+  CLLocationCoordinate2D tapCoordinate = [_mapView convertPoint:point
+                                           toCoordinateFromView:_mapView];
+  MKMapPoint mapPoint = MKMapPointForCoordinate(tapCoordinate);
+  CGPoint mapPointAsCGP = CGPointMake(mapPoint.x, mapPoint.y);
+
+  NSArray<id<MKOverlay>> *overlays = _mapView.overlays;
+  for (NSInteger i = overlays.count - 1; i >= 0; i--) {
+    id<MKOverlay> overlay = overlays[i];
+    if (![overlay isKindOfClass:[MKPolygon class]])
+      continue;
+
+    LuggPolygonView *polygonView = [_overlayToPolygonMap objectForKey:overlay];
+    if (!polygonView || !polygonView.tappable)
+      continue;
+
+    NSArray<CLLocation *> *coordinates = polygonView.coordinates;
+    if (coordinates.count == 0)
+      continue;
+
+    CGMutablePathRef path = CGPathCreateMutable();
+    for (NSUInteger j = 0; j < coordinates.count; j++) {
+      MKMapPoint mp = MKMapPointForCoordinate(coordinates[j].coordinate);
+      if (j == 0) {
+        CGPathMoveToPoint(path, NULL, mp.x, mp.y);
+      } else {
+        CGPathAddLineToPoint(path, NULL, mp.x, mp.y);
+      }
+    }
+    CGPathCloseSubpath(path);
+
+    BOOL contains = CGPathContainsPoint(path, NULL, mapPointAsCGP, NO);
+    CGPathRelease(path);
+
+    if (contains)
+      return polygonView;
+  }
+  return nil;
+}
+
+- (void)handlePolygonPress:(UILongPressGestureRecognizer *)gesture {
+  if (gesture.state == UIGestureRecognizerStateBegan) {
+    CGPoint point = [gesture locationInView:_mapView];
+    LuggPolygonView *hit = [self hitTestPolygonAtPoint:point];
+    if (hit) {
+      _pressedPolygonView = hit;
+      [self applyPolygonHighlight];
+    }
+  } else if (gesture.state == UIGestureRecognizerStateEnded) {
+    if (_pressedPolygonView) {
+      [self restorePolygonHighlight];
+      [_pressedPolygonView emitPressEvent];
+      _pressedPolygonView = nil;
+    }
+  } else if (gesture.state == UIGestureRecognizerStateCancelled ||
+             gesture.state == UIGestureRecognizerStateFailed) {
+    if (_pressedPolygonView) {
+      [self restorePolygonHighlight];
+      _pressedPolygonView = nil;
+    }
+  }
+}
+
+- (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer
+    shouldRecognizeSimultaneouslyWithGestureRecognizer:
+        (UIGestureRecognizer *)otherGestureRecognizer {
+  return YES;
+}
+
+- (void)applyPolygonHighlight {
+  MKPolygonRenderer *renderer =
+      (MKPolygonRenderer *)_pressedPolygonView.renderer;
+  if (!renderer)
+    return;
+
+  UIColor *fill = _pressedPolygonView.fillColor;
+  UIColor *stroke = _pressedPolygonView.strokeColor;
+  CGFloat fillAlpha = 0, strokeAlpha = 0;
+  [fill getRed:NULL green:NULL blue:NULL alpha:&fillAlpha];
+  [stroke getRed:NULL green:NULL blue:NULL alpha:&strokeAlpha];
+  renderer.fillColor = [fill colorWithAlphaComponent:fillAlpha * 0.5];
+  renderer.strokeColor = [stroke colorWithAlphaComponent:strokeAlpha * 0.5];
+  [renderer setNeedsDisplay];
+}
+
+- (void)restorePolygonHighlight {
+  MKPolygonRenderer *renderer =
+      (MKPolygonRenderer *)_pressedPolygonView.renderer;
+  if (!renderer)
+    return;
+
+  renderer.fillColor = _pressedPolygonView.fillColor;
+  renderer.strokeColor = _pressedPolygonView.strokeColor;
+  [renderer setNeedsDisplay];
+}
+
 #pragma mark - MKMapViewDelegate
 
 - (BOOL)isUserInteracting {
@@ -336,6 +451,22 @@
         [[MKPolylineRenderer alloc] initWithPolyline:polyline];
     return renderer;
   }
+
+  if ([overlay isKindOfClass:[MKPolygon class]]) {
+    LuggPolygonView *polygonView = [_overlayToPolygonMap objectForKey:overlay];
+    MKPolygon *polygon = (MKPolygon *)overlay;
+
+    MKPolygonRenderer *renderer =
+        [[MKPolygonRenderer alloc] initWithPolygon:polygon];
+    if (polygonView) {
+      renderer.fillColor = polygonView.fillColor;
+      renderer.strokeColor = polygonView.strokeColor;
+      renderer.lineWidth = polygonView.strokeWidth;
+      polygonView.renderer = renderer;
+    }
+    return renderer;
+  }
+
   return nil;
 }
 
@@ -373,6 +504,12 @@
 
 - (void)polylineViewDidUpdate:(LuggPolylineView *)polylineView {
   [self syncPolylineView:polylineView];
+}
+
+#pragma mark - PolygonViewDelegate
+
+- (void)polygonViewDidUpdate:(LuggPolygonView *)polygonView {
+  [self syncPolygonView:polygonView];
 }
 
 #pragma mark - Marker Management
@@ -547,6 +684,91 @@
   [self insertOverlay:polyline withZIndex:polylineView.zIndex];
 }
 
+#pragma mark - Polygon Management
+
+- (void)addPolygonView:(LuggPolygonView *)polygonView {
+  polygonView.delegate = self;
+  [self addPolygonOverlayToMap:polygonView];
+}
+
+- (void)removePolygonView:(LuggPolygonView *)polygonView {
+  polygonView.delegate = nil;
+  MKPolygon *polygon = (MKPolygon *)polygonView.polygon;
+  if (polygon) {
+    [_overlayToPolygonMap removeObjectForKey:polygon];
+    [_mapView removeOverlay:polygon];
+    polygonView.polygon = nil;
+  }
+}
+
+- (void)syncPolygonView:(LuggPolygonView *)polygonView {
+  if (!_mapView)
+    return;
+
+  MKPolygon *oldPolygon = (MKPolygon *)polygonView.polygon;
+
+  NSArray<CLLocation *> *coordinates = polygonView.coordinates;
+  if (coordinates.count == 0) {
+    if (oldPolygon) {
+      [_overlayToPolygonMap removeObjectForKey:oldPolygon];
+      [_mapView removeOverlay:oldPolygon];
+      polygonView.polygon = nil;
+      polygonView.renderer = nil;
+    }
+    return;
+  }
+
+  CLLocationCoordinate2D *coords = (CLLocationCoordinate2D *)malloc(
+      sizeof(CLLocationCoordinate2D) * coordinates.count);
+  for (NSUInteger i = 0; i < coordinates.count; i++) {
+    coords[i] = coordinates[i].coordinate;
+  }
+  MKPolygon *newPolygon = [MKPolygon polygonWithCoordinates:coords
+                                                      count:coordinates.count];
+  free(coords);
+
+  polygonView.polygon = newPolygon;
+  [_overlayToPolygonMap setObject:polygonView forKey:newPolygon];
+
+  MKPolygonRenderer *renderer = (MKPolygonRenderer *)polygonView.renderer;
+  if (renderer && oldPolygon) {
+    [_overlayToPolygonMap removeObjectForKey:oldPolygon];
+    [_mapView removeOverlay:oldPolygon];
+    [self insertOverlay:newPolygon withZIndex:polygonView.zIndex];
+    polygonView.renderer = nil;
+    return;
+  }
+
+  if (oldPolygon) {
+    [_overlayToPolygonMap removeObjectForKey:oldPolygon];
+    [_mapView removeOverlay:oldPolygon];
+  }
+  [self insertOverlay:newPolygon withZIndex:polygonView.zIndex];
+}
+
+- (void)addPolygonOverlayToMap:(LuggPolygonView *)polygonView {
+  if (!_mapView)
+    return;
+
+  NSArray<CLLocation *> *coordinates = polygonView.coordinates;
+  if (coordinates.count == 0)
+    return;
+
+  CLLocationCoordinate2D *coords = (CLLocationCoordinate2D *)malloc(
+      sizeof(CLLocationCoordinate2D) * coordinates.count);
+  for (NSUInteger i = 0; i < coordinates.count; i++) {
+    coords[i] = coordinates[i].coordinate;
+  }
+
+  MKPolygon *polygon = [MKPolygon polygonWithCoordinates:coords
+                                                   count:coordinates.count];
+  free(coords);
+
+  polygonView.polygon = polygon;
+  [_overlayToPolygonMap setObject:polygonView forKey:polygon];
+  [self insertOverlay:polygon withZIndex:polygonView.zIndex];
+}
+
 - (void)insertOverlay:(id<MKOverlay>)overlay withZIndex:(NSInteger)zIndex {
   if (zIndex == 0) {
     [_mapView addOverlay:overlay];
@@ -557,9 +779,19 @@
   NSInteger insertIndex = overlays.count;
 
   for (NSInteger i = 0; i < overlays.count; i++) {
+    NSInteger existingZIndex = 0;
     LuggPolylineView *existingPolylineView =
         [_overlayToPolylineMap objectForKey:overlays[i]];
-    if (existingPolylineView && existingPolylineView.zIndex > zIndex) {
+    LuggPolygonView *existingPolygonView =
+        [_overlayToPolygonMap objectForKey:overlays[i]];
+    if (existingPolylineView) {
+      existingZIndex = existingPolylineView.zIndex;
+    } else if (existingPolygonView) {
+      existingZIndex = existingPolygonView.zIndex;
+    } else {
+      continue;
+    }
+    if (existingZIndex > zIndex) {
       insertIndex = i;
       break;
     }
