@@ -36,6 +36,28 @@ export interface CameraIdleEvent {
   gesture: boolean;
 }
 
+export interface PressEvent {
+  coordinate: {
+    latitude: Double;
+    longitude: Double;
+  };
+  point: {
+    x: Double;
+    y: Double;
+  };
+}
+
+export interface LongPressEvent {
+  coordinate: {
+    latitude: Double;
+    longitude: Double;
+  };
+  point: {
+    x: Double;
+    y: Double;
+  };
+}
+
 export interface ReadyEvent {}
 
 export interface NativeProps extends ViewProps {
@@ -53,6 +75,8 @@ export interface NativeProps extends ViewProps {
   userLocationEnabled?: boolean;
   userLocationButtonEnabled?: boolean;
   theme?: WithDefault<'light' | 'dark' | 'system', 'system'>;
+  onMapPress?: DirectEventHandler<PressEvent>;
+  onMapLongPress?: DirectEventHandler<LongPressEvent>;
   onCameraMove?: DirectEventHandler<CameraMoveEvent>;
   onCameraIdle?: DirectEventHandler<CameraIdleEvent>;
   onReady?: DirectEventHandler<ReadyEvent>;

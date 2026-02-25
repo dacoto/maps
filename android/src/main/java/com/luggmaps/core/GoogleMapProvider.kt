@@ -33,6 +33,8 @@ class GoogleMapProvider(private val context: Context) :
   GoogleMap.OnCameraMoveStartedListener,
   GoogleMap.OnCameraMoveListener,
   GoogleMap.OnCameraIdleListener,
+  GoogleMap.OnMapClickListener,
+  GoogleMap.OnMapLongClickListener,
   GoogleMap.OnPolygonClickListener {
 
   override var delegate: MapProviderDelegate? = null
@@ -50,6 +52,7 @@ class GoogleMapProvider(private val context: Context) :
   private val pendingPolygonViews = mutableSetOf<LuggPolygonView>()
   private val polylineAnimators = mutableMapOf<LuggPolylineView, PolylineAnimator>()
   private val polygonToViewMap = mutableMapOf<Polygon, LuggPolygonView>()
+  private var tapLocation: LatLng? = null
 
   // Initial camera settings
   private var initialLatitude: Double = 0.0
@@ -107,6 +110,8 @@ class GoogleMapProvider(private val context: Context) :
     googleMap?.setOnCameraMoveStartedListener(null)
     googleMap?.setOnCameraMoveListener(null)
     googleMap?.setOnCameraIdleListener(null)
+    googleMap?.setOnMapClickListener(null)
+    googleMap?.setOnMapLongClickListener(null)
     googleMap?.setOnPolygonClickListener(null)
     googleMap?.clear()
     googleMap = null
@@ -126,7 +131,15 @@ class GoogleMapProvider(private val context: Context) :
     map.setOnCameraMoveStartedListener(this)
     map.setOnCameraMoveListener(this)
     map.setOnCameraIdleListener(this)
+    map.setOnMapClickListener(this)
+    map.setOnMapLongClickListener(this)
     map.setOnPolygonClickListener(this)
+
+    wrapperView?.touchEventHandler = { event ->
+      if (event.action == android.view.MotionEvent.ACTION_DOWN) {
+        tapLocation = map.projection.fromScreenLocation(android.graphics.Point(event.x.toInt(), event.y.toInt()))
+      }
+    }
 
     applyUiSettings()
     applyZoomLimits()
@@ -167,8 +180,25 @@ class GoogleMapProvider(private val context: Context) :
     isDragging = false
   }
 
+  override fun onMapClick(latLng: LatLng) {
+    val map = googleMap ?: return
+    val point = map.projection.toScreenLocation(latLng)
+    delegate?.mapProviderDidPress(latLng.latitude, latLng.longitude, point.x.toFloat(), point.y.toFloat())
+  }
+
+  override fun onMapLongClick(latLng: LatLng) {
+    val map = googleMap ?: return
+    val point = map.projection.toScreenLocation(latLng)
+    delegate?.mapProviderDidLongPress(latLng.latitude, latLng.longitude, point.x.toFloat(), point.y.toFloat())
+  }
+
   override fun onPolygonClick(polygon: Polygon) {
-    polygonToViewMap[polygon]?.emitPressEvent()
+    val polygonView = polygonToViewMap[polygon]
+    if (polygonView?.tappable == true) {
+      polygonView.emitPressEvent()
+    } else {
+      onMapClick(tapLocation ?: return)
+    }
   }
 
   // endregion
@@ -465,7 +495,7 @@ class GoogleMapProvider(private val context: Context) :
       strokeColor = polygonView.strokeColor
       strokeWidth = polygonView.strokeWidth.dpToPx()
       zIndex = polygonView.zIndex
-      isClickable = polygonView.tappable
+      isClickable = true
     }
   }
 
@@ -484,9 +514,9 @@ class GoogleMapProvider(private val context: Context) :
       .strokeColor(polygonView.strokeColor)
       .strokeWidth(polygonView.strokeWidth.dpToPx())
       .zIndex(polygonView.zIndex)
+      .clickable(true)
 
     val polygon = map.addPolygon(options)
-    polygon.isClickable = polygonView.tappable
     polygonView.polygon = polygon
     polygonToViewMap[polygon] = polygonView
   }
