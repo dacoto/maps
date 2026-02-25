@@ -2,8 +2,6 @@ package com.luggmaps.core
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.Color
-import android.view.MotionEvent
 import android.view.View
 import com.facebook.react.uimanager.PixelUtil.dpToPx
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -52,8 +50,6 @@ class GoogleMapProvider(private val context: Context) :
   private val pendingPolygonViews = mutableSetOf<LuggPolygonView>()
   private val polylineAnimators = mutableMapOf<LuggPolylineView, PolylineAnimator>()
   private val polygonToViewMap = mutableMapOf<Polygon, LuggPolygonView>()
-  private var pressedPolygon: Polygon? = null
-  private var pressedPolygonView: LuggPolygonView? = null
 
   // Initial camera settings
   private var initialLatitude: Double = 0.0
@@ -89,7 +85,6 @@ class GoogleMapProvider(private val context: Context) :
 
     val wrapper = wrapperView as LuggMapWrapperView
     this.wrapperView = wrapper
-    wrapper.touchEventHandler = { event -> handleMapTouch(event) }
 
     val options = GoogleMapOptions().mapId(mapId)
     mapView = MapView(context, options).also { view ->
@@ -107,8 +102,6 @@ class GoogleMapProvider(private val context: Context) :
     polylineAnimators.values.forEach { it.destroy() }
     polylineAnimators.clear()
     polygonToViewMap.clear()
-    pressedPolygon = null
-    pressedPolygonView = null
     wrapperView?.touchEventHandler = null
     wrapperView = null
     googleMap?.setOnCameraMoveStartedListener(null)
@@ -175,74 +168,7 @@ class GoogleMapProvider(private val context: Context) :
   }
 
   override fun onPolygonClick(polygon: Polygon) {
-    val polygonView = polygonToViewMap[polygon]
-    restorePolygonHighlight()
-    polygonView?.emitPressEvent()
-  }
-
-  private fun handleMapTouch(event: MotionEvent) {
-    when (event.actionMasked) {
-      MotionEvent.ACTION_DOWN -> {
-        val map = googleMap ?: return
-        val point = android.graphics.Point(event.x.toInt(), event.y.toInt())
-        val latLng = map.projection.fromScreenLocation(point)
-
-        for ((polygon, view) in polygonToViewMap) {
-          if (!view.tappable) continue
-          if (containsLocation(latLng, polygon.points)) {
-            pressedPolygon = polygon
-            pressedPolygonView = view
-            applyPolygonHighlight()
-            return
-          }
-        }
-      }
-
-      MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-        restorePolygonHighlight()
-      }
-    }
-  }
-
-  private fun containsLocation(point: LatLng, polygon: List<LatLng>): Boolean {
-    if (polygon.isEmpty()) return false
-    var inside = false
-    var j = polygon.size - 1
-    for (i in polygon.indices) {
-      val pi = polygon[i]
-      val pj = polygon[j]
-      if ((pi.latitude > point.latitude) != (pj.latitude > point.latitude) &&
-        point.longitude < (pj.longitude - pi.longitude) *
-        (point.latitude - pi.latitude) /
-        (pj.latitude - pi.latitude) +
-        pi.longitude
-      ) {
-        inside = !inside
-      }
-      j = i
-    }
-    return inside
-  }
-
-  private fun applyPolygonHighlight() {
-    val polygon = pressedPolygon ?: return
-    val view = pressedPolygonView ?: return
-    polygon.fillColor = fadeColor(view.fillColor)
-    polygon.strokeColor = fadeColor(view.strokeColor)
-  }
-
-  private fun fadeColor(color: Int): Int {
-    val alpha = (Color.alpha(color) * 0.5).toInt()
-    return Color.argb(alpha, Color.red(color), Color.green(color), Color.blue(color))
-  }
-
-  private fun restorePolygonHighlight() {
-    val polygon = pressedPolygon ?: return
-    val view = pressedPolygonView ?: return
-    polygon.fillColor = view.fillColor
-    polygon.strokeColor = view.strokeColor
-    pressedPolygon = null
-    pressedPolygonView = null
+    polygonToViewMap[polygon]?.emitPressEvent()
   }
 
   // endregion

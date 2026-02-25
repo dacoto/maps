@@ -32,8 +32,7 @@
   double _maxZoom;
   NSMapTable<id<MKOverlay>, LuggPolylineView *> *_overlayToPolylineMap;
   NSMapTable<id<MKOverlay>, LuggPolygonView *> *_overlayToPolygonMap;
-  UILongPressGestureRecognizer *_polygonPressGesture;
-  LuggPolygonView *_pressedPolygonView;
+  UITapGestureRecognizer *_polygonPressGesture;
 
   // Edge insets animation
   CADisplayLink *_edgeInsetsDisplayLink;
@@ -77,10 +76,9 @@
 
   [self applyZoomRange];
 
-  _polygonPressGesture = [[UILongPressGestureRecognizer alloc]
+  _polygonPressGesture = [[UITapGestureRecognizer alloc]
       initWithTarget:self
               action:@selector(handlePolygonPress:)];
-  _polygonPressGesture.minimumPressDuration = 0;
   _polygonPressGesture.cancelsTouchesInView = NO;
   _polygonPressGesture.delegate = self;
   [_mapView addGestureRecognizer:_polygonPressGesture];
@@ -102,7 +100,6 @@
     [_mapView removeGestureRecognizer:_polygonPressGesture];
     _polygonPressGesture = nil;
   }
-  _pressedPolygonView = nil;
   [_mapView removeFromSuperview];
   _mapView = nil;
   _isMapReady = NO;
@@ -286,60 +283,19 @@
   return nil;
 }
 
-- (void)handlePolygonPress:(UILongPressGestureRecognizer *)gesture {
-  if (gesture.state == UIGestureRecognizerStateBegan) {
-    CGPoint point = [gesture locationInView:_mapView];
-    LuggPolygonView *hit = [self hitTestPolygonAtPoint:point];
-    if (hit) {
-      _pressedPolygonView = hit;
-      [self applyPolygonHighlight];
-    }
-  } else if (gesture.state == UIGestureRecognizerStateEnded) {
-    if (_pressedPolygonView) {
-      [self restorePolygonHighlight];
-      [_pressedPolygonView emitPressEvent];
-      _pressedPolygonView = nil;
-    }
-  } else if (gesture.state == UIGestureRecognizerStateCancelled ||
-             gesture.state == UIGestureRecognizerStateFailed) {
-    if (_pressedPolygonView) {
-      [self restorePolygonHighlight];
-      _pressedPolygonView = nil;
-    }
-  }
+- (void)handlePolygonPress:(UITapGestureRecognizer *)gesture {
+  if (gesture.state != UIGestureRecognizerStateEnded)
+    return;
+
+  CGPoint point = [gesture locationInView:_mapView];
+  LuggPolygonView *polygonView = [self hitTestPolygonAtPoint:point];
+  [polygonView emitPressEvent];
 }
 
 - (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer
     shouldRecognizeSimultaneouslyWithGestureRecognizer:
         (UIGestureRecognizer *)otherGestureRecognizer {
   return YES;
-}
-
-- (void)applyPolygonHighlight {
-  MKPolygonRenderer *renderer =
-      (MKPolygonRenderer *)_pressedPolygonView.renderer;
-  if (!renderer)
-    return;
-
-  UIColor *fill = _pressedPolygonView.fillColor;
-  UIColor *stroke = _pressedPolygonView.strokeColor;
-  CGFloat fillAlpha = 0, strokeAlpha = 0;
-  [fill getRed:NULL green:NULL blue:NULL alpha:&fillAlpha];
-  [stroke getRed:NULL green:NULL blue:NULL alpha:&strokeAlpha];
-  renderer.fillColor = [fill colorWithAlphaComponent:fillAlpha * 0.5];
-  renderer.strokeColor = [stroke colorWithAlphaComponent:strokeAlpha * 0.5];
-  [renderer setNeedsDisplay];
-}
-
-- (void)restorePolygonHighlight {
-  MKPolygonRenderer *renderer =
-      (MKPolygonRenderer *)_pressedPolygonView.renderer;
-  if (!renderer)
-    return;
-
-  renderer.fillColor = _pressedPolygonView.fillColor;
-  renderer.strokeColor = _pressedPolygonView.strokeColor;
-  [renderer setNeedsDisplay];
 }
 
 #pragma mark - MKMapViewDelegate

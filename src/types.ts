@@ -33,3 +33,11 @@ export interface EdgeInsets {
  * Map theme
  */
 export type MapTheme = 'light' | 'dark' | 'system';
+
+/**
+ * Press event payload
+ */
+export interface PressEventPayload {
+  coordinate: Coordinate;
+  point: Point;
+}

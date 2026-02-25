@@ -10,7 +10,7 @@ import {
   MapView,
   MapProvider,
   type MapProviderType,
-  type CameraEventPayload,
+  type MapCameraEvent,
 } from '@lugg/maps';
 import {
   TrueSheet,
@@ -95,7 +95,7 @@ function HomeContent() {
   );
 
   const formatCameraEvent = useCallback(
-    (event: { nativeEvent: CameraEventPayload }, idle: boolean) => {
+    (event: MapCameraEvent, idle: boolean) => {
       const { coordinate, zoom, gesture } = event.nativeEvent;
       lastCoordinate.current = coordinate;
       const pos = `${coordinate.latitude.toFixed(
@@ -168,7 +168,7 @@ function HomeContent() {
           onReady={handleMapReady}
           onCameraMove={(e) => formatCameraEvent(e, false)}
           onCameraIdle={(e) => formatCameraEvent(e, true)}
-          onPolygonPress={() => setStatusText('Polygon pressed!')}
+          onPolygonPress={() => setStatusText('Polygon pressed')}
         />
       )}
 

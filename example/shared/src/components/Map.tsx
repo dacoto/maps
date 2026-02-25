@@ -5,9 +5,8 @@ import {
   Marker,
   Polygon,
   type MapViewProps,
-  type CameraEventPayload,
+  type MapCameraEvent,
 } from '@lugg/maps';
-import type { NativeSyntheticEvent } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   type SharedValue,
@@ -131,11 +130,11 @@ export const Map = forwardRef<MapView, MapProps>(
       };
     });
 
-    const handleCameraMove = (e: NativeSyntheticEvent<CameraEventPayload>) => {
+    const handleCameraMove = (e: MapCameraEvent) => {
       onCameraMove?.(e);
     };
 
-    const handleCameraIdle = (e: NativeSyntheticEvent<CameraEventPayload>) => {
+    const handleCameraIdle = (e: MapCameraEvent) => {
       setZoom(e.nativeEvent.zoom);
       onCameraIdle?.(e);
     };

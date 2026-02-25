@@ -18,6 +18,7 @@ export type {
   FitCoordinatesOptions,
   SetEdgeInsetsOptions,
   CameraEventPayload,
+  MapCameraEvent,
 } from './MapView.types';
 export type {
   MapProvider as MapProviderType,
@@ -25,4 +26,5 @@ export type {
   Coordinate,
   Point,
   EdgeInsets,
+  PressEventPayload,
 } from './types';

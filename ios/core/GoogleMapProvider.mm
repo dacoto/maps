@@ -8,8 +8,7 @@
 static NSString *const kDemoMapId = @"DEMO_MAP_ID";
 
 @interface GoogleMapProvider () <
-    LuggMarkerViewDelegate, LuggPolylineViewDelegate, LuggPolygonViewDelegate,
-    UIGestureRecognizerDelegate>
+    LuggMarkerViewDelegate, LuggPolylineViewDelegate, LuggPolygonViewDelegate>
 @end
 
 @implementation GoogleMapProvider {
@@ -23,9 +22,6 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
   NSMutableArray<LuggPolygonView *> *_pendingPolygonViews;
   NSMapTable<LuggPolylineView *, GMSPolylineAnimator *> *_polylineAnimators;
   NSMapTable<GMSPolygon *, LuggPolygonView *> *_polygonToViewMap;
-  UILongPressGestureRecognizer *_polygonPressGesture;
-  LuggPolygonView *_pressedPolygonView;
-  GMSPolygon *_pressedPolygon;
 
   // Edge insets animation
   CADisplayLink *_edgeInsetsDisplayLink;
@@ -90,14 +86,6 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
   _mapView.paddingAdjustmentBehavior =
       kGMSMapViewPaddingAdjustmentBehaviorNever;
 
-  _polygonPressGesture = [[UILongPressGestureRecognizer alloc]
-      initWithTarget:self
-              action:@selector(handlePolygonPress:)];
-  _polygonPressGesture.minimumPressDuration = 0;
-  _polygonPressGesture.cancelsTouchesInView = NO;
-  _polygonPressGesture.delegate = self;
-  [_mapView addGestureRecognizer:_polygonPressGesture];
-
   [wrapperView addSubview:_mapView];
 
   [self applyTheme];
@@ -117,12 +105,6 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
   [_pendingPolygonViews removeAllObjects];
   [_polylineAnimators removeAllObjects];
   [_polygonToViewMap removeAllObjects];
-  if (_polygonPressGesture) {
-    [_mapView removeGestureRecognizer:_polygonPressGesture];
-    _polygonPressGesture = nil;
-  }
-  _pressedPolygonView = nil;
-  _pressedPolygon = nil;
   [_mapView clear];
   [_mapView removeFromSuperview];
   _mapView = nil;
@@ -280,82 +262,16 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
                               gesture:wasDragging];
 }
 
-- (void)handlePolygonPress:(UILongPressGestureRecognizer *)gesture {
-  if (gesture.state == UIGestureRecognizerStateBegan) {
-    CGPoint point = [gesture locationInView:_mapView];
-    CLLocationCoordinate2D coord =
-        [_mapView.projection coordinateForPoint:point];
+- (void)mapView:(GMSMapView *)mapView didTapOverlay:(GMSOverlay *)overlay {
+  if (![overlay isKindOfClass:[GMSPolygon class]])
+    return;
 
-    for (GMSPolygon *polygon in _polygonToViewMap) {
-      LuggPolygonView *polygonView = [_polygonToViewMap objectForKey:polygon];
-      if (!polygonView || !polygonView.tappable)
-        continue;
+  GMSPolygon *polygon = (GMSPolygon *)overlay;
+  LuggPolygonView *polygonView = [_polygonToViewMap objectForKey:polygon];
+  if (!polygonView || !polygonView.tappable)
+    return;
 
-      if ([self coordinate:coord isInsidePolygon:polygonView.coordinates]) {
-        _pressedPolygon = polygon;
-        _pressedPolygonView = polygonView;
-        [self applyPolygonHighlight];
-        return;
-      }
-    }
-  } else if (gesture.state == UIGestureRecognizerStateEnded) {
-    if (_pressedPolygonView) {
-      [self restorePolygonHighlight];
-      [_pressedPolygonView emitPressEvent];
-      _pressedPolygonView = nil;
-      _pressedPolygon = nil;
-    }
-  } else if (gesture.state == UIGestureRecognizerStateCancelled ||
-             gesture.state == UIGestureRecognizerStateFailed) {
-    if (_pressedPolygonView) {
-      [self restorePolygonHighlight];
-      _pressedPolygonView = nil;
-      _pressedPolygon = nil;
-    }
-  }
-}
-
-- (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer
-    shouldRecognizeSimultaneouslyWithGestureRecognizer:
-        (UIGestureRecognizer *)otherGestureRecognizer {
-  return YES;
-}
-
-- (BOOL)coordinate:(CLLocationCoordinate2D)coord
-    isInsidePolygon:(NSArray<CLLocation *> *)coordinates {
-  if (coordinates.count == 0)
-    return NO;
-
-  NSUInteger count = coordinates.count;
-  BOOL inside = NO;
-  for (NSUInteger i = 0, j = count - 1; i < count; j = i++) {
-    CLLocationCoordinate2D pi = coordinates[i].coordinate;
-    CLLocationCoordinate2D pj = coordinates[j].coordinate;
-    if (((pi.latitude > coord.latitude) != (pj.latitude > coord.latitude)) &&
-        (coord.longitude < (pj.longitude - pi.longitude) *
-                                   (coord.latitude - pi.latitude) /
-                                   (pj.latitude - pi.latitude) +
-                               pi.longitude)) {
-      inside = !inside;
-    }
-  }
-  return inside;
-}
-
-- (void)applyPolygonHighlight {
-  UIColor *fill = _pressedPolygonView.fillColor;
-  UIColor *stroke = _pressedPolygonView.strokeColor;
-  CGFloat fillAlpha = 0, strokeAlpha = 0;
-  [fill getRed:NULL green:NULL blue:NULL alpha:&fillAlpha];
-  [stroke getRed:NULL green:NULL blue:NULL alpha:&strokeAlpha];
-  _pressedPolygon.fillColor = [fill colorWithAlphaComponent:fillAlpha * 0.5];
-  _pressedPolygon.strokeColor =
-      [stroke colorWithAlphaComponent:strokeAlpha * 0.5];
-}
-
-- (void)restorePolygonHighlight {
-  _pressedPolygon.fillColor = _pressedPolygonView.fillColor;
-  _pressedPolygon.strokeColor = _pressedPolygonView.strokeColor;
+  [polygonView emitPressEvent];
 }
 
 #pragma mark - MarkerViewDelegate
@@ -588,7 +504,7 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
   polygon.strokeColor = polygonView.strokeColor;
   polygon.strokeWidth = polygonView.strokeWidth;
   polygon.zIndex = (int)polygonView.zIndex;
-  polygon.tappable = NO;
+  polygon.tappable = polygonView.tappable;
 }
 
 - (void)processPendingPolygons {
@@ -615,7 +531,7 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
   polygon.strokeColor = polygonView.strokeColor;
   polygon.strokeWidth = polygonView.strokeWidth;
   polygon.zIndex = (int)polygonView.zIndex;
-  polygon.tappable = NO;
+  polygon.tappable = polygonView.tappable;
   polygon.map = _mapView;
   polygonView.polygon = polygon;
   [_polygonToViewMap setObject:polygonView forKey:polygon];

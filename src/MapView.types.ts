@@ -46,6 +46,8 @@ export interface CameraEventPayload {
   gesture: boolean;
 }
 
+export type MapCameraEvent = NativeSyntheticEvent<CameraEventPayload>;
+
 /**
  * MapView component props
  */
@@ -120,11 +122,11 @@ export interface MapViewProps extends ViewProps {
   /**
    * Called when camera moves
    */
-  onCameraMove?: (event: NativeSyntheticEvent<CameraEventPayload>) => void;
+  onCameraMove?: (event: MapCameraEvent) => void;
   /**
    * Called when camera stops moving
    */
-  onCameraIdle?: (event: NativeSyntheticEvent<CameraEventPayload>) => void;
+  onCameraIdle?: (event: MapCameraEvent) => void;
   /**
    * Called when map is loaded and ready
    */
