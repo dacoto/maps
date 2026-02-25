@@ -1,4 +1,5 @@
 #import "LuggMarkerView.h"
+#import "events/MarkerPressEvent.h"
 
 #import <react/renderer/components/RNMapsSpec/ComponentDescriptors.h>
 #import <react/renderer/components/RNMapsSpec/EventEmitters.h>
@@ -8,6 +9,7 @@
 #import "RCTFabricComponentsPlugins.h"
 
 using namespace facebook::react;
+using namespace luggmaps::events;
 
 @interface LuggMarkerView () <RCTLuggMarkerViewViewProtocol>
 @end
@@ -206,6 +208,16 @@ using namespace facebook::react;
     CGContextScaleCTM(context.CGContext, self->_scale, self->_scale);
     [self->_iconView.layer renderInContext:context.CGContext];
   }];
+}
+
+- (void)emitPressEventWithPoint:(CGPoint)point {
+  MarkerPressEvent event{
+      .latitude = _coordinate.latitude,
+      .longitude = _coordinate.longitude,
+      .x = point.x,
+      .y = point.y,
+  };
+  event.emit<LuggMarkerViewEventEmitter>(_eventEmitter);
 }
 
 - (void)resetIconViewTransform {

@@ -296,11 +296,27 @@
   return nil;
 }
 
+- (BOOL)hitTestAnnotationAtPoint:(CGPoint)point {
+  for (id<MKAnnotation> annotation in _mapView.annotations) {
+    MKAnnotationView *view = [_mapView viewForAnnotation:annotation];
+    if (!view)
+      continue;
+    CGPoint local = [view convertPoint:point fromView:_mapView];
+    if ([view pointInside:local withEvent:nil])
+      return YES;
+  }
+  return NO;
+}
+
 - (void)handleTap:(UITapGestureRecognizer *)gesture {
   if (gesture.state != UIGestureRecognizerStateEnded)
     return;
 
   CGPoint point = [gesture locationInView:_mapView];
+
+  if ([self hitTestAnnotationAtPoint:point])
+    return;
+
   LuggPolygonView *polygonView = [self hitTestPolygonAtPoint:point];
   if (polygonView) {
     [polygonView emitPressEvent];
@@ -459,6 +475,23 @@
   }
 
   return nil;
+}
+
+- (void)mapView:(MKMapView *)mapView
+    didSelectAnnotationView:(MKAnnotationView *)view {
+  if (![view.annotation isKindOfClass:[AppleMarkerAnnotation class]])
+    return;
+
+  AppleMarkerAnnotation *annotation =
+      (AppleMarkerAnnotation *)view.annotation;
+  LuggMarkerView *markerView = annotation.markerView;
+
+  if (markerView) {
+    CGPoint point = [_mapView convertCoordinate:markerView.coordinate
+                                  toPointToView:_mapView];
+    [markerView emitPressEventWithPoint:point];
+    [_mapView setCenterCoordinate:markerView.coordinate animated:YES];
+  }
 }
 
 #pragma mark - MarkerViewDelegate

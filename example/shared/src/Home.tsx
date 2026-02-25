@@ -66,6 +66,14 @@ function HomeContent() {
   const [markers, setMarkers] = useState(INITIAL_MARKERS);
   const [statusText, setStatusText] = useState('Loading...');
   const lastCoordinate = useRef({ latitude: 37.78, longitude: -122.43 });
+  const statusLockRef = useRef(false);
+
+  const lockStatus = useCallback(() => {
+    statusLockRef.current = true;
+    setTimeout(() => {
+      statusLockRef.current = false;
+    }, 1000);
+  }, []);
 
   const getSheetBottom = useCallback(
     (event: DetentChangeEvent) => screenHeight - event.nativeEvent.position,
@@ -97,6 +105,7 @@ function HomeContent() {
 
   const formatPressEvent = useCallback(
     (event: MapPressEvent, label: string) => {
+      lockStatus();
       const { coordinate, point } = event.nativeEvent;
       const lat = coordinate.latitude.toFixed(5);
       const lng = coordinate.longitude.toFixed(5);
@@ -104,13 +113,14 @@ function HomeContent() {
       const py = point.y.toFixed(0);
       setStatusText(`${label}: ${lat}, ${lng} (${px}, ${py})`);
     },
-    []
+    [lockStatus]
   );
 
   const formatCameraEvent = useCallback(
     (event: MapCameraEvent, idle: boolean) => {
       const { coordinate, zoom, gesture } = event.nativeEvent;
       lastCoordinate.current = coordinate;
+      if (statusLockRef.current) return;
       const pos = `${coordinate.latitude.toFixed(
         5
       )}, ${coordinate.longitude.toFixed(5)} (z${zoom.toFixed(1)})`;
@@ -183,7 +193,11 @@ function HomeContent() {
           onLongPress={(e) => formatPressEvent(e, 'Long press')}
           onCameraMove={(e) => formatCameraEvent(e, false)}
           onCameraIdle={(e) => formatCameraEvent(e, true)}
-          onPolygonPress={() => setStatusText('Polygon pressed')}
+          onMarkerPress={(e, m) => formatPressEvent(e, `Marker(${m.name})`)}
+          onPolygonPress={() => {
+            lockStatus();
+            setStatusText('Polygon pressed');
+          }}
         />
       )}
 

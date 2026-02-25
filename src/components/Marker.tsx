@@ -1,8 +1,10 @@
 import React from 'react';
 import type { ReactNode } from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, type NativeSyntheticEvent } from 'react-native';
 import LuggMarkerViewNativeComponent from '../fabric/LuggMarkerViewNativeComponent';
-import type { Coordinate, Point } from '../types';
+import type { Coordinate, Point, PressEventPayload } from '../types';
+
+export type MarkerPressEvent = NativeSyntheticEvent<PressEventPayload>;
 
 export interface MarkerProps {
   /**
@@ -47,6 +49,10 @@ export interface MarkerProps {
    */
   rasterize?: boolean;
   /**
+   * Called when the marker is pressed
+   */
+  onPress?: (event: MarkerPressEvent) => void;
+  /**
    * Custom marker view
    */
   children?: ReactNode;
@@ -76,6 +82,7 @@ export class Marker extends React.PureComponent<MarkerProps> {
       rotate = 0,
       scale = 1,
       rasterize = true,
+      onPress,
       children,
     } = this.props;
 
@@ -90,6 +97,7 @@ export class Marker extends React.PureComponent<MarkerProps> {
         rotate={rotate}
         scale={scale}
         rasterize={rasterize}
+        onMarkerPress={onPress}
       >
         {children}
       </LuggMarkerViewNativeComponent>
