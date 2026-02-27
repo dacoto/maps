@@ -68,11 +68,23 @@ class LuggMapViewManager :
     view.dispatchEvent(ReadyEvent(view))
   }
 
-  override fun onPress(view: LuggMapView, latitude: Double, longitude: Double, x: Float, y: Float) {
+  override fun onPress(
+    view: LuggMapView,
+    latitude: Double,
+    longitude: Double,
+    x: Float,
+    y: Float
+  ) {
     view.dispatchEvent(PressEvent(view, latitude, longitude, x, y))
   }
 
-  override fun onLongPress(view: LuggMapView, latitude: Double, longitude: Double, x: Float, y: Float) {
+  override fun onLongPress(
+    view: LuggMapView,
+    latitude: Double,
+    longitude: Double,
+    x: Float,
+    y: Float
+  ) {
     view.dispatchEvent(LongPressEvent(view, latitude, longitude, x, y))
   }
 

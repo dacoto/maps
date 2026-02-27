@@ -314,8 +314,7 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
   }
 }
 
-- (void)mapView:(GMSMapView *)mapView
-    didDragMarker:(GMSMarker *)marker {
+- (void)mapView:(GMSMapView *)mapView didDragMarker:(GMSMarker *)marker {
   LuggMarkerView *markerView = [_markerToViewMap objectForKey:marker];
   if (markerView) {
     [markerView updateCoordinate:marker.position];
@@ -324,8 +323,7 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
   }
 }
 
-- (void)mapView:(GMSMapView *)mapView
-    didEndDraggingMarker:(GMSMarker *)marker {
+- (void)mapView:(GMSMapView *)mapView didEndDraggingMarker:(GMSMarker *)marker {
   LuggMarkerView *markerView = [_markerToViewMap objectForKey:marker];
   if (markerView) {
     [markerView updateCoordinate:marker.position];

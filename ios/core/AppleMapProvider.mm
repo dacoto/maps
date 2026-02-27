@@ -76,9 +76,9 @@
 
   [self applyZoomRange];
 
-  _tapGesture = [[UITapGestureRecognizer alloc]
-      initWithTarget:self
-              action:@selector(handleTap:)];
+  _tapGesture =
+      [[UITapGestureRecognizer alloc] initWithTarget:self
+                                              action:@selector(handleTap:)];
   _tapGesture.cancelsTouchesInView = NO;
   _tapGesture.delegate = self;
   [_mapView addGestureRecognizer:_tapGesture];
@@ -321,7 +321,7 @@
     [polygonView emitPressEvent];
   } else {
     CLLocationCoordinate2D coordinate = [_mapView convertPoint:point
-                                         toCoordinateFromView:_mapView];
+                                          toCoordinateFromView:_mapView];
     [_delegate mapProviderDidPress:coordinate.latitude
                          longitude:coordinate.longitude
                                  x:point.x
@@ -335,7 +335,7 @@
 
   CGPoint point = [gesture locationInView:_mapView];
   CLLocationCoordinate2D coordinate = [_mapView convertPoint:point
-                                       toCoordinateFromView:_mapView];
+                                        toCoordinateFromView:_mapView];
   [_delegate mapProviderDidLongPress:coordinate.latitude
                            longitude:coordinate.longitude
                                    x:point.x
@@ -497,8 +497,7 @@
   if (![view.annotation isKindOfClass:[AppleMarkerAnnotation class]])
     return;
 
-  AppleMarkerAnnotation *annotation =
-      (AppleMarkerAnnotation *)view.annotation;
+  AppleMarkerAnnotation *annotation = (AppleMarkerAnnotation *)view.annotation;
   LuggMarkerView *markerView = annotation.markerView;
 
   if (markerView) {
@@ -515,8 +514,7 @@
   if (![view.annotation isKindOfClass:[AppleMarkerAnnotation class]])
     return;
 
-  AppleMarkerAnnotation *annotation =
-      (AppleMarkerAnnotation *)view.annotation;
+  AppleMarkerAnnotation *annotation = (AppleMarkerAnnotation *)view.annotation;
   LuggMarkerView *markerView = annotation.markerView;
   if (!markerView)
     return;
@@ -548,9 +546,9 @@
 }
 
 - (void)addCenterTapGesture:(MKAnnotationView *)view {
-  UITapGestureRecognizer *tap =
-      [[UITapGestureRecognizer alloc] initWithTarget:self
-                                              action:@selector(handleAnnotationTap:)];
+  UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc]
+      initWithTarget:self
+              action:@selector(handleAnnotationTap:)];
   tap.cancelsTouchesInView = NO;
   [view addGestureRecognizer:tap];
 }

@@ -346,7 +346,9 @@ export const MapView = forwardRef<MapViewRef, MapViewProps>(function MapView(
     : undefined;
 
   return (
-    <MapContext.Provider value={{ map, isDragging, moveCamera: panToCoordinate }}>
+    <MapContext.Provider
+      value={{ map, isDragging, moveCamera: panToCoordinate }}
+    >
       <View ref={containerRef} style={style}>
         <Map
           id={id}

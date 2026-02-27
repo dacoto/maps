@@ -25,7 +25,7 @@ class LuggMarkerViewManager :
       "topMarkerPress" to mapOf("registrationName" to "onMarkerPress"),
       "topMarkerDragStart" to mapOf("registrationName" to "onMarkerDragStart"),
       "topMarkerDragChange" to mapOf("registrationName" to "onMarkerDragChange"),
-      "topMarkerDragEnd" to mapOf("registrationName" to "onMarkerDragEnd"),
+      "topMarkerDragEnd" to mapOf("registrationName" to "onMarkerDragEnd")
     )
 
   override fun onDropViewInstance(view: LuggMarkerView) {

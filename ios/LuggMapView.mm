@@ -209,16 +209,16 @@ using namespace luggmaps::events;
                   longitude:(double)longitude
                           x:(double)x
                           y:(double)y {
-  PressEvent{latitude, longitude, x, y}
-      .emit<LuggMapViewEventEmitter>(_eventEmitter);
+  PressEvent{latitude, longitude, x, y}.emit<LuggMapViewEventEmitter>(
+      _eventEmitter);
 }
 
 - (void)mapProviderDidLongPress:(double)latitude
                       longitude:(double)longitude
                               x:(double)x
                               y:(double)y {
-  LongPressEvent{latitude, longitude, x, y}
-      .emit<LuggMapViewEventEmitter>(_eventEmitter);
+  LongPressEvent{latitude, longitude, x, y}.emit<LuggMapViewEventEmitter>(
+      _eventEmitter);
 }
 
 #pragma mark - Property Setters

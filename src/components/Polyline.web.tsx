@@ -57,6 +57,24 @@ export function Polyline({
 }: PolylineProps) {
   const resolvedZIndex = zIndex ?? (animated ? 1 : 0);
   const { map, isDragging } = useMapContext();
+
+  const { duration, easing, trailLength, delay } = useMemo(
+    () => ({
+      duration: animatedOptions?.duration ?? DEFAULT_DURATION,
+      easing: animatedOptions?.easing ?? 'linear',
+      trailLength: Math.max(
+        0.01,
+        Math.min(1, animatedOptions?.trailLength ?? 1)
+      ),
+      delay: animatedOptions?.delay ?? 0,
+    }),
+    [
+      animatedOptions?.duration,
+      animatedOptions?.easing,
+      animatedOptions?.trailLength,
+      animatedOptions?.delay,
+    ]
+  );
   const polylinesRef = useRef<google.maps.Polyline[]>([]);
   const animationRef = useRef<number>(0);
   const isPausedRef = useRef(false);
@@ -100,10 +118,16 @@ export function Polyline({
       hasGradient: currentHasGradient,
       zIndex: currentZIndex,
     } = propsRef.current;
-    if (!currentMap || path.length < 2) return;
+    const existing = polylinesRef.current;
+    if (!currentMap) return;
+
+    if (path.length < 2) {
+      existing.forEach((p) => p.setMap(null));
+      existing.length = 0;
+      return;
+    }
 
     const neededSegments = currentHasGradient ? path.length - 1 : 1;
-    const existing = polylinesRef.current;
 
     // Update or create segments
     for (let i = 0; i < neededSegments; i++) {
@@ -167,26 +191,28 @@ export function Polyline({
       return;
     }
 
-    const duration = animatedOptions?.duration ?? DEFAULT_DURATION;
-    const easing = animatedOptions?.easing ?? 'linear';
-    const trailLength = Math.max(
-      0.01,
-      Math.min(1, animatedOptions?.trailLength ?? 1)
-    );
-    const delay = animatedOptions?.delay ?? 0;
-
     const totalPoints = fullPath.length;
     const useTrailMode = trailLength < 1;
-    const cycleDuration = useTrailMode ? duration : duration * 2;
+    const renderMax = useTrailMode ? 1 : 2;
+    const cycleMax = useTrailMode ? 1 : 2.15;
 
     let startTime: number | null = null;
     let delayRemaining = delay;
 
+    let pausedAt: number | null = null;
+
     const animate = (time: number) => {
       if (isPausedRef.current) {
-        startTime = null;
+        if (pausedAt === null) pausedAt = time;
         animationRef.current = requestAnimationFrame(animate);
         return;
+      }
+
+      if (pausedAt !== null) {
+        if (startTime !== null) {
+          startTime += time - pausedAt;
+        }
+        pausedAt = null;
       }
 
       if (startTime === null) {
@@ -204,11 +230,16 @@ export function Polyline({
         delayRemaining = 0;
       }
 
-      const rawProgress = ((time - startTime) % cycleDuration) / duration;
-      const maxProgress = useTrailMode ? 1 : 2;
-      const clampedProgress = Math.min(rawProgress, maxProgress);
+      const rawProgress = (time - startTime) / duration;
+
+      if (rawProgress >= cycleMax) {
+        delayRemaining = delay;
+        startTime = time;
+      }
+
+      const clampedProgress = Math.min(rawProgress, renderMax);
       const easedProgress =
-        applyEasing(clampedProgress / maxProgress, easing) * maxProgress;
+        applyEasing(clampedProgress / renderMax, easing) * renderMax;
 
       let startIdx: number;
       let endIdx: number;
@@ -219,11 +250,6 @@ export function Polyline({
       } else {
         startIdx = easedProgress <= 1 ? 0 : (easedProgress - 1) * totalPoints;
         endIdx = easedProgress <= 1 ? easedProgress * totalPoints : totalPoints;
-      }
-
-      if (rawProgress >= maxProgress) {
-        delayRemaining = delay;
-        startTime = time;
       }
 
       const partialPath: google.maps.LatLngLiteral[] = [];
@@ -277,7 +303,10 @@ export function Polyline({
   }, [
     coordinates,
     animated,
-    animatedOptions,
+    duration,
+    easing,
+    trailLength,
+    delay,
     hasGradient,
     updatePath,
     mapReady,

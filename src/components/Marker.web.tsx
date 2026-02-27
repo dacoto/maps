@@ -48,7 +48,11 @@ export function Marker({
 
   const handleClick = useCallback(
     (e: google.maps.MapMouseEvent) => {
-      moveCamera(coordinate);
+      const pos = dragPositionRef.current;
+      const coord = pos
+        ? { latitude: pos.lat, longitude: pos.lng }
+        : coordinate;
+      moveCamera(coord);
       onPress?.(createEvent(e, coordinate));
     },
     [moveCamera, onPress, coordinate]

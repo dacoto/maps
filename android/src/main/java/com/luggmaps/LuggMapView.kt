@@ -28,8 +28,20 @@ interface LuggMapViewEventDelegate {
     gesture: Boolean
   )
   fun onReady(view: LuggMapView)
-  fun onPress(view: LuggMapView, latitude: Double, longitude: Double, x: Float, y: Float)
-  fun onLongPress(view: LuggMapView, latitude: Double, longitude: Double, x: Float, y: Float)
+  fun onPress(
+    view: LuggMapView,
+    latitude: Double,
+    longitude: Double,
+    x: Float,
+    y: Float
+  )
+  fun onLongPress(
+    view: LuggMapView,
+    latitude: Double,
+    longitude: Double,
+    x: Float,
+    y: Float
+  )
 }
 
 @SuppressLint("ViewConstructor")
