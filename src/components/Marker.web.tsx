@@ -1,9 +1,29 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { AdvancedMarker } from '@vis.gl/react-google-maps';
 import { useMapContext } from '../MapProvider.web';
 import type { MarkerProps } from './Marker';
 
 const toWebAnchor = (value: number) => `-${value * 100}%`;
+
+function createEvent(
+  e: google.maps.MapMouseEvent,
+  coordinate: MarkerProps['coordinate']
+) {
+  const latLng = e.latLng;
+  const domEvent = e.domEvent as MouseEvent;
+  return {
+    nativeEvent: {
+      coordinate: {
+        latitude: latLng?.lat() ?? coordinate.latitude,
+        longitude: latLng?.lng() ?? coordinate.longitude,
+      },
+      point: {
+        x: domEvent?.clientX ?? 0,
+        y: domEvent?.clientY ?? 0,
+      },
+    },
+  } as any;
+}
 
 export function Marker({
   coordinate,
@@ -12,10 +32,16 @@ export function Marker({
   zIndex,
   rotate,
   scale,
+  draggable,
   onPress,
+  onDragStart,
+  onDragChange,
+  onDragEnd,
   children,
 }: MarkerProps) {
   const { moveCamera } = useMapContext();
+  const dragPositionRef = useRef<google.maps.LatLngLiteral | null>(null);
+
   const transforms: string[] = [];
   if (rotate) transforms.push(`rotate(${rotate}deg)`);
   if (scale && scale !== 1) transforms.push(`scale(${scale})`);
@@ -23,35 +49,66 @@ export function Marker({
   const handleClick = useCallback(
     (e: google.maps.MapMouseEvent) => {
       moveCamera(coordinate);
-
-      if (!onPress) return;
-      const latLng = e.latLng;
-      const domEvent = e.domEvent as MouseEvent;
-      onPress({
-        nativeEvent: {
-          coordinate: {
-            latitude: latLng?.lat() ?? coordinate.latitude,
-            longitude: latLng?.lng() ?? coordinate.longitude,
-          },
-          point: {
-            x: domEvent?.clientX ?? 0,
-            y: domEvent?.clientY ?? 0,
-          },
-        },
-      } as any);
+      onPress?.(createEvent(e, coordinate));
     },
     [moveCamera, onPress, coordinate]
   );
 
+  const handleDragStart = useCallback(
+    (e: google.maps.MapMouseEvent) => {
+      const latLng = e.latLng;
+      if (latLng) {
+        dragPositionRef.current = { lat: latLng.lat(), lng: latLng.lng() };
+      }
+      onDragStart?.(createEvent(e, coordinate));
+    },
+    [onDragStart, coordinate]
+  );
+
+  const handleDrag = useCallback(
+    (e: google.maps.MapMouseEvent) => {
+      const latLng = e.latLng;
+      if (latLng) {
+        dragPositionRef.current = { lat: latLng.lat(), lng: latLng.lng() };
+      }
+      onDragChange?.(createEvent(e, coordinate));
+    },
+    [onDragChange, coordinate]
+  );
+
+  const handleDragEnd = useCallback(
+    (e: google.maps.MapMouseEvent) => {
+      const latLng = e.latLng;
+      if (latLng) {
+        dragPositionRef.current = { lat: latLng.lat(), lng: latLng.lng() };
+      }
+      onDragEnd?.(createEvent(e, coordinate));
+    },
+    [onDragEnd, coordinate]
+  );
+
+  useEffect(() => {
+    dragPositionRef.current = null;
+  }, [coordinate.latitude, coordinate.longitude]);
+
+  const position = dragPositionRef.current ?? {
+    lat: coordinate.latitude,
+    lng: coordinate.longitude,
+  };
+
   return (
     <AdvancedMarker
-      position={{ lat: coordinate.latitude, lng: coordinate.longitude }}
+      position={position}
       title={title}
       zIndex={zIndex}
       anchorLeft={anchor ? toWebAnchor(anchor.x) : undefined}
       anchorTop={anchor ? toWebAnchor(anchor.y) : undefined}
       clickable
+      draggable={draggable}
       onClick={handleClick}
+      onDragStart={handleDragStart}
+      onDrag={handleDrag}
+      onDragEnd={handleDragEnd}
       style={
         transforms.length > 0 ? { transform: transforms.join(' ') } : undefined
       }
