@@ -34,7 +34,6 @@
   NSMapTable<id<MKOverlay>, LuggPolygonView *> *_overlayToPolygonMap;
   UITapGestureRecognizer *_tapGesture;
   UILongPressGestureRecognizer *_longPressGesture;
-
   // Edge insets animation
   CADisplayLink *_edgeInsetsDisplayLink;
   UIEdgeInsets _edgeInsetsFrom;
@@ -407,8 +406,22 @@
   AppleMarkerAnnotation *markerAnnotation = (AppleMarkerAnnotation *)annotation;
   LuggMarkerView *markerView = markerAnnotation.markerView;
 
-  if (!markerView || !markerView.hasCustomView) {
+  if (!markerView) {
     return nil;
+  }
+
+  if (!markerView.hasCustomView) {
+    MKMarkerAnnotationView *markerAnnotationView =
+        [[MKMarkerAnnotationView alloc] initWithAnnotation:annotation
+                                           reuseIdentifier:nil];
+    markerAnnotationView.canShowCallout = YES;
+    markerAnnotationView.displayPriority = MKFeatureDisplayPriorityRequired;
+    markerAnnotationView.layer.zPosition = markerView.zIndex;
+    markerAnnotationView.zPriority = markerView.zIndex;
+    markerAnnotationView.draggable = markerView.draggable;
+    [self addCenterTapGesture:markerAnnotationView];
+    markerAnnotation.annotationView = markerAnnotationView;
+    return markerAnnotationView;
   }
 
   MKAnnotationView *annotationView =
@@ -418,6 +431,8 @@
   annotationView.displayPriority = MKFeatureDisplayPriorityRequired;
   annotationView.layer.zPosition = markerView.zIndex;
   annotationView.zPriority = markerView.zIndex;
+  annotationView.draggable = markerView.draggable;
+  [self addCenterTapGesture:annotationView];
 
   if (!markerView.rasterize) {
     UIView *iconView = markerView.iconView;
@@ -490,7 +505,62 @@
     CGPoint point = [_mapView convertCoordinate:markerView.coordinate
                                   toPointToView:_mapView];
     [markerView emitPressEventWithPoint:point];
-    [_mapView setCenterCoordinate:markerView.coordinate animated:YES];
+  }
+}
+
+- (void)mapView:(MKMapView *)mapView
+        annotationView:(MKAnnotationView *)view
+    didChangeDragState:(MKAnnotationViewDragState)newState
+          fromOldState:(MKAnnotationViewDragState)oldState {
+  if (![view.annotation isKindOfClass:[AppleMarkerAnnotation class]])
+    return;
+
+  AppleMarkerAnnotation *annotation =
+      (AppleMarkerAnnotation *)view.annotation;
+  LuggMarkerView *markerView = annotation.markerView;
+  if (!markerView)
+    return;
+
+  CLLocationCoordinate2D coord = annotation.coordinate;
+  CGPoint point = [_mapView convertCoordinate:coord toPointToView:_mapView];
+
+  switch (newState) {
+  case MKAnnotationViewDragStateStarting:
+    [markerView updateCoordinate:coord];
+    [markerView emitDragStartEventWithPoint:point];
+    [view setDragState:MKAnnotationViewDragStateDragging animated:YES];
+    break;
+  case MKAnnotationViewDragStateDragging:
+    [markerView updateCoordinate:coord];
+    [markerView emitDragChangeEventWithPoint:point];
+    break;
+  case MKAnnotationViewDragStateEnding:
+    [markerView updateCoordinate:coord];
+    [markerView emitDragEndEventWithPoint:point];
+    [view setDragState:MKAnnotationViewDragStateNone animated:YES];
+    break;
+  case MKAnnotationViewDragStateCanceling:
+    [view setDragState:MKAnnotationViewDragStateNone animated:YES];
+    break;
+  default:
+    break;
+  }
+}
+
+- (void)addCenterTapGesture:(MKAnnotationView *)view {
+  UITapGestureRecognizer *tap =
+      [[UITapGestureRecognizer alloc] initWithTarget:self
+                                              action:@selector(handleAnnotationTap:)];
+  tap.cancelsTouchesInView = NO;
+  [view addGestureRecognizer:tap];
+}
+
+- (void)handleAnnotationTap:(UITapGestureRecognizer *)gesture {
+  MKAnnotationView *view = (MKAnnotationView *)gesture.view;
+  if ([view.annotation isKindOfClass:[AppleMarkerAnnotation class]]) {
+    AppleMarkerAnnotation *annotation =
+        (AppleMarkerAnnotation *)view.annotation;
+    [_mapView setCenterCoordinate:annotation.coordinate animated:YES];
   }
 }
 
@@ -517,6 +587,7 @@
 
   MKAnnotationView *annotationView = annotation.annotationView;
   if (annotationView) {
+    annotationView.draggable = markerView.draggable;
     annotationView.layer.zPosition = markerView.zIndex;
     annotationView.zPriority = markerView.zIndex;
   }

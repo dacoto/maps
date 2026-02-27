@@ -11,6 +11,7 @@ import com.facebook.react.views.view.ReactViewGroup
 import com.google.android.gms.maps.model.AdvancedMarker
 import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import com.luggmaps.events.MarkerDragEvent
 import com.luggmaps.events.MarkerPressEvent
 import com.luggmaps.extensions.dispatchEvent
 
@@ -57,6 +58,11 @@ class LuggMarkerView(context: Context) : ReactViewGroup(context) {
 
   var rasterize: Boolean = true
     private set
+
+  var draggable: Boolean = false
+    private set
+
+  var isDragging: Boolean = false
 
   var didLayout: Boolean = false
     private set
@@ -240,8 +246,24 @@ class LuggMarkerView(context: Context) : ReactViewGroup(context) {
     this.rasterize = rasterize
   }
 
+  fun setDraggable(draggable: Boolean) {
+    this.draggable = draggable
+  }
+
   fun emitPressEvent(x: Float, y: Float) {
     dispatchEvent(MarkerPressEvent(this, latitude, longitude, x, y))
+  }
+
+  fun emitDragStartEvent(x: Float, y: Float) {
+    dispatchEvent(MarkerDragEvent(this, MarkerDragEvent.DRAG_START, latitude, longitude, x, y))
+  }
+
+  fun emitDragChangeEvent(x: Float, y: Float) {
+    dispatchEvent(MarkerDragEvent(this, MarkerDragEvent.DRAG_CHANGE, latitude, longitude, x, y))
+  }
+
+  fun emitDragEndEvent(x: Float, y: Float) {
+    dispatchEvent(MarkerDragEvent(this, MarkerDragEvent.DRAG_END, latitude, longitude, x, y))
   }
 
   fun setName(name: String?) {
