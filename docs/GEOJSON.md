@@ -63,9 +63,6 @@ Use render callbacks to customize how features are rendered:
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
 | `geojson` | `GeoJSON` | **required** | GeoJSON object (FeatureCollection, Feature, or Geometry) |
-| `strokeColor` | `ColorValue` | - | Default stroke color for polylines and polygons |
-| `strokeWidth` | `number` | - | Default stroke width |
-| `fillColor` | `ColorValue` | - | Default fill color for polygons |
 | `zIndex` | `number` | - | Z-index for all rendered components |
 | `renderMarker` | `(props, feature) => ReactElement` | - | Custom marker renderer |
 | `renderPolyline` | `(props, feature) => ReactElement` | - | Custom polyline renderer |
@@ -85,7 +82,7 @@ Use render callbacks to customize how features are rendered:
 
 ## Feature Properties (simplestyle-spec)
 
-Per-feature styling via `feature.properties` overrides component-level props:
+Per-feature styling via `feature.properties`:
 
 | Property | Maps To |
 |---|---|
@@ -95,4 +92,4 @@ Per-feature styling via `feature.properties` overrides component-level props:
 | `stroke-width` | Polyline/Polygon `strokeWidth` |
 | `fill` | Polygon `fillColor` |
 
-Precedence: render callback > feature properties > component props.
+Precedence: render callback > feature properties.
