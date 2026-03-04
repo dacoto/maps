@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { useMapContext } from '../MapProvider.web';
-import type { PolygonProps } from './Polygon';
+import type { PolygonProps } from './Polygon.types';
 
-export function Polygon({
+export const Polygon = ({
   coordinates,
   holes,
   strokeColor = '#000000',
@@ -10,7 +10,7 @@ export function Polygon({
   fillColor = 'rgba(0, 0, 0, 0.3)',
   zIndex = 0,
   onPress,
-}: PolygonProps) {
+}: PolygonProps) => {
   const { map } = useMapContext();
   const polygonRef = useRef<google.maps.Polygon | null>(null);
   const listenersRef = useRef<google.maps.MapsEventListener[]>([]);
@@ -18,24 +18,6 @@ export function Polygon({
   const handleClick = useCallback(() => {
     onPress?.();
   }, [onPress]);
-
-  const applyHighlight = useCallback(() => {
-    const polygon = polygonRef.current;
-    if (!polygon) return;
-    polygon.setOptions({
-      fillOpacity: 0.5,
-      strokeOpacity: 0.5,
-    });
-  }, []);
-
-  const restoreHighlight = useCallback(() => {
-    const polygon = polygonRef.current;
-    if (!polygon) return;
-    polygon.setOptions({
-      fillOpacity: 1,
-      strokeOpacity: 1,
-    });
-  }, []);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -56,15 +38,10 @@ export function Polygon({
     listenersRef.current = [];
 
     if (onPress) {
-      listenersRef.current.push(
-        polygon.addListener('click', handleClick),
-        polygon.addListener('mousedown', applyHighlight),
-        polygon.addListener('mouseup', restoreHighlight),
-        polygon.addListener('mouseout', restoreHighlight)
-      );
+      listenersRef.current.push(polygon.addListener('click', handleClick));
     }
     polygon.set('clickable', !!onPress);
-  }, [onPress, handleClick, applyHighlight, restoreHighlight]);
+  }, [onPress, handleClick]);
 
   // Sync polygon with props
   useEffect(() => {
@@ -108,12 +85,7 @@ export function Polygon({
       polygonRef.current = polygon;
 
       if (onPress) {
-        listenersRef.current.push(
-          polygon.addListener('click', handleClick),
-          polygon.addListener('mousedown', applyHighlight),
-          polygon.addListener('mouseup', restoreHighlight),
-          polygon.addListener('mouseout', restoreHighlight)
-        );
+        listenersRef.current.push(polygon.addListener('click', handleClick));
       }
     }
   }, [
@@ -126,9 +98,7 @@ export function Polygon({
     zIndex,
     onPress,
     handleClick,
-    applyHighlight,
-    restoreHighlight,
   ]);
 
   return null;
-}
+};

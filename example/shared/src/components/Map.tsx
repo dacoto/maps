@@ -3,11 +3,13 @@ import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import {
   MapView,
   Marker,
+  GeoJson,
   Polygon,
   type MapViewProps,
   type MapCameraEvent,
   type MarkerPressEvent,
   type MarkerDragEvent,
+  type GeoJSON,
 } from '@lugg/maps';
 import Animated, {
   useAnimatedStyle,
@@ -20,9 +22,11 @@ import { MarkerText } from './MarkerText';
 import { MarkerImage } from './MarkerImage';
 import type { MarkerData } from './index';
 import { Route, smoothCoordinates } from './Route';
+import { SAMPLE_GEOJSON } from '../geojson';
 
 interface MapProps extends MapViewProps {
   markers: MarkerData[];
+  geojson?: GeoJSON | null;
   animatedPosition?: SharedValue<number>;
   onPolygonPress?: () => void;
   onMarkerPress?: (event: MarkerPressEvent, marker: MarkerData) => void;
@@ -176,6 +180,7 @@ export const Map = forwardRef<MapView, MapProps>(
   (
     {
       markers,
+      geojson,
       edgeInsets,
       animatedPosition,
       onCameraIdle,
@@ -260,6 +265,21 @@ export const Map = forwardRef<MapView, MapProps>(
             text="LO"
             color="#34A853"
           />
+          <GeoJson geojson={SAMPLE_GEOJSON} />
+          {geojson && (
+            <GeoJson
+              geojson={geojson}
+              renderPolygon={(props) => (
+                <Polygon
+                  key={`geojson-${props.coordinates[0]?.latitude}`}
+                  {...props}
+                  fillColor="rgba(66, 133, 244, 0.2)"
+                  strokeColor="#4285F4"
+                  strokeWidth={1}
+                />
+              )}
+            />
+          )}
         </MapView>
         <Animated.View style={[styles.centerPin, centerPinStyle]}>
           <View style={styles.centerPinDot} />
