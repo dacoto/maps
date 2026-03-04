@@ -1,0 +1,30 @@
+# Types
+
+## Coordinate
+
+```ts
+interface Coordinate {
+  latitude: number;
+  longitude: number;
+}
+```
+
+## Point
+
+```ts
+interface Point {
+  x: number;
+  y: number;
+}
+```
+
+## EdgeInsets
+
+```ts
+interface EdgeInsets {
+  top: number;
+  left: number;
+  bottom: number;
+  right: number;
+}
+```

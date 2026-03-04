@@ -120,24 +120,7 @@ import { MapView, Marker, Polyline, Polygon } from '@lugg/maps';
 
 ## Types
 
-```ts
-interface Coordinate {
-  latitude: number;
-  longitude: number;
-}
-
-interface Point {
-  x: number;
-  y: number;
-}
-
-interface EdgeInsets {
-  top: number;
-  left: number;
-  bottom: number;
-  right: number;
-}
-```
+See [Types](docs/TYPES.md) for common type definitions (`Coordinate`, `Point`, `EdgeInsets`).
 
 ## Contributing
 
