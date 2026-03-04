@@ -46,6 +46,20 @@ const CIRCLE_COORDS = Array.from({ length: 36 }, (_, i) => {
   };
 });
 
+const HOLE_RADIUS = 0.0015;
+const CIRCLE_HOLES = [
+  Array.from({ length: 36 }, (_, i) => {
+    const angle = (i * 10 * Math.PI) / 180;
+    return {
+      latitude: CIRCLE_CENTER.latitude + HOLE_RADIUS * Math.cos(angle),
+      longitude:
+        CIRCLE_CENTER.longitude +
+        (HOLE_RADIUS * Math.sin(angle)) /
+          Math.cos((CIRCLE_CENTER.latitude * Math.PI) / 180),
+    };
+  }),
+];
+
 const renderMarker = (
   marker: MarkerData,
   onPress?: (event: MarkerPressEvent, marker: MarkerData) => void,
@@ -234,6 +248,7 @@ export const Map = forwardRef<MapView, MapProps>(
           <CrewMarker route={smoothedRoute} zoom={zoom} />
           <Polygon
             coordinates={CIRCLE_COORDS}
+            holes={CIRCLE_HOLES}
             fillColor="rgba(66, 133, 244, 0.15)"
             strokeColor="#4285F4"
             strokeWidth={2}
@@ -246,7 +261,9 @@ export const Map = forwardRef<MapView, MapProps>(
             color="#34A853"
           />
         </MapView>
-        <Animated.View style={[styles.centerPin, centerPinStyle]} />
+        <Animated.View style={[styles.centerPin, centerPinStyle]}>
+          <View style={styles.centerPinDot} />
+        </Animated.View>
       </View>
     );
   }
@@ -259,10 +276,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   centerPin: {
-    backgroundColor: 'blue',
-    height: 20,
-    width: 20,
-    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(66, 133, 244, 0.2)',
+    borderWidth: 2,
+    borderColor: 'white',
+  },
+  centerPinDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#4285F4',
   },
   customMarker: {
     height: 30,
