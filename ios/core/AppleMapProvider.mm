@@ -13,6 +13,7 @@
 @property(nonatomic, copy, nullable) NSString *subtitle;
 @property(nonatomic, strong) LuggMarkerView *markerView;
 @property(nonatomic, weak) MKAnnotationView *annotationView;
+@property(nonatomic, copy, nullable) dispatch_block_t pendingScaleAnimation;
 @end
 
 @implementation AppleMarkerAnnotation
@@ -572,6 +573,7 @@
   [contentView removeFromSuperview];
 
   contentView.userInteractionEnabled = YES;
+  contentView.hidden = YES;
   calloutView.delegate = self;
 
   AppleMarkerAnnotation *annotation =
@@ -585,7 +587,10 @@
   }
 
   _activeNonBubbledMarker = markerView;
-  [self positionNonBubbledCallout];
+  dispatch_async(dispatch_get_main_queue(), ^{
+    [self positionNonBubbledCallout];
+    contentView.hidden = NO;
+  });
 }
 
 - (void)calloutViewDidUpdate:(LuggCalloutView *)calloutView {
@@ -622,6 +627,7 @@
         CGPointMake(point.x + contentSize.width * (0.5 - anchor.x),
                     point.y + contentSize.height * (0.5 - anchor.y));
   }
+
 }
 
 - (void)dismissNonBubbledCallout {
@@ -784,6 +790,10 @@
       (AppleMarkerAnnotation *)markerView.marker;
 
   if (annotation) {
+    if (annotation.pendingScaleAnimation) {
+      dispatch_block_cancel(annotation.pendingScaleAnimation);
+      annotation.pendingScaleAnimation = nil;
+    }
     annotation.annotationView.transform = CGAffineTransformIdentity;
     annotation.markerView = nil;
     annotation.annotationView = nil;
@@ -802,31 +812,65 @@
   annotationView.transform = CGAffineTransformIdentity;
 
   UIView *iconView = markerView.iconView;
-  CGRect frame = iconView.frame;
-  if (frame.size.width <= 0 || frame.size.height <= 0)
+  iconView.transform = CGAffineTransformIdentity;
+
+  // Clean up iconView from in-progress rasterize animation
+  if (markerView.rasterize && [iconView superview] == annotationView) {
+    [iconView removeFromSuperview];
+    iconView.layer.anchorPoint = CGPointMake(0.5, 0.5);
+  }
+
+  CGSize size = iconView.bounds.size;
+  if (size.width <= 0 || size.height <= 0)
     return;
 
   CGFloat scale = markerView.scale;
   CGPoint anchor = markerView.anchor;
+  CGFloat scaledWidth = size.width * scale;
+  CGFloat scaledHeight = size.height * scale;
 
-  if (markerView.rasterize) {
-    annotationView.image = [markerView createScaledIconImage];
-  } else {
-    iconView.layer.anchorPoint = anchor;
-    iconView.transform = CGAffineTransformMakeScale(scale, scale);
-    iconView.frame =
-        CGRectMake(frame.size.width * (0.5 - anchor.x) * (scale - 1),
-                   frame.size.height * (0.5 - anchor.y) * (scale - 1),
-                   frame.size.width, frame.size.height);
+  AppleMarkerAnnotation *annotation =
+      (AppleMarkerAnnotation *)markerView.marker;
+
+  // Cancel any pending rasterize
+  if (annotation.pendingScaleAnimation) {
+    dispatch_block_cancel(annotation.pendingScaleAnimation);
+    annotation.pendingScaleAnimation = nil;
   }
 
-  annotationView.bounds =
-      CGRectMake(0, 0, frame.size.width * scale, frame.size.height * scale);
+  // Use live iconView during rapid updates (skip expensive rasterize per frame)
+  if (markerView.rasterize && [iconView superview] != annotationView) {
+    annotationView.image = nil;
+    [annotationView addSubview:iconView];
+  }
+
+  iconView.layer.anchorPoint = anchor;
+  iconView.bounds = CGRectMake(0, 0, size.width, size.height);
+  iconView.center =
+      CGPointMake(scaledWidth * anchor.x, scaledHeight * anchor.y);
+  iconView.transform = CGAffineTransformMakeScale(scale, scale);
+
+  annotationView.bounds = CGRectMake(0, 0, scaledWidth, scaledHeight);
   annotationView.centerOffset =
-      CGPointMake(frame.size.width * scale * (anchor.x - 0.5),
-                  -frame.size.height * scale * (anchor.y - 0.5));
+      CGPointMake(scaledWidth * (0.5 - anchor.x),
+                  scaledHeight * (0.5 - anchor.y));
   annotationView.transform =
       CGAffineTransformMakeRotation(markerView.rotate * M_PI / 180.0);
+
+  // Debounce: rasterize once updates settle
+  if (markerView.rasterize) {
+    dispatch_block_t rasterizeBlock = dispatch_block_create((dispatch_block_flags_t)0, ^{
+      annotation.pendingScaleAnimation = nil;
+      annotationView.image = [markerView createScaledIconImage];
+      [iconView removeFromSuperview];
+      [markerView resetIconViewTransform];
+    });
+
+    annotation.pendingScaleAnimation = rasterizeBlock;
+    dispatch_after(
+        dispatch_time(DISPATCH_TIME_NOW, (int64_t)(150 * NSEC_PER_MSEC)),
+        dispatch_get_main_queue(), rasterizeBlock);
+  }
 }
 
 - (void)updateAnnotationViewFrame:(AppleMarkerAnnotation *)annotation {
