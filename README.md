@@ -114,6 +114,7 @@ import { MapView, Marker, Polyline, Polygon } from '@lugg/maps';
 
 - [MapView](docs/MAPVIEW.md) - Main map component
 - [Marker](docs/MARKER.md) - Map markers with callout support
+- [Callout](docs/CALLOUT.md) - Custom callout content for markers
 - [Polyline](docs/POLYLINE.md) - Draw lines on the map
 - [Polygon](docs/POLYGON.md) - Draw filled shapes on the map
 - [GeoJson](docs/GEOJSON.md) - Render GeoJSON data on the map
