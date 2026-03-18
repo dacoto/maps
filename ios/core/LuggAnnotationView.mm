@@ -10,7 +10,7 @@ BOOL LuggAnnotationPointInside(UIView *self, CGPoint point, UIEvent *event) {
 }
 
 UIView *_Nullable LuggAnnotationHitTest(UIView *self, CGPoint point,
-                                         UIEvent *event) {
+                                        UIEvent *event) {
   for (UIView *subview in [self.subviews reverseObjectEnumerator]) {
     CGPoint subviewPoint = [subview convertPoint:point fromView:self];
     UIView *result = [subview hitTest:subviewPoint withEvent:event];
