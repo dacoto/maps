@@ -1,4 +1,5 @@
 #import "GoogleMapProvider.h"
+#import "../LuggCalloutView.h"
 #import "../LuggMarkerView.h"
 #import "../LuggPolygonView.h"
 #import "../LuggPolylineView.h"
@@ -8,10 +9,12 @@
 static NSString *const kDemoMapId = @"DEMO_MAP_ID";
 
 @interface GoogleMapProvider () <
-    LuggMarkerViewDelegate, LuggPolylineViewDelegate, LuggPolygonViewDelegate>
+    LuggMarkerViewDelegate, LuggCalloutViewDelegate, LuggPolylineViewDelegate,
+    LuggPolygonViewDelegate>
 @end
 
 @implementation GoogleMapProvider {
+  UIView *_wrapperView;
   GMSMapView *_mapView;
   BOOL _isMapReady;
   BOOL _isDragging;
@@ -23,6 +26,7 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
   NSMapTable<LuggPolylineView *, GMSPolylineAnimator *> *_polylineAnimators;
   NSMapTable<GMSPolygon *, LuggPolygonView *> *_polygonToViewMap;
   NSMapTable<GMSMarker *, LuggMarkerView *> *_markerToViewMap;
+  LuggMarkerView *_activeNonBubbledMarker;
 
   // Edge insets animation
   CADisplayLink *_edgeInsetsDisplayLink;
@@ -88,6 +92,7 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
   _mapView.paddingAdjustmentBehavior =
       kGMSMapViewPaddingAdjustmentBehaviorNever;
 
+  _wrapperView = wrapperView;
   [wrapperView addSubview:_mapView];
 
   [self applyTheme];
@@ -248,6 +253,7 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
                             longitude:position.target.longitude
                                  zoom:position.zoom
                               gesture:_isDragging];
+  [self positionNonBubbledCallout];
 }
 
 - (void)mapView:(GMSMapView *)mapView
@@ -267,6 +273,7 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
 
 - (void)mapView:(GMSMapView *)mapView
     didTapAtCoordinate:(CLLocationCoordinate2D)coordinate {
+  [self dismissNonBubbledCallout];
   CGPoint point = [mapView.projection pointForCoordinate:coordinate];
   [_delegate mapProviderDidPress:coordinate.latitude
                        longitude:coordinate.longitude
@@ -296,10 +303,19 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
 }
 
 - (BOOL)mapView:(GMSMapView *)mapView didTapMarker:(GMSMarker *)marker {
+  [self dismissNonBubbledCallout];
+
   LuggMarkerView *markerView = [_markerToViewMap objectForKey:marker];
   if (markerView) {
     CGPoint point = [_mapView.projection pointForCoordinate:marker.position];
     [markerView emitPressEventWithPoint:point];
+
+    LuggCalloutView *calloutView = markerView.calloutView;
+    if (calloutView && !calloutView.bubbled && calloutView.hasCustomContent) {
+      [mapView animateToLocation:marker.position];
+      [self showNonBubbledCallout:markerView];
+      return YES;
+    }
   }
   return NO;
 }
@@ -330,6 +346,95 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
     CGPoint point = [_mapView.projection pointForCoordinate:marker.position];
     [markerView emitDragEndEventWithPoint:point];
   }
+}
+
+- (UIView *)rasterizedCalloutView:(LuggCalloutView *)calloutView {
+  UIView *contentView = calloutView.contentView;
+  [contentView layoutIfNeeded];
+
+  CGSize size = contentView.bounds.size;
+  if (size.width <= 0 || size.height <= 0)
+    return nil;
+
+  UIGraphicsImageRendererFormat *format =
+      [UIGraphicsImageRendererFormat defaultFormat];
+  format.scale = [UIScreen mainScreen].scale;
+  UIGraphicsImageRenderer *renderer =
+      [[UIGraphicsImageRenderer alloc] initWithSize:size format:format];
+  UIImage *image =
+      [renderer imageWithActions:^(UIGraphicsImageRendererContext *context) {
+        [contentView.layer renderInContext:context.CGContext];
+      }];
+
+  return [[UIImageView alloc] initWithImage:image];
+}
+
+- (UIView *)mapView:(GMSMapView *)mapView markerInfoWindow:(GMSMarker *)marker {
+  // Non-bubbled callouts are rendered as live views, not info windows
+  return nil;
+}
+
+- (UIView *)mapView:(GMSMapView *)mapView
+    markerInfoContents:(GMSMarker *)marker {
+  LuggMarkerView *markerView = [_markerToViewMap objectForKey:marker];
+  if (!markerView || !markerView.calloutView ||
+      !markerView.calloutView.hasCustomContent)
+    return nil;
+
+  if (markerView.calloutView.bubbled) {
+    return [self rasterizedCalloutView:markerView.calloutView];
+  }
+
+  return nil;
+}
+
+- (void)showNonBubbledCallout:(LuggMarkerView *)markerView {
+  [self dismissNonBubbledCallout];
+  _mapView.selectedMarker = nil;
+
+  LuggCalloutView *calloutView = markerView.calloutView;
+  UIView *contentView = calloutView.contentView;
+  [contentView removeFromSuperview];
+
+  contentView.userInteractionEnabled = YES;
+  calloutView.delegate = self;
+  [_wrapperView addSubview:contentView];
+
+  _activeNonBubbledMarker = markerView;
+  [self positionNonBubbledCallout];
+}
+
+- (void)calloutViewDidUpdate:(LuggCalloutView *)calloutView {
+  [self positionNonBubbledCallout];
+}
+
+- (void)dismissNonBubbledCallout {
+  if (!_activeNonBubbledMarker)
+    return;
+
+  LuggCalloutView *calloutView = _activeNonBubbledMarker.calloutView;
+  calloutView.delegate = nil;
+  [calloutView.contentView removeFromSuperview];
+  _activeNonBubbledMarker = nil;
+}
+
+- (void)positionNonBubbledCallout {
+  if (!_activeNonBubbledMarker)
+    return;
+
+  LuggCalloutView *calloutView = _activeNonBubbledMarker.calloutView;
+  UIView *contentView = calloutView.contentView;
+  CGSize contentSize = contentView.bounds.size;
+  if (contentSize.width <= 0 || contentSize.height <= 0)
+    return;
+
+  CGPoint anchor = calloutView.anchor;
+  CGPoint point = [_mapView.projection
+      pointForCoordinate:_activeNonBubbledMarker.coordinate];
+
+  contentView.center =
+      CGPointMake(point.x + contentSize.width * (0.5 - anchor.x),
+                  point.y + contentSize.height * (0.5 - anchor.y));
 }
 
 #pragma mark - MarkerViewDelegate
@@ -387,8 +492,10 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
 
   GMSAdvancedMarker *marker = (GMSAdvancedMarker *)markerView.marker;
   marker.position = markerView.coordinate;
-  marker.title = markerView.title;
-  marker.snippet = markerView.markerDescription;
+  marker.title = markerView.title.length > 0 ? markerView.title : nil;
+  marker.snippet = markerView.markerDescription.length > 0
+                       ? markerView.markerDescription
+                       : nil;
   marker.zIndex = (int)markerView.zIndex;
   marker.draggable = markerView.draggable;
   [self applyMarkerStyle:markerView marker:marker];
@@ -410,8 +517,10 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
 
   GMSAdvancedMarker *marker = [[GMSAdvancedMarker alloc] init];
   marker.position = markerView.coordinate;
-  marker.title = markerView.title;
-  marker.snippet = markerView.markerDescription;
+  marker.title = markerView.title.length > 0 ? markerView.title : nil;
+  marker.snippet = markerView.markerDescription.length > 0
+                       ? markerView.markerDescription
+                       : nil;
   marker.zIndex = (int)markerView.zIndex;
   marker.draggable = markerView.draggable;
 

@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { isValidElement } from 'react';
 import { StyleSheet } from 'react-native';
 import LuggMarkerViewNativeComponent from '../fabric/LuggMarkerViewNativeComponent';
+import LuggCalloutViewNativeComponent from '../fabric/LuggCalloutViewNativeComponent';
 import type { MarkerProps } from './Marker.types';
 
 export type {
+  CalloutOptions,
   MarkerProps,
   MarkerPressEvent,
   MarkerDragEvent,
@@ -38,8 +40,18 @@ export class Marker extends React.PureComponent<MarkerProps> {
       onDragStart,
       onDragChange,
       onDragEnd,
+      callout,
+      calloutOptions,
       children,
     } = this.props;
+
+    const calloutContent = callout
+      ? isValidElement(callout)
+        ? callout
+        : React.createElement(callout)
+      : null;
+    const calloutBubbled = calloutOptions?.bubbled ?? true;
+    const calloutAnchor = calloutOptions?.anchor;
 
     return (
       <LuggMarkerViewNativeComponent
@@ -59,6 +71,15 @@ export class Marker extends React.PureComponent<MarkerProps> {
         onMarkerDragEnd={onDragEnd}
       >
         {children}
+        {calloutContent && (
+          <LuggCalloutViewNativeComponent
+            style={calloutStyles.callout}
+            bubbled={calloutBubbled}
+            anchor={calloutAnchor}
+          >
+            {calloutContent}
+          </LuggCalloutViewNativeComponent>
+        )}
       </LuggMarkerViewNativeComponent>
     );
   }
@@ -66,6 +87,13 @@ export class Marker extends React.PureComponent<MarkerProps> {
 
 const styles = StyleSheet.create({
   marker: {
+    position: 'absolute',
+    pointerEvents: 'box-none',
+  },
+});
+
+const calloutStyles = StyleSheet.create({
+  callout: {
     position: 'absolute',
     pointerEvents: 'box-none',
   },

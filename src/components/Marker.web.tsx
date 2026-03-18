@@ -1,7 +1,43 @@
-import { useCallback, useEffect, useRef } from 'react';
-import { AdvancedMarker } from '@vis.gl/react-google-maps';
+import React, {
+  isValidElement,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
+import {
+  AdvancedMarker,
+  InfoWindow,
+  useAdvancedMarkerRef,
+} from '@vis.gl/react-google-maps';
 import { useMapContext } from '../MapProvider.web';
 import type { MarkerProps } from './Marker.types';
+
+const CALLOUT_ARROW_HEIGHT = 12;
+const UNBUBBLED_CLASS = 'rnm-callout-unbubbled';
+const UNBUBBLED_STYLE_ID = 'rnm-callout-unbubbled-style';
+
+function injectUnbubbledStyle() {
+  if (document.getElementById(UNBUBBLED_STYLE_ID)) return;
+  const style = document.createElement('style');
+  style.id = UNBUBBLED_STYLE_ID;
+  style.textContent = `
+    .gm-style-iw-c:has(.${UNBUBBLED_CLASS}) {
+      background: transparent !important;
+      box-shadow: none !important;
+      padding: 0 !important;
+      border-radius: 0 !important;
+    }
+    .gm-style-iw-d:has(.${UNBUBBLED_CLASS}) {
+      overflow: visible !important;
+    }
+    .gm-style-iw-t:has(.${UNBUBBLED_CLASS})::after,
+    .gm-style-iw-t:has(.${UNBUBBLED_CLASS}) .gm-style-iw-tc {
+      display: none !important;
+    }
+  `;
+  document.head.appendChild(style);
+}
 
 const toWebAnchor = (value: number) => `-${value * 100}%`;
 
@@ -25,6 +61,7 @@ const createEvent = (
 export const Marker = ({
   coordinate,
   title,
+  description,
   anchor,
   zIndex,
   rotate,
@@ -34,10 +71,38 @@ export const Marker = ({
   onDragStart,
   onDragChange,
   onDragEnd,
+  callout,
+  calloutOptions,
   children,
 }: MarkerProps) => {
-  const { moveCamera } = useMapContext();
+  const { moveCamera, onCalloutClose, closeCallouts } = useMapContext();
   const dragPositionRef = useRef<google.maps.LatLngLiteral | null>(null);
+  const [markerRef, markerElement] = useAdvancedMarkerRef();
+  const [infoWindowOpen, setInfoWindowOpen] = useState(false);
+  const calloutBubbled = calloutOptions?.bubbled ?? true;
+
+  const closeCallout = useCallback(() => setInfoWindowOpen(false), []);
+
+  useEffect(() => onCalloutClose(closeCallout), [onCalloutClose, closeCallout]);
+
+  useEffect(() => {
+    if (!calloutBubbled) injectUnbubbledStyle();
+  }, [calloutBubbled]);
+
+  const hasCallout = !!(callout || title);
+
+  const calloutContent = callout
+    ? isValidElement(callout)
+      ? callout
+      : React.createElement(callout)
+    : title
+    ? React.createElement(
+        'div',
+        { style: { fontSize: 14 } },
+        React.createElement('div', { style: { fontWeight: 500 } }, title),
+        description ? React.createElement('div', null, description) : null
+      )
+    : null;
 
   const transforms: string[] = [];
   if (rotate) transforms.push(`rotate(${rotate}deg)`);
@@ -51,8 +116,12 @@ export const Marker = ({
         : coordinate;
       moveCamera(coord);
       onPress?.(createEvent(e, coordinate));
+      if (hasCallout) {
+        closeCallouts(closeCallout);
+        setInfoWindowOpen((prev) => !prev);
+      }
     },
-    [moveCamera, onPress, coordinate]
+    [moveCamera, onPress, coordinate, hasCallout, closeCallouts, closeCallout]
   );
 
   const handleDragStart = useCallback(
@@ -92,29 +161,50 @@ export const Marker = ({
     dragPositionRef.current = null;
   }, [coordinate.latitude, coordinate.longitude]);
 
-  const position = dragPositionRef.current ?? {
+  const latLngPosition = {
     lat: coordinate.latitude,
     lng: coordinate.longitude,
   };
 
+  const position = dragPositionRef.current ?? latLngPosition;
+
   return (
-    <AdvancedMarker
-      position={position}
-      title={title}
-      zIndex={zIndex}
-      anchorLeft={anchor ? toWebAnchor(anchor.x) : undefined}
-      anchorTop={anchor ? toWebAnchor(anchor.y) : undefined}
-      clickable
-      draggable={draggable}
-      onClick={handleClick}
-      onDragStart={handleDragStart}
-      onDrag={handleDrag}
-      onDragEnd={handleDragEnd}
-      style={
-        transforms.length > 0 ? { transform: transforms.join(' ') } : undefined
-      }
-    >
-      {children}
-    </AdvancedMarker>
+    <>
+      <AdvancedMarker
+        ref={markerRef}
+        position={position}
+        title={title}
+        zIndex={zIndex}
+        anchorLeft={anchor ? toWebAnchor(anchor.x) : undefined}
+        anchorTop={anchor ? toWebAnchor(anchor.y) : undefined}
+        clickable
+        draggable={draggable}
+        onClick={handleClick}
+        onDragStart={handleDragStart}
+        onDrag={handleDrag}
+        onDragEnd={handleDragEnd}
+        style={
+          transforms.length > 0
+            ? { transform: transforms.join(' ') }
+            : undefined
+        }
+      >
+        {children}
+      </AdvancedMarker>
+      {calloutContent && infoWindowOpen && markerElement && (
+        <InfoWindow
+          anchor={markerElement}
+          pixelOffset={!calloutBubbled ? [0, CALLOUT_ARROW_HEIGHT] : undefined}
+          headerDisabled
+          onClose={() => setInfoWindowOpen(false)}
+        >
+          {!calloutBubbled ? (
+            <div className={UNBUBBLED_CLASS}>{calloutContent}</div>
+          ) : (
+            calloutContent
+          )}
+        </InfoWindow>
+      )}
+    </>
   );
 };

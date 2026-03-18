@@ -2,7 +2,7 @@ export { MapView } from './MapView.web';
 export { MapProvider } from './MapProvider.web';
 export type { MapProviderProps } from './MapProvider.types';
 export { Marker } from './components/index.web';
-export type { MarkerProps } from './components/index.web';
+export type { CalloutOptions, MarkerProps } from './components/index.web';
 export { Polygon } from './components/index.web';
 export type { PolygonProps } from './components/index.web';
 export { Polyline } from './components/index.web';
@@ -26,6 +26,7 @@ export type {
   GeoJSON,
   Feature,
   FeatureCollection,
+  FeatureProperties,
   Geometry,
   Position,
 } from './components/GeoJson.types';

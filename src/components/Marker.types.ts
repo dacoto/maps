@@ -1,9 +1,27 @@
-import type { ReactNode } from 'react';
+import type { ComponentType, ReactElement, ReactNode } from 'react';
 import type { NativeSyntheticEvent } from 'react-native';
 import type { Coordinate, Point, PressEventPayload } from '../types';
 
 export type MarkerPressEvent = NativeSyntheticEvent<PressEventPayload>;
 export type MarkerDragEvent = NativeSyntheticEvent<PressEventPayload>;
+
+export interface CalloutOptions {
+  /**
+   * Whether to wrap the callout in the native platform bubble.
+   * Set to `false` to render custom content directly without the native callout chrome.
+   *
+   * @default true
+   */
+  bubbled?: boolean;
+  /**
+   * Anchor point for the callout relative to the marker position.
+   * `{x: 0.5, y: 1}` places the bottom-center of the callout at the marker.
+   *
+   * @note Not supported on web.
+   * @default {x: 0.5, y: 1}
+   */
+  anchor?: Point;
+}
 
 export interface MarkerProps {
   /**
@@ -68,6 +86,15 @@ export interface MarkerProps {
    * Called when marker drag ends
    */
   onDragEnd?: (event: MarkerDragEvent) => void;
+  /**
+   * Callout content displayed when marker is tapped.
+   * Pass a `ReactElement` for inline content or a `ComponentType` to be instantiated.
+   */
+  callout?: ComponentType<unknown> | ReactElement;
+  /**
+   * Callout configuration options.
+   */
+  calloutOptions?: CalloutOptions;
   /**
    * Custom marker view
    */

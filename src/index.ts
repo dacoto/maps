@@ -3,6 +3,7 @@ export { MapProvider } from './MapProvider';
 export type { MapProviderProps } from './MapProvider.types';
 export { Marker } from './components';
 export type {
+  CalloutOptions,
   MarkerProps,
   MarkerPressEvent,
   MarkerDragEvent,
@@ -39,6 +40,7 @@ export type {
   GeoJSON,
   Feature,
   FeatureCollection,
+  FeatureProperties,
   Geometry,
   Position,
 } from './components/GeoJson.types';

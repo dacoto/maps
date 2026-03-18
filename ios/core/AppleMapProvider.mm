@@ -1,8 +1,10 @@
 #import "AppleMapProvider.h"
+#import "../LuggCalloutView.h"
 #import "../LuggMarkerView.h"
 #import "../LuggPolygonView.h"
 #import "../LuggPolylineView.h"
 #import "../extensions/MKMapView+Zoom.h"
+#import "LuggAnnotationView.h"
 #import "MKPolylineAnimator.h"
 
 @interface AppleMarkerAnnotation : NSObject <MKAnnotation>
@@ -20,11 +22,12 @@
 @end
 
 @interface AppleMapProvider () <
-    LuggMarkerViewDelegate, LuggPolylineViewDelegate, LuggPolygonViewDelegate,
-    UIGestureRecognizerDelegate>
+    LuggMarkerViewDelegate, LuggCalloutViewDelegate, LuggPolylineViewDelegate,
+    LuggPolygonViewDelegate, UIGestureRecognizerDelegate>
 @end
 
 @implementation AppleMapProvider {
+  UIView *_wrapperView;
   LuggAppleMapViewContent *_mapView;
   BOOL _isMapReady;
   BOOL _isDragging;
@@ -34,6 +37,8 @@
   NSMapTable<id<MKOverlay>, LuggPolygonView *> *_overlayToPolygonMap;
   UITapGestureRecognizer *_tapGesture;
   UILongPressGestureRecognizer *_longPressGesture;
+  LuggMarkerView *_activeNonBubbledMarker;
+  BOOL _isReselectingAnnotation;
   // Edge insets animation
   CADisplayLink *_edgeInsetsDisplayLink;
   UIEdgeInsets _edgeInsetsFrom;
@@ -91,6 +96,7 @@
 
   [_tapGesture requireGestureRecognizerToFail:_longPressGesture];
 
+  _wrapperView = wrapperView;
   [wrapperView addSubview:_mapView];
 
   MKCoordinateRegion region = [_mapView regionForCenterCoordinate:coordinate
@@ -103,6 +109,7 @@
 }
 
 - (void)destroy {
+  [self dismissNonBubbledCallout];
   [self stopEdgeInsetsAnimation];
   if (_tapGesture) {
     [_mapView removeGestureRecognizer:_tapGesture];
@@ -319,11 +326,24 @@
   return NO;
 }
 
+- (BOOL)hitTestCalloutAtPoint:(CGPoint)point {
+  if (!_activeNonBubbledMarker)
+    return NO;
+
+  UIView *contentView = _activeNonBubbledMarker.calloutView.contentView;
+  CGPoint local = [contentView convertPoint:point fromView:_mapView];
+  return [contentView pointInside:local withEvent:nil];
+}
+
 - (void)handleTap:(UITapGestureRecognizer *)gesture {
   if (gesture.state != UIGestureRecognizerStateEnded)
     return;
 
   CGPoint point = [gesture locationInView:_mapView];
+  if ([self hitTestCalloutAtPoint:point])
+    return;
+
+  [self dismissNonBubbledCallout];
 
   if ([self hitTestAnnotationAtPoint:point])
     return;
@@ -390,6 +410,7 @@
                             longitude:mapView.centerCoordinate.longitude
                                  zoom:mapView.zoomLevel
                               gesture:_isDragging];
+  [self positionNonBubbledCallout];
 }
 
 - (void)mapView:(MKMapView *)mapView regionDidChangeAnimated:(BOOL)animated {
@@ -423,28 +444,31 @@
   }
 
   if (!markerView.hasCustomView) {
-    MKMarkerAnnotationView *markerAnnotationView =
-        [[MKMarkerAnnotationView alloc] initWithAnnotation:annotation
-                                           reuseIdentifier:nil];
+    LuggMarkerAnnotationView *markerAnnotationView =
+        [[LuggMarkerAnnotationView alloc] initWithAnnotation:annotation
+                                             reuseIdentifier:nil];
     markerAnnotationView.canShowCallout = YES;
     markerAnnotationView.displayPriority = MKFeatureDisplayPriorityRequired;
     markerAnnotationView.layer.zPosition = markerView.zIndex;
     markerAnnotationView.zPriority = markerView.zIndex;
     markerAnnotationView.draggable = markerView.draggable;
+    [self applyCalloutView:markerView annotationView:markerAnnotationView];
     [self addCenterTapGesture:markerAnnotationView];
     markerAnnotation.annotationView = markerAnnotationView;
     return markerAnnotationView;
   }
 
-  MKAnnotationView *annotationView =
-      [[MKAnnotationView alloc] initWithAnnotation:annotation
-                                   reuseIdentifier:nil];
+  LuggAnnotationView *annotationView =
+      [[LuggAnnotationView alloc] initWithAnnotation:annotation
+                                     reuseIdentifier:nil];
   annotationView.canShowCallout = YES;
   annotationView.displayPriority = MKFeatureDisplayPriorityRequired;
   annotationView.layer.zPosition = markerView.zIndex;
   annotationView.zPriority = markerView.zIndex;
   annotationView.draggable = markerView.draggable;
   [self addCenterTapGesture:annotationView];
+
+  [self applyCalloutView:markerView annotationView:annotationView];
 
   if (!markerView.rasterize) {
     UIView *iconView = markerView.iconView;
@@ -516,6 +540,104 @@
     CGPoint point = [_mapView convertCoordinate:markerView.coordinate
                                   toPointToView:_mapView];
     [markerView emitPressEventWithPoint:point];
+
+    LuggCalloutView *calloutView = markerView.calloutView;
+    if (calloutView && !calloutView.bubbled && calloutView.hasCustomContent) {
+      [self showNonBubbledCallout:markerView];
+    }
+  }
+}
+
+- (void)mapView:(MKMapView *)mapView
+    didDeselectAnnotationView:(MKAnnotationView *)view {
+  if (![view.annotation isKindOfClass:[AppleMarkerAnnotation class]])
+    return;
+
+  AppleMarkerAnnotation *annotation = (AppleMarkerAnnotation *)view.annotation;
+  LuggMarkerView *markerView = annotation.markerView;
+
+  if (markerView && _activeNonBubbledMarker == markerView &&
+      !_isReselectingAnnotation) {
+    _isReselectingAnnotation = YES;
+    [_mapView selectAnnotation:annotation animated:NO];
+    _isReselectingAnnotation = NO;
+  }
+}
+
+- (void)showNonBubbledCallout:(LuggMarkerView *)markerView {
+  [self dismissNonBubbledCallout];
+
+  LuggCalloutView *calloutView = markerView.calloutView;
+  UIView *contentView = calloutView.contentView;
+  [contentView removeFromSuperview];
+
+  contentView.userInteractionEnabled = YES;
+  calloutView.delegate = self;
+
+  AppleMarkerAnnotation *annotation =
+      (AppleMarkerAnnotation *)markerView.marker;
+  MKAnnotationView *annotationView = annotation.annotationView;
+  if (annotationView) {
+    annotationView.clipsToBounds = NO;
+    [annotationView addSubview:contentView];
+  } else {
+    [_wrapperView addSubview:contentView];
+  }
+
+  _activeNonBubbledMarker = markerView;
+  [self positionNonBubbledCallout];
+}
+
+- (void)calloutViewDidUpdate:(LuggCalloutView *)calloutView {
+  [self positionNonBubbledCallout];
+}
+
+- (void)positionNonBubbledCallout {
+  if (!_activeNonBubbledMarker)
+    return;
+
+  LuggCalloutView *calloutView = _activeNonBubbledMarker.calloutView;
+  UIView *contentView = calloutView.contentView;
+  CGSize contentSize = contentView.bounds.size;
+  if (contentSize.width <= 0 || contentSize.height <= 0)
+    return;
+
+  CGPoint anchor = calloutView.anchor;
+
+  AppleMarkerAnnotation *annotation =
+      (AppleMarkerAnnotation *)_activeNonBubbledMarker.marker;
+  MKAnnotationView *annotationView = annotation.annotationView;
+
+  if (annotationView && contentView.superview == annotationView) {
+    CGPoint center = CGPointMake(annotationView.bounds.size.width / 2.0 +
+                                     contentSize.width * (0.5 - anchor.x),
+                                 annotationView.bounds.size.height / 2.0 +
+                                     contentSize.height * (0.5 - anchor.y));
+    contentView.center = center;
+  } else {
+    CGPoint point =
+        [_mapView convertCoordinate:_activeNonBubbledMarker.coordinate
+                      toPointToView:_wrapperView];
+    contentView.center =
+        CGPointMake(point.x + contentSize.width * (0.5 - anchor.x),
+                    point.y + contentSize.height * (0.5 - anchor.y));
+  }
+}
+
+- (void)dismissNonBubbledCallout {
+  if (!_activeNonBubbledMarker)
+    return;
+
+  LuggMarkerView *markerView = _activeNonBubbledMarker;
+  _activeNonBubbledMarker = nil;
+
+  markerView.calloutView.delegate = nil;
+  [markerView.calloutView.contentView removeFromSuperview];
+
+  AppleMarkerAnnotation *annotation =
+      (AppleMarkerAnnotation *)markerView.marker;
+  if (annotation) {
+    [_mapView deselectAnnotation:annotation animated:NO];
   }
 }
 
@@ -574,6 +696,27 @@
   }
 }
 
+- (void)applyCalloutView:(LuggMarkerView *)markerView
+          annotationView:(MKAnnotationView *)annotationView {
+  LuggCalloutView *calloutView = markerView.calloutView;
+  if (!calloutView) {
+    annotationView.detailCalloutAccessoryView = nil;
+    annotationView.rightCalloutAccessoryView = nil;
+    return;
+  }
+
+  annotationView.rightCalloutAccessoryView = nil;
+
+  if (!calloutView.bubbled) {
+    annotationView.canShowCallout = NO;
+    annotationView.detailCalloutAccessoryView = nil;
+    return;
+  }
+
+  annotationView.detailCalloutAccessoryView =
+      calloutView.hasCustomContent ? calloutView.contentView : nil;
+}
+
 #pragma mark - MarkerViewDelegate
 
 - (void)markerViewDidLayout:(LuggMarkerView *)markerView {
@@ -600,6 +743,7 @@
     annotationView.draggable = markerView.draggable;
     annotationView.layer.zPosition = markerView.zIndex;
     annotationView.zPriority = markerView.zIndex;
+    [self applyCalloutView:markerView annotationView:annotationView];
   }
 
   [self updateAnnotationViewFrame:annotation];
