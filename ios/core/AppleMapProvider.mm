@@ -627,7 +627,6 @@
         CGPointMake(point.x + contentSize.width * (0.5 - anchor.x),
                     point.y + contentSize.height * (0.5 - anchor.y));
   }
-
 }
 
 - (void)dismissNonBubbledCallout {
@@ -851,20 +850,20 @@
   iconView.transform = CGAffineTransformMakeScale(scale, scale);
 
   annotationView.bounds = CGRectMake(0, 0, scaledWidth, scaledHeight);
-  annotationView.centerOffset =
-      CGPointMake(scaledWidth * (0.5 - anchor.x),
-                  scaledHeight * (0.5 - anchor.y));
+  annotationView.centerOffset = CGPointMake(scaledWidth * (0.5 - anchor.x),
+                                            scaledHeight * (0.5 - anchor.y));
   annotationView.transform =
       CGAffineTransformMakeRotation(markerView.rotate * M_PI / 180.0);
 
   // Debounce: rasterize once updates settle
   if (markerView.rasterize) {
-    dispatch_block_t rasterizeBlock = dispatch_block_create((dispatch_block_flags_t)0, ^{
-      annotation.pendingScaleAnimation = nil;
-      annotationView.image = [markerView createScaledIconImage];
-      [iconView removeFromSuperview];
-      [markerView resetIconViewTransform];
-    });
+    dispatch_block_t rasterizeBlock =
+        dispatch_block_create((dispatch_block_flags_t)0, ^{
+          annotation.pendingScaleAnimation = nil;
+          annotationView.image = [markerView createScaledIconImage];
+          [iconView removeFromSuperview];
+          [markerView resetIconViewTransform];
+        });
 
     annotation.pendingScaleAnimation = rasterizeBlock;
     dispatch_after(
