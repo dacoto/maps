@@ -587,10 +587,7 @@
   }
 
   _activeNonBubbledMarker = markerView;
-  dispatch_async(dispatch_get_main_queue(), ^{
-    [self positionNonBubbledCallout];
-    contentView.hidden = NO;
-  });
+  [self positionNonBubbledCallout];
 }
 
 - (void)calloutViewDidUpdate:(LuggCalloutView *)calloutView {
@@ -626,6 +623,8 @@
         CGPointMake(point.x + contentSize.width * (0.5 - anchor.x),
                     point.y + contentSize.height * (0.5 - anchor.y));
   }
+  
+  contentView.hidden = NO;
 }
 
 - (void)dismissNonBubbledCallout {
