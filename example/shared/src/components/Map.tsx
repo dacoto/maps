@@ -128,7 +128,10 @@ const renderMarker = (
           onDragStart={handleDragStart}
           onDragChange={handleDragChange}
           onDragEnd={handleDragEnd}
-          callout={calloutEl('Icon Marker Callout', 'A draggable pin-style marker with a custom icon representation on the map')}
+          callout={calloutEl(
+            'Icon Marker Callout',
+            'A draggable pin-style marker with a custom icon representation on the map'
+          )}
         />
       );
     case 'text':
@@ -145,7 +148,10 @@ const renderMarker = (
           onDragStart={handleDragStart}
           onDragChange={handleDragChange}
           onDragEnd={handleDragEnd}
-          callout={calloutEl(`Text Badge Marker ${text}`, 'Displays a colored text badge that can be dragged around the map')}
+          callout={calloutEl(
+            `Text Badge Marker ${text}`,
+            'Displays a colored text badge that can be dragged around the map'
+          )}
         />
       );
     case 'image':
@@ -161,7 +167,10 @@ const renderMarker = (
           onDragStart={handleDragStart}
           onDragChange={handleDragChange}
           onDragEnd={handleDragEnd}
-          callout={calloutEl('Remote Image Marker', 'An avatar marker rendered from a remote image source URL')}
+          callout={calloutEl(
+            'Remote Image Marker',
+            'An avatar marker rendered from a remote image source URL'
+          )}
         />
       );
     case 'custom':
@@ -180,7 +189,9 @@ const renderMarker = (
           callout={
             <View style={styles.customCallout}>
               <View>
-                <Text style={styles.calloutTitle}>Custom Interactive Marker</Text>
+                <Text style={styles.calloutTitle}>
+                  Custom Interactive Marker
+                </Text>
                 <Text style={styles.calloutDescription}>
                   A non-bubbled custom callout with interactive button support
                 </Text>

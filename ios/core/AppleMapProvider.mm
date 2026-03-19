@@ -623,7 +623,7 @@
         CGPointMake(point.x + contentSize.width * (0.5 - anchor.x),
                     point.y + contentSize.height * (0.5 - anchor.y));
   }
-  
+
   contentView.hidden = NO;
 }
 

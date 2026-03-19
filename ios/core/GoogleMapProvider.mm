@@ -444,7 +444,8 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
       pointForCoordinate:_activeNonBubbledMarker.coordinate];
 
   UIView *iconView = _activeNonBubbledMarker.iconView;
-  CGFloat markerHeight = iconView.bounds.size.height * _activeNonBubbledMarker.scale;
+  CGFloat markerHeight =
+      iconView.bounds.size.height * _activeNonBubbledMarker.scale;
 
   contentView.center =
       CGPointMake(point.x + contentSize.width * (0.5 - anchor.x),
