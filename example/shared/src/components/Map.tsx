@@ -128,7 +128,7 @@ const renderMarker = (
           onDragStart={handleDragStart}
           onDragChange={handleDragChange}
           onDragEnd={handleDragEnd}
-          callout={calloutEl('Icon Marker', 'A pin-style marker')}
+          callout={calloutEl('Icon Marker Callout', 'A draggable pin-style marker with a custom icon representation on the map')}
         />
       );
     case 'text':
@@ -145,7 +145,7 @@ const renderMarker = (
           onDragStart={handleDragStart}
           onDragChange={handleDragChange}
           onDragEnd={handleDragEnd}
-          callout={calloutEl(`Text Marker ${text}`, 'A text badge marker')}
+          callout={calloutEl(`Text Badge Marker ${text}`, 'Displays a colored text badge that can be dragged around the map')}
         />
       );
     case 'image':
@@ -161,7 +161,7 @@ const renderMarker = (
           onDragStart={handleDragStart}
           onDragChange={handleDragChange}
           onDragEnd={handleDragEnd}
-          callout={calloutEl('Image Marker', 'An avatar marker')}
+          callout={calloutEl('Remote Image Marker', 'An avatar marker rendered from a remote image source URL')}
         />
       );
     case 'custom':
@@ -180,9 +180,9 @@ const renderMarker = (
           callout={
             <View style={styles.customCallout}>
               <View>
-                <Text style={styles.calloutTitle}>Custom Marker</Text>
+                <Text style={styles.calloutTitle}>Custom Interactive Marker</Text>
                 <Text style={styles.calloutDescription}>
-                  Non-bubbled callout
+                  A non-bubbled custom callout with interactive button support
                 </Text>
               </View>
               <Button title="Press me" onPress={() => Alert.alert('pressed')} />
@@ -369,7 +369,7 @@ const styles = StyleSheet.create({
     minWidth: 140,
   },
   customCallout: {
-    minWidth: 140,
+    width: 250,
     padding: 10,
     backgroundColor: 'white',
     borderRadius: 10,

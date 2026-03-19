@@ -443,9 +443,13 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
   CGPoint point = [_mapView.projection
       pointForCoordinate:_activeNonBubbledMarker.coordinate];
 
+  UIView *iconView = _activeNonBubbledMarker.iconView;
+  CGFloat markerHeight = iconView.bounds.size.height * _activeNonBubbledMarker.scale;
+
   contentView.center =
       CGPointMake(point.x + contentSize.width * (0.5 - anchor.x),
-                  point.y + contentSize.height * (0.5 - anchor.y));
+                  point.y - markerHeight * _activeNonBubbledMarker.anchor.y +
+                      contentSize.height * (0.5 - anchor.y));
 }
 
 #pragma mark - MarkerViewDelegate

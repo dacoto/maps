@@ -616,8 +616,7 @@
   if (annotationView && contentView.superview == annotationView) {
     CGPoint center = CGPointMake(annotationView.bounds.size.width / 2.0 +
                                      contentSize.width * (0.5 - anchor.x),
-                                 annotationView.bounds.size.height / 2.0 +
-                                     contentSize.height * (0.5 - anchor.y));
+                                 contentSize.height * (0.5 - anchor.y));
     contentView.center = center;
   } else {
     CGPoint point =
