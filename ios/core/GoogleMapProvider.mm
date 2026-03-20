@@ -845,7 +845,7 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
     return;
 
   GMSCircle *circle = [GMSCircle circleWithPosition:circleView.center
-                                              radius:circleView.radius];
+                                             radius:circleView.radius];
   circle.fillColor = circleView.fillColor;
   circle.strokeColor = circleView.strokeColor;
   circle.strokeWidth = circleView.strokeWidth;

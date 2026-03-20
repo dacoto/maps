@@ -19,8 +19,15 @@ export class Circle extends React.PureComponent<CircleProps> {
   }
 
   render() {
-    const { center, radius, strokeColor, strokeWidth, fillColor, zIndex, onPress } =
-      this.props;
+    const {
+      center,
+      radius,
+      strokeColor,
+      strokeWidth,
+      fillColor,
+      zIndex,
+      onPress,
+    } = this.props;
 
     return (
       <LuggCircleViewNativeComponent

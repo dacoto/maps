@@ -1309,9 +1309,8 @@ static double tileToLng(NSInteger x, NSInteger z) {
 
   MKCircle *oldCircle = (MKCircle *)circleView.circle;
 
-  MKCircle *newCircle =
-      [MKCircle circleWithCenterCoordinate:circleView.center
-                                    radius:circleView.radius];
+  MKCircle *newCircle = [MKCircle circleWithCenterCoordinate:circleView.center
+                                                      radius:circleView.radius];
 
   circleView.circle = newCircle;
   [_overlayToCircleMap setObject:circleView forKey:newCircle];
@@ -1336,9 +1335,8 @@ static double tileToLng(NSInteger x, NSInteger z) {
   if (!_mapView)
     return;
 
-  MKCircle *circle =
-      [MKCircle circleWithCenterCoordinate:circleView.center
-                                    radius:circleView.radius];
+  MKCircle *circle = [MKCircle circleWithCenterCoordinate:circleView.center
+                                                   radius:circleView.radius];
 
   circleView.circle = circle;
   [_overlayToCircleMap setObject:circleView forKey:circle];
