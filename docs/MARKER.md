@@ -121,7 +121,9 @@ Use the `callout` prop to display a callout when the marker is tapped.
 />
 ```
 
-### Callout Options
+### CalloutOptions
 
-- `bubbled` - Whether to wrap the callout in the native platform bubble. Defaults to `true`.
-- `anchor` - Anchor point for non-bubbled callout positioning relative to the marker. Defaults to `{x: 0.5, y: 1}`. Not supported on Web.
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `bubbled` | `boolean` | `true` | Whether to wrap the callout in the native platform bubble |
+| `anchor` | [`Point`](./TYPES.md#point) | `{x: 0.5, y: 1}` | Anchor point for non-bubbled callout positioning relative to the marker. Not supported on Web |

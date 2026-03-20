@@ -39,6 +39,15 @@ import { MapView, TileOverlay } from '@lugg/maps';
 | `zIndex` | `number` | - | Z-index for layering |
 | `onPress` | `() => void` | - | Called when the tile overlay is tapped |
 
+## Types
+
+### TileOverlayBounds
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `northeast` | [`Coordinate`](./TYPES.md#coordinate) | Northeast corner of the bounds |
+| `southwest` | [`Coordinate`](./TYPES.md#coordinate) | Southwest corner of the bounds |
+
 ## Platform Notes
 
 - **Apple Maps**: Uses `MKTileOverlay` with `MKTileOverlayRenderer`.

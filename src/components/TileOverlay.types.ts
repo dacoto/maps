@@ -1,6 +1,8 @@
+import type { Coordinate } from '../types';
+
 export interface TileOverlayBounds {
-  northeast: { latitude: number; longitude: number };
-  southwest: { latitude: number; longitude: number };
+  northeast: Coordinate;
+  southwest: Coordinate;
 }
 
 export interface TileOverlayProps {
