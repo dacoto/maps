@@ -1,5 +1,6 @@
 #import <CoreLocation/CoreLocation.h>
 #import <UIKit/UIKit.h>
+#import <react/renderer/components/RNMapsSpec/Props.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -46,7 +47,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)setRotateEnabled:(BOOL)enabled;
 - (void)setPitchEnabled:(BOOL)enabled;
 - (void)setUserLocationEnabled:(BOOL)enabled;
-- (void)setTheme:(NSInteger)theme;
+- (void)setMapType:(facebook::react::LuggMapViewMapType)mapType;
+- (void)setTheme:(facebook::react::LuggMapViewTheme)theme;
 - (void)setMinZoom:(double)minZoom;
 - (void)setMaxZoom:(double)maxZoom;
 - (void)setEdgeInsets:(UIEdgeInsets)edgeInsets

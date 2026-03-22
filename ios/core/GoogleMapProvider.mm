@@ -1,4 +1,8 @@
 #import "GoogleMapProvider.h"
+
+using facebook::react::LuggMapViewMapType;
+using facebook::react::LuggMapViewTheme;
+
 #import "../LuggCalloutView.h"
 #import "../LuggCircleView.h"
 #import "../LuggGroundOverlayView.h"
@@ -22,7 +26,7 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
   GMSMapView *_mapView;
   BOOL _isMapReady;
   BOOL _isDragging;
-  NSInteger _theme;
+  LuggMapViewTheme _theme;
   UIEdgeInsets _edgeInsets;
   NSMutableArray<LuggMarkerView *> *_pendingMarkerViews;
   NSMutableArray<LuggPolylineView *> *_pendingPolylineViews;
@@ -164,7 +168,26 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
   _mapView.myLocationEnabled = enabled;
 }
 
-- (void)setTheme:(NSInteger)theme {
+- (void)setMapType:(LuggMapViewMapType)mapType {
+  if (!_mapView) return;
+
+  switch (mapType) {
+  case LuggMapViewMapType::Satellite:
+    _mapView.mapType = kGMSTypeSatellite;
+    break;
+  case LuggMapViewMapType::Terrain:
+    _mapView.mapType = kGMSTypeTerrain;
+    break;
+  case LuggMapViewMapType::Hybrid:
+    _mapView.mapType = kGMSTypeHybrid;
+    break;
+  default:
+    _mapView.mapType = kGMSTypeNormal;
+    break;
+  }
+}
+
+- (void)setTheme:(LuggMapViewTheme)theme {
   _theme = theme;
   [self applyTheme];
 }
@@ -174,13 +197,13 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
     return;
 
   switch (_theme) {
-  case 1: // Dark
+  case LuggMapViewTheme::Dark:
     _mapView.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
     break;
-  case 0: // Light
+  case LuggMapViewTheme::Light:
     _mapView.overrideUserInterfaceStyle = UIUserInterfaceStyleLight;
     break;
-  default: // System
+  default:
     _mapView.overrideUserInterfaceStyle = UIUserInterfaceStyleUnspecified;
     break;
   }

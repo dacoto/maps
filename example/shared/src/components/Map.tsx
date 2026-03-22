@@ -37,9 +37,17 @@ import { MarkerIcon } from './MarkerIcon';
 import { MarkerText } from './MarkerText';
 import { MarkerImage } from './MarkerImage';
 import { Button } from './Button';
+import { ThemedText } from './ThemedText';
 import type { MarkerData } from './index';
 import { Route, smoothCoordinates } from './Route';
 import { SAMPLE_GEOJSON } from '../geojson';
+import { sizes, useTheme } from '../theme';
+import {
+  INITIAL_ZOOM,
+  CIRCLE_CENTER,
+  CIRCLE_COORDS,
+  CIRCLE_HOLES,
+} from '../mapData';
 
 interface MapProps extends MapViewProps {
   markers: MarkerData[];
@@ -54,36 +62,44 @@ interface MapProps extends MapViewProps {
   onMarkerDragEnd?: (event: MarkerDragEvent, marker: MarkerData) => void;
 }
 
-const INITIAL_ZOOM = 14;
-
-const CIRCLE_CENTER = { latitude: 37.78, longitude: -122.43 };
-const CIRCLE_RADIUS = 0.003;
-const CIRCLE_COORDS = Array.from({ length: 36 }, (_, i) => {
-  const angle = (i * 10 * Math.PI) / 180;
-  return {
-    latitude: CIRCLE_CENTER.latitude + CIRCLE_RADIUS * Math.cos(angle),
-    longitude:
-      CIRCLE_CENTER.longitude +
-      (CIRCLE_RADIUS * Math.sin(angle)) /
-        Math.cos((CIRCLE_CENTER.latitude * Math.PI) / 180),
-  };
-});
-
-const HOLE_RADIUS = 0.0015;
-const CIRCLE_HOLES = [
-  Array.from({ length: 36 }, (_, i) => {
-    const angle = (i * 10 * Math.PI) / 180;
-    return {
-      latitude: CIRCLE_CENTER.latitude + HOLE_RADIUS * Math.cos(angle),
-      longitude:
-        CIRCLE_CENTER.longitude +
-        (HOLE_RADIUS * Math.sin(angle)) /
-          Math.cos((CIRCLE_CENTER.latitude * Math.PI) / 180),
-    };
-  }),
-];
+const CustomCallout = () => {
+  const { colors } = useTheme();
+  return (
+    <View
+      style={[styles.customCallout, { backgroundColor: colors.background }]}
+    >
+      <View>
+        <ThemedText style={styles.calloutTitle}>
+          Custom Interactive Marker
+        </ThemedText>
+        <ThemedText variant="caption" style={styles.calloutDescription}>
+          A non-bubbled custom callout with interactive button support
+        </ThemedText>
+      </View>
+      <Button title="Press me" onPress={() => Alert.alert('pressed')} />
+    </View>
+  );
+};
 
 const SELECTED_SCALE = 1.5;
+
+const CalloutContent = ({
+  title,
+  description,
+  themed,
+}: {
+  title: string;
+  description: string;
+  themed?: boolean;
+}) => {
+  const Label = themed ? ThemedText : Text;
+  return (
+    <View style={styles.callout}>
+      <Label style={styles.calloutTitle}>{title}</Label>
+      <Label style={styles.calloutDescription}>{description}</Label>
+    </View>
+  );
+};
 
 const renderMarker = (
   marker: MarkerData,
@@ -92,7 +108,8 @@ const renderMarker = (
   onDragStart?: (event: MarkerDragEvent, marker: MarkerData) => void,
   onDragChange?: (event: MarkerDragEvent, marker: MarkerData) => void,
   onDragEnd?: (event: MarkerDragEvent, marker: MarkerData) => void,
-  refCallback?: (id: string, ref: Marker | null) => void
+  refCallback?: (id: string, ref: Marker | null) => void,
+  themedCallout?: boolean
 ) => {
   const {
     id,
@@ -107,7 +124,6 @@ const renderMarker = (
     imageUrl,
   } = marker;
   const scale = id === selectedId ? SELECTED_SCALE : 1;
-
   const handlePress = onPress
     ? (e: MarkerPressEvent) => onPress(e, marker)
     : undefined;
@@ -120,106 +136,78 @@ const renderMarker = (
   const handleDragEnd = onDragEnd
     ? (e: MarkerDragEvent) => onDragEnd(e, marker)
     : undefined;
-
-  const calloutEl = (label: string, desc: string) => (
-    <View style={styles.callout}>
-      <Text style={styles.calloutTitle}>{label}</Text>
-      <Text style={styles.calloutDescription}>{desc}</Text>
-    </View>
-  );
-
   const markerRef = refCallback
     ? (r: Marker | null) => refCallback(id, r)
     : undefined;
+
+  const shared = {
+    name,
+    coordinate,
+    scale,
+    draggable: true as const,
+    onPress: handlePress,
+    onDragStart: handleDragStart,
+    onDragChange: handleDragChange,
+    onDragEnd: handleDragEnd,
+  };
 
   switch (type) {
     case 'icon':
       return (
         <MarkerIcon
-          ref={markerRef}
           key={id}
-          name={name}
-          coordinate={coordinate}
-          scale={scale}
-          draggable
-          onPress={handlePress}
-          onDragStart={handleDragStart}
-          onDragChange={handleDragChange}
-          onDragEnd={handleDragEnd}
-          callout={calloutEl(
-            'Icon Marker Callout',
-            'A draggable pin-style marker with a custom icon representation on the map'
-          )}
+          ref={markerRef}
+          {...shared}
+          callout={
+            <CalloutContent
+              themed={themedCallout}
+              title="Icon Marker Callout"
+              description="A draggable pin-style marker with a custom icon representation on the map"
+            />
+          }
         />
       );
     case 'text':
       return (
         <MarkerText
-          ref={markerRef}
           key={id}
-          name={name}
-          coordinate={coordinate}
+          ref={markerRef}
+          {...shared}
           text={text ?? 'X'}
           color={color}
-          scale={scale}
-          draggable
-          onPress={handlePress}
-          onDragStart={handleDragStart}
-          onDragChange={handleDragChange}
-          onDragEnd={handleDragEnd}
-          callout={calloutEl(
-            `Text Badge Marker ${text}`,
-            'Displays a colored text badge that can be dragged around the map'
-          )}
+          callout={
+            <CalloutContent
+              themed={themedCallout}
+              title={`Text Badge Marker ${text}`}
+              description="Displays a colored text badge that can be dragged around the map"
+            />
+          }
         />
       );
     case 'image':
       return (
         <MarkerImage
-          ref={markerRef}
           key={id}
-          name={name}
-          coordinate={coordinate}
+          ref={markerRef}
+          {...shared}
           source={{ uri: imageUrl }}
-          scale={scale}
-          draggable
-          onPress={handlePress}
-          onDragStart={handleDragStart}
-          onDragChange={handleDragChange}
-          onDragEnd={handleDragEnd}
-          callout={calloutEl(
-            'Remote Image Marker',
-            'An avatar marker rendered from a remote image source URL'
-          )}
+          callout={
+            <CalloutContent
+              themed={themedCallout}
+              title="Remote Image Marker"
+              description="An avatar marker rendered from a remote image source URL"
+            />
+          }
         />
       );
     case 'custom':
       return (
         <Marker
-          ref={markerRef}
           key={id}
-          name={name}
-          coordinate={coordinate}
+          ref={markerRef}
+          {...shared}
           anchor={anchor}
-          scale={scale}
-          draggable
-          onPress={handlePress}
-          onDragStart={handleDragStart}
-          onDragChange={handleDragChange}
-          onDragEnd={handleDragEnd}
-          callout={
-            <View style={styles.customCallout}>
-              <View>
-                <Text style={styles.calloutTitle}>
-                  Custom Interactive Marker
-                </Text>
-                <Text style={styles.calloutDescription}>
-                  A non-bubbled custom callout with interactive button support
-                </Text>
-              </View>
-              <Button title="Press me" onPress={() => Alert.alert('pressed')} />
-            </View>
-          }
+          callout={<CustomCallout />}
           calloutOptions={{ bubbled: false }}
         >
           <View
@@ -230,19 +218,20 @@ const renderMarker = (
     default:
       return (
         <Marker
-          ref={markerRef}
           key={id}
-          name={name}
-          coordinate={coordinate}
+          ref={markerRef}
+          {...shared}
           title={title}
           description={description}
-          scale={scale}
-          draggable
-          onPress={handlePress}
-          onDragStart={handleDragStart}
-          onDragChange={handleDragChange}
-          onDragEnd={handleDragEnd}
-          callout={title ? undefined : calloutEl('Basic Marker', name ?? '')}
+          callout={
+            title ? undefined : (
+              <CalloutContent
+                themed={themedCallout}
+                title="Basic Marker"
+                description={name ?? ''}
+              />
+            )
+          }
         />
       );
   }
@@ -258,6 +247,7 @@ export const Map = forwardRef<MapRef, MapProps>(
     {
       markers,
       geojson,
+      provider,
       edgeInsets,
       animatedPosition,
       onCameraIdle,
@@ -304,31 +294,22 @@ export const Map = forwardRef<MapRef, MapProps>(
       }),
       []
     );
-    const polylineCoordinates = useMemo(
-      () => markers.map((m) => m.coordinate),
-      [markers]
-    );
+
     const smoothedRoute = useMemo(
-      () => smoothCoordinates(polylineCoordinates),
-      [polylineCoordinates]
+      () => smoothCoordinates(markers.map((m) => m.coordinate)),
+      [markers]
     );
 
     const centerPinStyle = useAnimatedStyle(() => {
       const bottom = animatedPosition
         ? screenHeight - animatedPosition.value
         : 0;
-      return {
-        transform: [{ translateY: -bottom / 2 }],
-      };
+      return { transform: [{ translateY: -bottom / 2 }] };
     });
 
     const handleMarkerPress = (e: MarkerPressEvent, marker: MarkerData) => {
       setSelectedMarkerId((prev) => (prev === marker.id ? null : marker.id));
       onMarkerPress?.(e, marker);
-    };
-
-    const handleCameraMove = (e: MapCameraEvent) => {
-      onCameraMove?.(e);
     };
 
     const handleCameraIdle = (e: MapCameraEvent) => {
@@ -341,13 +322,14 @@ export const Map = forwardRef<MapRef, MapProps>(
         <MapView
           ref={mapRef}
           style={StyleSheet.absoluteFill}
-          initialCoordinate={{ latitude: 37.78, longitude: -122.43 }}
+          provider={provider}
+          initialCoordinate={CIRCLE_CENTER}
           initialZoom={INITIAL_ZOOM}
           userLocationEnabled
           edgeInsets={edgeInsets}
           onPress={onPress}
           onLongPress={onLongPress}
-          onCameraMove={handleCameraMove}
+          onCameraMove={onCameraMove}
           onCameraIdle={handleCameraIdle}
           {...props}
         >
@@ -359,7 +341,8 @@ export const Map = forwardRef<MapRef, MapProps>(
               onMarkerDragStart,
               onMarkerDragChange,
               onMarkerDragEnd,
-              handleMarkerRef
+              handleMarkerRef,
+              provider === 'apple'
             )
           )}
           <Route coordinates={smoothedRoute} />
@@ -388,9 +371,7 @@ export const Map = forwardRef<MapRef, MapProps>(
           />
           <GeoJson geojson={SAMPLE_GEOJSON} />
           <GroundOverlay
-            image={{
-              uri: 'https://picsum.photos/320/240',
-            }}
+            image={{ uri: 'https://picsum.photos/320/240' }}
             bounds={{
               southwest: { latitude: 37.7765, longitude: -122.435 },
               northeast: { latitude: 37.7805, longitude: -122.43 },
@@ -432,45 +413,44 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     width: 32,
     height: 32,
-    borderRadius: 16,
+    borderRadius: sizes.radiusFull,
     backgroundColor: 'rgba(66, 133, 244, 0.2)',
     borderWidth: 2,
     borderColor: 'white',
     pointerEvents: 'none',
   },
   centerPinDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: sizes.sm,
+    height: sizes.sm,
+    borderRadius: sizes.radiusFull,
     backgroundColor: '#4285F4',
   },
   customMarker: {
     height: 30,
     width: 30,
-    borderRadius: 15,
+    borderRadius: sizes.radiusFull,
   },
   callout: {
     minWidth: 140,
   },
   customCallout: {
     width: 250,
-    padding: 10,
-    backgroundColor: 'white',
-    borderRadius: 10,
+    padding: sizes.radiusLg,
+    borderRadius: sizes.radiusLg,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: sizes.shadowOffset,
     shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
-    gap: 12,
+    shadowRadius: sizes.shadowRadius,
+    elevation: sizes.elevation,
+    gap: sizes.md,
   },
   calloutTitle: {
     fontWeight: 'bold',
-    fontSize: 14,
+    fontSize: sizes.fontBase,
     marginBottom: 2,
   },
   calloutDescription: {
-    fontSize: 12,
+    fontSize: sizes.fontSm,
     color: '#666',
   },
 });

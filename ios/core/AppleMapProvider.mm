@@ -1,4 +1,8 @@
 #import "AppleMapProvider.h"
+
+using facebook::react::LuggMapViewMapType;
+using facebook::react::LuggMapViewTheme;
+
 #import "../LuggCalloutView.h"
 #import "../LuggCircleView.h"
 #import "../LuggGroundOverlayView.h"
@@ -236,15 +240,35 @@ static double tileToLng(NSInteger x, NSInteger z) {
   _mapView.showsUserLocation = enabled;
 }
 
-- (void)setTheme:(NSInteger)theme {
+- (void)setMapType:(LuggMapViewMapType)mapType {
+  switch (mapType) {
+  case LuggMapViewMapType::Satellite:
+    _mapView.mapType = MKMapTypeSatellite;
+    break;
+  case LuggMapViewMapType::Terrain:
+    _mapView.mapType = MKMapTypeStandard;
+    break;
+  case LuggMapViewMapType::Hybrid:
+    _mapView.mapType = MKMapTypeHybrid;
+    break;
+  case LuggMapViewMapType::MutedStandard:
+    _mapView.mapType = MKMapTypeMutedStandard;
+    break;
+  default:
+    _mapView.mapType = MKMapTypeStandard;
+    break;
+  }
+}
+
+- (void)setTheme:(LuggMapViewTheme)theme {
   switch (theme) {
-  case 1: // Dark
+  case LuggMapViewTheme::Dark:
     _mapView.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
     break;
-  case 0: // Light
+  case LuggMapViewTheme::Light:
     _mapView.overrideUserInterfaceStyle = UIUserInterfaceStyleLight;
     break;
-  default: // System
+  default:
     _mapView.overrideUserInterfaceStyle = UIUserInterfaceStyleUnspecified;
     break;
   }
