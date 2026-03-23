@@ -8,6 +8,7 @@ import {
 } from 'react';
 import {
   Alert,
+  Platform,
   StyleSheet,
   Text,
   View,
@@ -342,7 +343,7 @@ export const Map = forwardRef<MapRef, MapProps>(
               onMarkerDragChange,
               onMarkerDragEnd,
               handleMarkerRef,
-              provider === 'apple'
+              provider === 'apple' || Platform.OS === 'android'
             )
           )}
           <Route coordinates={smoothedRoute} />
