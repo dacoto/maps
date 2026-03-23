@@ -102,7 +102,6 @@ const CalloutContent = ({
 
 const renderMarker = (
   marker: MarkerData,
-  selectedId: string | null,
   onPress?: (event: MarkerPressEvent, marker: MarkerData) => void,
   onDragStart?: (event: MarkerDragEvent, marker: MarkerData) => void,
   onDragChange?: (event: MarkerDragEvent, marker: MarkerData) => void,
@@ -266,9 +265,6 @@ export const Map = forwardRef<MapRef, MapProps>(
     const mapRef = useRef<MapView>(null);
     const markerRefsMap = useRef(new globalThis.Map<string, Marker>());
     const [zoom, setZoom] = useState(INITIAL_ZOOM);
-    const [selectedMarkerId, setSelectedMarkerId] = useState<string | null>(
-      null
-    );
 
     const handleMarkerRef = useCallback((id: string, r: Marker | null) => {
       if (r) {
@@ -305,7 +301,6 @@ export const Map = forwardRef<MapRef, MapProps>(
     });
 
     const handleMarkerPress = (e: MarkerPressEvent, marker: MarkerData) => {
-      setSelectedMarkerId((prev) => (prev === marker.id ? null : marker.id));
       onMarkerPress?.(e, marker);
     };
 
@@ -333,7 +328,6 @@ export const Map = forwardRef<MapRef, MapProps>(
           {markers.map((m) =>
             renderMarker(
               m,
-              selectedMarkerId,
               handleMarkerPress,
               onMarkerDragStart,
               onMarkerDragChange,
