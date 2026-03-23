@@ -82,8 +82,6 @@ const CustomCallout = () => {
   );
 };
 
-const SELECTED_SCALE = 1.5;
-
 const CalloutContent = ({
   title,
   description,
@@ -124,7 +122,6 @@ const renderMarker = (
     color,
     imageUrl,
   } = marker;
-  const scale = id === selectedId ? SELECTED_SCALE : 1;
   const handlePress = onPress
     ? (e: MarkerPressEvent) => onPress(e, marker)
     : undefined;
@@ -144,7 +141,6 @@ const renderMarker = (
   const shared = {
     name,
     coordinate,
-    scale,
     draggable: true as const,
     onPress: handlePress,
     onDragStart: handleDragStart,
