@@ -30,6 +30,7 @@ import com.google.android.gms.maps.model.PolylineOptions
 import com.google.android.gms.maps.model.TileOverlay
 import com.google.android.gms.maps.model.TileOverlayOptions
 import com.google.android.gms.maps.model.UrlTileProvider
+import com.luggmaps.extensions.findViewByTag
 import com.luggmaps.LuggCalloutView
 import com.luggmaps.LuggCircleView
 import com.luggmaps.LuggCircleViewDelegate
@@ -506,7 +507,7 @@ class GoogleMapProvider(private val context: Context) :
 
     if (map != null && oldInsets != edgeInsets) {
       val cameraUpdate = CameraUpdateFactory.newCameraPosition(map.cameraPosition)
-      applyEdgeInsets()
+      applyEdgeInsets(duration)
       when {
         duration < 0 -> map.animateCamera(cameraUpdate)
         duration > 0 -> map.animateCamera(cameraUpdate, duration, null)
@@ -1176,9 +1177,35 @@ class GoogleMapProvider(private val context: Context) :
     }
   }
 
-  private fun applyEdgeInsets() {
+  private fun applyEdgeInsets(duration: Int = 0) {
     googleMap?.setPadding(edgeInsets.left, edgeInsets.top, edgeInsets.right, edgeInsets.bottom)
+    applyWatermarkTranslation(duration)
   }
+
+  private fun applyWatermarkTranslation(duration: Int = 0) {
+    val view = mapView ?: return
+    view.findViewByTag("GoogleWatermark")?.let { watermark ->
+      val targetY = -edgeInsets.bottom.toFloat()
+      val targetX = edgeInsets.left.toFloat()
+      if (duration > 0) {
+        watermark.animate()
+          .translationY(targetY)
+          .translationX(targetX)
+          .setDuration(duration.toLong())
+          .start()
+      } else if (duration < 0) {
+        watermark.animate()
+          .translationY(targetY)
+          .translationX(targetX)
+          .start()
+      } else {
+        watermark.translationY = targetY
+        watermark.translationX = targetX
+      }
+    }
+  }
+
+
 
   override fun onConfigurationChanged(newConfig: Configuration) {
     val newNightMode = newConfig.uiMode and Configuration.UI_MODE_NIGHT_MASK
