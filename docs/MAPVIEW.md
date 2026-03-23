@@ -44,7 +44,7 @@ import { MapView } from '@lugg/maps';
 | `onCameraIdle` | `(event: MapCameraEvent) => void` | - | Called when camera stops moving |
 | `onReady` | `() => void` | - | Called when map is loaded and ready |
 
-## Enums
+## Types
 
 ### MapProvider
 

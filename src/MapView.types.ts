@@ -2,13 +2,70 @@ import type { ReactNode } from 'react';
 import type { NativeSyntheticEvent, ViewProps } from 'react-native';
 import type {
   MapProvider,
-  MapType,
   Coordinate,
   EdgeInsets,
-  MapTheme,
-  PoiFilter,
   PressEventPayload,
 } from './types';
+
+export type MapType =
+  | 'standard'
+  | 'satellite'
+  | 'terrain'
+  | 'hybrid'
+  | 'muted-standard';
+
+export type MapTheme = 'light' | 'dark' | 'system';
+
+export type PoiCategory =
+  | 'airport'
+  | 'amusement-park'
+  | 'aquarium'
+  | 'atm'
+  | 'bakery'
+  | 'bank'
+  | 'beach'
+  | 'brewery'
+  | 'cafe'
+  | 'campground'
+  | 'car-rental'
+  | 'ev-charger'
+  | 'fire-station'
+  | 'fitness-center'
+  | 'food-market'
+  | 'gas-station'
+  | 'hospital'
+  | 'hotel'
+  | 'laundry'
+  | 'library'
+  | 'marina'
+  | 'movie-theater'
+  | 'museum'
+  | 'national-park'
+  | 'nightlife'
+  | 'park'
+  | 'parking'
+  | 'pharmacy'
+  | 'police'
+  | 'post-office'
+  | 'public-transport'
+  | 'restaurant'
+  | 'restroom'
+  | 'school'
+  | 'stadium'
+  | 'store'
+  | 'theater'
+  | 'university'
+  | 'winery'
+  | 'zoo';
+
+export interface PoiFilter {
+  /**
+   * Filter mode
+   * @default 'including'
+   */
+  mode?: 'including' | 'excluding';
+  categories: PoiCategory[];
+}
 
 /**
  * Options for moving the camera

@@ -34,17 +34,17 @@ export type {
   CameraEventPayload,
   MapCameraEvent,
   MapPressEvent,
+  MapType,
+  MapTheme,
+  PoiCategory,
+  PoiFilter,
 } from './MapView.types';
 export type {
   MapProvider as MapProviderType,
-  MapType,
-  MapTheme,
   Coordinate,
   Point,
   EdgeInsets,
   PressEventPayload,
-  PoiCategory,
-  PoiFilter,
 } from './types';
 export type {
   GeoJSON,

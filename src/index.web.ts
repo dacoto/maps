@@ -27,15 +27,15 @@ export type {
   MoveCameraOptions,
   FitCoordinatesOptions,
   CameraEventPayload,
+  MapType,
+  PoiCategory,
+  PoiFilter,
 } from './MapView.types';
 export type {
   MapProvider as MapProviderType,
-  MapType,
   Coordinate,
   Point,
   EdgeInsets,
-  PoiCategory,
-  PoiFilter,
 } from './types';
 export type {
   GeoJSON,
