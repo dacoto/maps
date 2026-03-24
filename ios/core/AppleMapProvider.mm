@@ -253,7 +253,7 @@ static MKPointOfInterestCategory poiCategoryFromString(NSString *string) {
   static NSDictionary<NSString *, MKPointOfInterestCategory> *map;
   static dispatch_once_t onceToken;
   dispatch_once(&onceToken, ^{
-    map = @{
+    NSMutableDictionary<NSString *, MKPointOfInterestCategory> *m = [NSMutableDictionary dictionaryWithDictionary:@{
       @"airport" : MKPointOfInterestCategoryAirport,
       @"amusement-park" : MKPointOfInterestCategoryAmusementPark,
       @"aquarium" : MKPointOfInterestCategoryAquarium,
@@ -294,7 +294,45 @@ static MKPointOfInterestCategory poiCategoryFromString(NSString *string) {
       @"university" : MKPointOfInterestCategoryUniversity,
       @"winery" : MKPointOfInterestCategoryWinery,
       @"zoo" : MKPointOfInterestCategoryZoo,
-    };
+    }];
+    if (@available(iOS 18.0, *)) {
+      [m addEntriesFromDictionary:@{
+        @"animal-service" : MKPointOfInterestCategoryAnimalService,
+        @"automotive-repair" : MKPointOfInterestCategoryAutomotiveRepair,
+        @"baseball" : MKPointOfInterestCategoryBaseball,
+        @"basketball" : MKPointOfInterestCategoryBasketball,
+        @"beauty" : MKPointOfInterestCategoryBeauty,
+        @"bowling" : MKPointOfInterestCategoryBowling,
+        @"castle" : MKPointOfInterestCategoryCastle,
+        @"convention-center" : MKPointOfInterestCategoryConventionCenter,
+        @"distillery" : MKPointOfInterestCategoryDistillery,
+        @"fairground" : MKPointOfInterestCategoryFairground,
+        @"fishing" : MKPointOfInterestCategoryFishing,
+        @"fortress" : MKPointOfInterestCategoryFortress,
+        @"go-kart" : MKPointOfInterestCategoryGoKart,
+        @"golf" : MKPointOfInterestCategoryGolf,
+        @"hiking" : MKPointOfInterestCategoryHiking,
+        @"kayaking" : MKPointOfInterestCategoryKayaking,
+        @"landmark" : MKPointOfInterestCategoryLandmark,
+        @"mailbox" : MKPointOfInterestCategoryMailbox,
+        @"mini-golf" : MKPointOfInterestCategoryMiniGolf,
+        @"music-venue" : MKPointOfInterestCategoryMusicVenue,
+        @"national-monument" : MKPointOfInterestCategoryNationalMonument,
+        @"planetarium" : MKPointOfInterestCategoryPlanetarium,
+        @"rock-climbing" : MKPointOfInterestCategoryRockClimbing,
+        @"rv-park" : MKPointOfInterestCategoryRVPark,
+        @"skate-park" : MKPointOfInterestCategorySkatePark,
+        @"skating" : MKPointOfInterestCategorySkating,
+        @"skiing" : MKPointOfInterestCategorySkiing,
+        @"soccer" : MKPointOfInterestCategorySoccer,
+        @"spa" : MKPointOfInterestCategorySpa,
+        @"surfing" : MKPointOfInterestCategorySurfing,
+        @"swimming" : MKPointOfInterestCategorySwimming,
+        @"tennis" : MKPointOfInterestCategoryTennis,
+        @"volleyball" : MKPointOfInterestCategoryVolleyball,
+      }];
+    }
+    map = [m copy];
   });
   return map[string];
 }

@@ -92,48 +92,81 @@ When `mode` is `'including'`, only the specified categories are shown. When `'ex
 
 ### PoiCategory
 
-| Value | Description |
-|-------|-------------|
-| `'airport'` | Airports |
-| `'amusement-park'` | Amusement parks |
-| `'aquarium'` | Aquariums |
-| `'atm'` | ATMs |
-| `'bakery'` | Bakeries |
-| `'bank'` | Banks |
-| `'beach'` | Beaches |
-| `'brewery'` | Breweries |
-| `'cafe'` | Cafes |
-| `'campground'` | Campgrounds |
-| `'car-rental'` | Car rental locations |
-| `'ev-charger'` | EV charging stations |
-| `'fire-station'` | Fire stations |
-| `'fitness-center'` | Fitness centers |
-| `'food-market'` | Food markets |
-| `'gas-station'` | Gas stations |
-| `'hospital'` | Hospitals |
-| `'hotel'` | Hotels |
-| `'laundry'` | Laundry services |
-| `'library'` | Libraries |
-| `'marina'` | Marinas |
-| `'movie-theater'` | Movie theaters |
-| `'museum'` | Museums |
-| `'national-park'` | National parks |
-| `'nightlife'` | Nightlife venues |
-| `'park'` | Parks |
-| `'parking'` | Parking lots |
-| `'pharmacy'` | Pharmacies |
-| `'police'` | Police stations |
-| `'post-office'` | Post offices |
-| `'public-transport'` | Public transport stations |
-| `'restaurant'` | Restaurants |
-| `'restroom'` | Restrooms |
-| `'school'` | Schools |
-| `'stadium'` | Stadiums |
-| `'store'` | Stores |
-| `'theater'` | Theaters |
-| `'university'` | Universities |
-| `'winery'` | Wineries |
-| `'zoo'` | Zoos |
+| Value | Description | Availability |
+|-------|-------------|--------------|
+| `'airport'` | Airports | iOS 13+ |
+| `'amusement-park'` | Amusement parks | iOS 13+ |
+| `'animal-service'` | Animal services | iOS 18+ |
+| `'aquarium'` | Aquariums | iOS 13+ |
+| `'atm'` | ATMs | iOS 13+ |
+| `'automotive-repair'` | Automotive repair | iOS 18+ |
+| `'bakery'` | Bakeries | iOS 13+ |
+| `'bank'` | Banks | iOS 13+ |
+| `'baseball'` | Baseball | iOS 18+ |
+| `'basketball'` | Basketball | iOS 18+ |
+| `'beach'` | Beaches | iOS 13+ |
+| `'beauty'` | Beauty services | iOS 18+ |
+| `'bowling'` | Bowling | iOS 18+ |
+| `'brewery'` | Breweries | iOS 13+ |
+| `'cafe'` | Cafes | iOS 13+ |
+| `'campground'` | Campgrounds | iOS 13+ |
+| `'car-rental'` | Car rental locations | iOS 13+ |
+| `'castle'` | Castles | iOS 18+ |
+| `'convention-center'` | Convention centers | iOS 18+ |
+| `'distillery'` | Distilleries | iOS 18+ |
+| `'ev-charger'` | EV charging stations | iOS 13+ |
+| `'fairground'` | Fairgrounds | iOS 18+ |
+| `'fire-station'` | Fire stations | iOS 13+ |
+| `'fishing'` | Fishing | iOS 18+ |
+| `'fitness-center'` | Fitness centers | iOS 13+ |
+| `'food-market'` | Food markets | iOS 13+ |
+| `'fortress'` | Fortresses | iOS 18+ |
+| `'gas-station'` | Gas stations | iOS 13+ |
+| `'go-kart'` | Go-kart | iOS 18+ |
+| `'golf'` | Golf | iOS 18+ |
+| `'hiking'` | Hiking | iOS 18+ |
+| `'hospital'` | Hospitals | iOS 13+ |
+| `'hotel'` | Hotels | iOS 13+ |
+| `'kayaking'` | Kayaking | iOS 18+ |
+| `'landmark'` | Landmarks | iOS 18+ |
+| `'laundry'` | Laundry services | iOS 13+ |
+| `'library'` | Libraries | iOS 13+ |
+| `'mailbox'` | Mailboxes | iOS 18+ |
+| `'marina'` | Marinas | iOS 13+ |
+| `'mini-golf'` | Mini golf | iOS 18+ |
+| `'movie-theater'` | Movie theaters | iOS 13+ |
+| `'museum'` | Museums | iOS 13+ |
+| `'music-venue'` | Music venues | iOS 18+ |
+| `'national-monument'` | National monuments | iOS 18+ |
+| `'national-park'` | National parks | iOS 13+ |
+| `'nightlife'` | Nightlife venues | iOS 13+ |
+| `'park'` | Parks | iOS 13+ |
+| `'parking'` | Parking lots | iOS 13+ |
+| `'pharmacy'` | Pharmacies | iOS 13+ |
+| `'planetarium'` | Planetariums | iOS 18+ |
+| `'police'` | Police stations | iOS 13+ |
+| `'post-office'` | Post offices | iOS 13+ |
+| `'public-transport'` | Public transport stations | iOS 13+ |
+| `'restaurant'` | Restaurants | iOS 13+ |
+| `'restroom'` | Restrooms | iOS 13+ |
+| `'rock-climbing'` | Rock climbing | iOS 18+ |
+| `'rv-park'` | RV parks | iOS 18+ |
+| `'school'` | Schools | iOS 13+ |
+| `'skate-park'` | Skate parks | iOS 18+ |
+| `'skating'` | Skating | iOS 18+ |
+| `'skiing'` | Skiing | iOS 18+ |
+| `'soccer'` | Soccer | iOS 18+ |
+| `'spa'` | Spas | iOS 18+ |
+| `'stadium'` | Stadiums | iOS 13+ |
+| `'store'` | Stores | iOS 13+ |
+| `'surfing'` | Surfing | iOS 18+ |
+| `'swimming'` | Swimming | iOS 18+ |
+| `'tennis'` | Tennis | iOS 18+ |
+| `'theater'` | Theaters | iOS 13+ |
+| `'university'` | Universities | iOS 13+ |
+| `'volleyball'` | Volleyball | iOS 18+ |
+| `'winery'` | Wineries | iOS 13+ |
+| `'zoo'` | Zoos | iOS 13+ |
 
 ## Ref Methods
 
