@@ -6,6 +6,7 @@ import android.graphics.Canvas
 import android.view.View
 import androidx.core.graphics.createBitmap
 import androidx.core.view.isNotEmpty
+import com.facebook.react.uimanager.PointerEvents
 import com.facebook.react.views.view.ReactViewGroup
 
 class LuggCalloutView(context: Context) : ReactViewGroup(context) {
@@ -28,6 +29,7 @@ class LuggCalloutView(context: Context) : ReactViewGroup(context) {
 
   init {
     visibility = GONE
+    pointerEvents = PointerEvents.NONE
   }
 
   override fun addView(child: View, index: Int) {
