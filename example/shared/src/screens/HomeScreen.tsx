@@ -16,7 +16,12 @@ import {
 } from '@lodev09/react-native-true-sheet';
 import { ReanimatedTrueSheetProvider } from '@lodev09/react-native-true-sheet/reanimated';
 
-import { Map, type MapRef, type MarkerData, MapTypeButton } from '../components';
+import {
+  Map,
+  type MapRef,
+  type MarkerData,
+  MapTypeButton,
+} from '../components';
 import { useLocationPermission, useMarkers } from '../hooks';
 import { randomFrom } from '../utils';
 import {

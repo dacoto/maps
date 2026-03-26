@@ -1,6 +1,10 @@
 import { useCallback } from 'react';
 import { useColorScheme } from 'react-native';
-import { NavigationContainer, DarkTheme, DefaultTheme } from '@react-navigation/native';
+import {
+  NavigationContainer,
+  DarkTheme,
+  DefaultTheme,
+} from '@react-navigation/native';
 import {
   createNativeStackNavigator,
   type NativeStackScreenProps,
