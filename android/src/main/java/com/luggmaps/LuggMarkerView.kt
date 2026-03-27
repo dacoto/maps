@@ -3,6 +3,7 @@ package com.luggmaps
 import android.content.Context
 import android.graphics.Canvas
 import android.view.View
+import android.view.ViewGroup
 import androidx.core.graphics.createBitmap
 import androidx.core.view.isNotEmpty
 import com.facebook.react.views.view.ReactViewGroup
@@ -22,6 +23,10 @@ interface LuggMarkerViewDelegate {
 
 class LuggMarkerView(context: Context) : ReactViewGroup(context) {
   private var scaleUpdateRunnable: Runnable? = null
+
+  companion object {
+    private const val OFFSCREEN_TRANSLATION_X = -10000f
+  }
 
   var name: String? = null
     private set
@@ -170,10 +175,25 @@ class LuggMarkerView(context: Context) : ReactViewGroup(context) {
     visibility = GONE
   }
 
+  private fun ensureContentViewAttached() {
+    if (contentView.parent == null) {
+      // Add contentView to the hierarchy so Fabric triggers measure/layout,
+      // but push it offscreen so it is never visually rendered on the map.
+      // createContentBitmap() calls contentView.draw(canvas) which draws
+      // relative to the view's own coordinate space, unaffected by translation.
+      contentView.translationX = OFFSCREEN_TRANSLATION_X
+      super.addView(contentView, 0, ViewGroup.LayoutParams(
+        ViewGroup.LayoutParams.WRAP_CONTENT,
+        ViewGroup.LayoutParams.WRAP_CONTENT
+      ))
+    }
+  }
+
   override fun addView(child: View, index: Int) {
     if (child is LuggCalloutView) {
       calloutView = child
     } else {
+      ensureContentViewAttached()
       contentView.addView(child, index)
     }
     didLayout = false
