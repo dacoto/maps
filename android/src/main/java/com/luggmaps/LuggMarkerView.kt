@@ -175,11 +175,8 @@ class LuggMarkerView(context: Context) : ReactViewGroup(context) {
     visibility = GONE
   }
 
-  private var contentViewAttached = false
-
   private fun ensureContentViewAttached() {
-    if (!contentViewAttached) {
-      contentViewAttached = true
+    if (contentView.parent == null) {
       // Add contentView to the hierarchy so Fabric triggers measure/layout,
       // but push it offscreen so it is never visually rendered on the map.
       // createContentBitmap() calls contentView.draw(canvas) which draws
