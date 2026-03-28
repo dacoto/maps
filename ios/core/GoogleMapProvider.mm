@@ -693,12 +693,65 @@ static NSString *const kDemoMapId = @"DEMO_MAP_ID";
       marker.rotation = 0;
     }
     marker.groundAnchor = markerView.anchor;
+  } else if (markerView.hasIconUri || markerView.hasImageUri) {
+    marker.iconView = nil;
+    marker.rotation = markerView.rotate;
+    marker.groundAnchor = markerView.anchor;
+    NSString *uri = markerView.hasIconUri ? markerView.iconUri : markerView.imageUri;
+    UIImage *cached = markerView.hasIconUri ? markerView.cachedIcon : markerView.cachedImage;
+    if (cached) {
+      marker.icon = [self scaleUIImage:cached scale:markerView.scale];
+    } else {
+      [self loadMarkerImageUri:uri forMarkerView:markerView marker:marker];
+    }
   } else {
     marker.iconView = nil;
     marker.icon = nil;
     marker.rotation = markerView.rotate;
     marker.groundAnchor = CGPointMake(0.5, 1);
   }
+}
+
+- (void)loadMarkerImageUri:(NSString *)uri
+             forMarkerView:(LuggMarkerView *)markerView
+                    marker:(GMSAdvancedMarker *)marker {
+  NSURL *url = [NSURL URLWithString:uri];
+  if (!url) return;
+
+  BOOL isIconUri = markerView.hasIconUri;
+  __weak LuggMarkerView *weakMarkerView = markerView;
+  __weak GMSAdvancedMarker *weakMarker = marker;
+  dispatch_async(
+      dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        NSData *data = [NSData dataWithContentsOfURL:url];
+        UIImage *image = data ? [UIImage imageWithData:data] : nil;
+        dispatch_async(dispatch_get_main_queue(), ^{
+          LuggMarkerView *strongMarkerView = weakMarkerView;
+          GMSAdvancedMarker *strongMarker = weakMarker;
+          if (!strongMarkerView || !strongMarker || !image) return;
+          if (isIconUri) {
+            strongMarkerView.cachedIcon = image;
+          } else {
+            strongMarkerView.cachedImage = image;
+          }
+          strongMarker.icon =
+              [self scaleUIImage:image scale:strongMarkerView.scale];
+        });
+      });
+}
+
+- (UIImage *)scaleUIImage:(UIImage *)image scale:(CGFloat)scale {
+  if (scale == 1.0) return image;
+  CGSize size =
+      CGSizeMake(image.size.width * scale, image.size.height * scale);
+  UIGraphicsImageRendererFormat *format =
+      [UIGraphicsImageRendererFormat defaultFormat];
+  format.scale = image.scale;
+  UIGraphicsImageRenderer *renderer =
+      [[UIGraphicsImageRenderer alloc] initWithSize:size format:format];
+  return [renderer imageWithActions:^(UIGraphicsImageRendererContext *ctx) {
+    [image drawInRect:CGRectMake(0, 0, size.width, size.height)];
+  }];
 }
 
 #pragma mark - Polyline Management

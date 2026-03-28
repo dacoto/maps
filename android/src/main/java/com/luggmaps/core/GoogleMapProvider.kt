@@ -671,6 +671,7 @@ class GoogleMapProvider(private val context: Context) :
       isDraggable = markerView.draggable
     }
 
+    val marker = markerView.marker ?: return
     if (markerView.hasCustomView) {
       if (markerView.scaleChanged) {
         markerView.applyScaleToMarker()
@@ -679,6 +680,8 @@ class GoogleMapProvider(private val context: Context) :
       if (!markerView.rasterize) {
         positionLiveMarker(markerView)
       }
+    } else if (markerView.hasIconUri || markerView.hasImageUri) {
+      applyImageIconToMarker(markerView, marker)
     }
   }
 
@@ -712,7 +715,60 @@ class GoogleMapProvider(private val context: Context) :
       } else {
         showLiveMarker(markerView)
       }
+    } else if (markerView.hasIconUri || markerView.hasImageUri) {
+      applyImageIconToMarker(markerView, marker)
     }
+  }
+
+  private fun applyImageIconToMarker(markerView: LuggMarkerView, marker: AdvancedMarker) {
+    val isIcon = markerView.hasIconUri
+    val cached = if (isIcon) markerView.cachedIconBitmap else markerView.cachedImageBitmap
+    if (cached != null) {
+      val scaled = scaleBitmap(cached, markerView.scale)
+      marker.setIcon(BitmapDescriptorFactory.fromBitmap(scaled))
+      return
+    }
+    val uri = if (isIcon) markerView.iconUri else markerView.imageUri
+    Thread {
+      try {
+        val bitmap = loadBitmapFromUri(uri)
+        if (bitmap != null) {
+          mapView?.post {
+            if (isIcon) {
+              markerView.cachedIconBitmap = bitmap
+            } else {
+              markerView.cachedImageBitmap = bitmap
+            }
+            val scaled = scaleBitmap(bitmap, markerView.scale)
+            marker.setIcon(BitmapDescriptorFactory.fromBitmap(scaled))
+          }
+        }
+      } catch (_: Exception) {}
+    }.start()
+  }
+
+  private fun loadBitmapFromUri(uri: String): android.graphics.Bitmap? {
+    if (uri.startsWith("asset://")) {
+      val assetPath = uri.removePrefix("asset://")
+      return context.assets.open(assetPath).use { stream ->
+        android.graphics.BitmapFactory.decodeStream(stream)
+      }
+    }
+    val connection = java.net.URL(uri).openConnection() as java.net.HttpURLConnection
+    connection.instanceFollowRedirects = true
+    connection.connect()
+    return try {
+      android.graphics.BitmapFactory.decodeStream(connection.inputStream)
+    } finally {
+      connection.disconnect()
+    }
+  }
+
+  private fun scaleBitmap(bitmap: android.graphics.Bitmap, scale: Float): android.graphics.Bitmap {
+    if (scale == 1f) return bitmap
+    val w = (bitmap.width * scale).toInt().coerceAtLeast(1)
+    val h = (bitmap.height * scale).toInt().coerceAtLeast(1)
+    return android.graphics.Bitmap.createScaledBitmap(bitmap, w, h, true)
   }
 
   // Workaround: AdvancedMarker.iconView is buggy on Android, so we manually add the custom

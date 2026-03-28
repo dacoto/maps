@@ -776,6 +776,21 @@ static MKPointOfInterestCategory poiCategoryFromString(NSString *string) {
   }
 
   if (!markerView.hasCustomView) {
+    if (markerView.hasImageUri) {
+      MKAnnotationView *annotationView =
+          [[MKAnnotationView alloc] initWithAnnotation:annotation
+                                       reuseIdentifier:nil];
+      annotationView.canShowCallout = YES;
+      annotationView.displayPriority = MKFeatureDisplayPriorityRequired;
+      annotationView.layer.zPosition = markerView.zIndex;
+      annotationView.zPriority = markerView.zIndex;
+      annotationView.draggable = markerView.draggable;
+      [self applyCalloutView:markerView annotationView:annotationView];
+      [self addCenterTapGesture:annotationView];
+      markerAnnotation.annotationView = annotationView;
+      [self applyImageMarkerStyle:markerView annotationView:annotationView];
+      return annotationView;
+    }
     LuggMarkerAnnotationView *markerAnnotationView =
         [[LuggMarkerAnnotationView alloc] initWithAnnotation:annotation
                                              reuseIdentifier:nil];
@@ -1225,6 +1240,66 @@ static MKPointOfInterestCategory poiCategoryFromString(NSString *string) {
   [self markerViewDidUpdate:markerView];
 }
 
+- (void)applyImageMarkerStyle:(LuggMarkerView *)markerView
+               annotationView:(MKAnnotationView *)annotationView {
+  CGFloat scale = markerView.scale;
+  CGPoint anchor = markerView.anchor;
+
+  UIImage *cached = markerView.cachedImage;
+  if (cached) {
+    UIImage *image = [self scaleUIImage:cached scale:scale];
+    annotationView.image = image;
+    CGFloat w = image.size.width;
+    CGFloat h = image.size.height;
+    annotationView.bounds = CGRectMake(0, 0, w, h);
+    annotationView.centerOffset =
+        CGPointMake(w * (0.5 - anchor.x), h * (0.5 - anchor.y));
+    annotationView.transform =
+        CGAffineTransformMakeRotation(markerView.rotate * M_PI / 180.0);
+  } else {
+    [self loadMarkerImageUri:markerView.imageUri
+              forMarkerView:markerView
+             annotationView:annotationView];
+  }
+}
+
+- (void)loadMarkerImageUri:(NSString *)uri
+             forMarkerView:(LuggMarkerView *)markerView
+            annotationView:(MKAnnotationView *)annotationView {
+  NSURL *url = [NSURL URLWithString:uri];
+  if (!url) return;
+
+  __weak LuggMarkerView *weakMarkerView = markerView;
+  __weak MKAnnotationView *weakAnnotationView = annotationView;
+  dispatch_async(
+      dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        NSData *data = [NSData dataWithContentsOfURL:url];
+        UIImage *image = data ? [UIImage imageWithData:data] : nil;
+        dispatch_async(dispatch_get_main_queue(), ^{
+          LuggMarkerView *strongMarkerView = weakMarkerView;
+          MKAnnotationView *strongAnnotationView = weakAnnotationView;
+          if (!strongMarkerView || !strongAnnotationView || !image) return;
+          strongMarkerView.cachedImage = image;
+          [self applyImageMarkerStyle:strongMarkerView
+                       annotationView:strongAnnotationView];
+        });
+      });
+}
+
+- (UIImage *)scaleUIImage:(UIImage *)image scale:(CGFloat)scale {
+  if (scale == 1.0) return image;
+  CGSize size =
+      CGSizeMake(image.size.width * scale, image.size.height * scale);
+  UIGraphicsImageRendererFormat *format =
+      [UIGraphicsImageRendererFormat defaultFormat];
+  format.scale = image.scale;
+  UIGraphicsImageRenderer *renderer =
+      [[UIGraphicsImageRenderer alloc] initWithSize:size format:format];
+  return [renderer imageWithActions:^(UIGraphicsImageRendererContext *ctx) {
+    [image drawInRect:CGRectMake(0, 0, size.width, size.height)];
+  }];
+}
+
 - (void)applyMarkerStyle:(LuggMarkerView *)markerView
           annotationView:(MKAnnotationView *)annotationView {
   annotationView.transform = CGAffineTransformIdentity;
@@ -1297,6 +1372,11 @@ static MKPointOfInterestCategory poiCategoryFromString(NSString *string) {
 
   if (!annotationView || !markerView)
     return;
+
+  if (markerView.hasImageUri && !markerView.hasCustomView) {
+    [self applyImageMarkerStyle:markerView annotationView:annotationView];
+    return;
+  }
 
   [self applyMarkerStyle:markerView annotationView:annotationView];
 }

@@ -1,5 +1,5 @@
 import type { ComponentType, ReactElement, ReactNode } from 'react';
-import type { NativeSyntheticEvent } from 'react-native';
+import type { ImageSourcePropType, NativeSyntheticEvent } from 'react-native';
 import type { Coordinate, Point, PressEventPayload } from '../types';
 
 export type MarkerPressEvent = NativeSyntheticEvent<PressEventPayload>;
@@ -108,6 +108,17 @@ export interface MarkerProps {
    * Callout configuration options.
    */
   calloutOptions?: CalloutOptions;
+  /**
+   * A custom image to be used as the marker's icon. Only local image resources are allowed.
+   * When set, takes the place of custom children as the marker icon.
+   */
+  image?: ImageSourcePropType;
+  /**
+   * Marker icon to render (equivalent to icon property of GMSMarker).
+   * Only local image resources are allowed. Takes priority over `image` on Google Maps.
+   * @platform google
+   */
+  icon?: ImageSourcePropType;
   /**
    * Custom marker view
    */

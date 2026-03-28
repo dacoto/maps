@@ -31,6 +31,8 @@ using namespace luggmaps::events;
   BOOL _didLayout;
   UIView *_iconView;
   LuggCalloutView *_calloutView;
+  NSString *_imageUri;
+  NSString *_iconUri;
 }
 
 + (ComponentDescriptorProvider)componentDescriptorProvider {
@@ -82,6 +84,18 @@ using namespace luggmaps::events;
   _rasterize = newViewProps.rasterize;
   _centerOnPress = newViewProps.centerOnPress;
   _draggable = newViewProps.draggable;
+
+  NSString *newImageUri = [NSString stringWithUTF8String:newViewProps.image.c_str()];
+  if (![_imageUri isEqualToString:newImageUri]) {
+    _imageUri = newImageUri;
+    self.cachedImage = nil;
+  }
+
+  NSString *newIconUri = [NSString stringWithUTF8String:newViewProps.icon.c_str()];
+  if (![_iconUri isEqualToString:newIconUri]) {
+    _iconUri = newIconUri;
+    self.cachedIcon = nil;
+  }
 }
 
 - (void)finalizeUpdates:(RNComponentViewUpdateMask)updateMask {
@@ -189,6 +203,14 @@ using namespace luggmaps::events;
   return _iconView.subviews.count > 0;
 }
 
+- (BOOL)hasImageUri {
+  return _imageUri.length > 0;
+}
+
+- (BOOL)hasIconUri {
+  return _iconUri.length > 0;
+}
+
 - (BOOL)didLayout {
   return _didLayout;
 }
@@ -199,6 +221,14 @@ using namespace luggmaps::events;
 
 - (LuggCalloutView *)calloutView {
   return _calloutView;
+}
+
+- (NSString *)imageUri {
+  return _imageUri;
+}
+
+- (NSString *)iconUri {
+  return _iconUri;
 }
 
 - (UIImage *)createIconImage {
@@ -311,6 +341,10 @@ using namespace luggmaps::events;
   _calloutView = nil;
   self.marker = nil;
   self.delegate = nil;
+  self.cachedImage = nil;
+  self.cachedIcon = nil;
+  _imageUri = nil;
+  _iconUri = nil;
   [self resetIconViewTransform];
   for (UIView *subview in _iconView.subviews) {
     [subview removeFromSuperview];

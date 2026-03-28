@@ -1,5 +1,5 @@
 import React, { isValidElement } from 'react';
-import { StyleSheet } from 'react-native';
+import { Image, StyleSheet } from 'react-native';
 import LuggMarkerViewNativeComponent, {
   Commands,
 } from '../fabric/LuggMarkerViewNativeComponent';
@@ -67,7 +67,12 @@ export class Marker
       callout,
       calloutOptions,
       children,
+      image,
+      icon,
     } = this.props;
+
+    const imageUri = image ? Image.resolveAssetSource(image)?.uri ?? '' : '';
+    const iconUri = icon ? Image.resolveAssetSource(icon)?.uri ?? '' : '';
 
     const calloutContent = callout
       ? isValidElement(callout)
@@ -91,6 +96,8 @@ export class Marker
         rasterize={rasterize}
         centerOnPress={centerOnPress}
         draggable={draggable}
+        image={imageUri}
+        icon={iconUri}
         onMarkerPress={onPress}
         onMarkerDragStart={onDragStart}
         onMarkerDragChange={onDragChange}

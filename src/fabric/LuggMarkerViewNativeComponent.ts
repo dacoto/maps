@@ -27,6 +27,8 @@ export interface NativeProps extends ViewProps {
   rasterize?: WithDefault<boolean, true>;
   centerOnPress?: WithDefault<boolean, true>;
   draggable?: WithDefault<boolean, false>;
+  image?: string;
+  icon?: string;
   onMarkerPress?: DirectEventHandler<{
     coordinate: {
       latitude: Double;

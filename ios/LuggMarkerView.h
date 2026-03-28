@@ -29,9 +29,15 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, readonly) BOOL centerOnPress;
 @property(nonatomic, readonly) BOOL draggable;
 @property(nonatomic, readonly) BOOL hasCustomView;
+@property(nonatomic, readonly) BOOL hasImageUri;
+@property(nonatomic, readonly) BOOL hasIconUri;
 @property(nonatomic, readonly) BOOL didLayout;
 @property(nonatomic, readonly) UIView *iconView;
 @property(nonatomic, readonly, nullable) LuggCalloutView *calloutView;
+@property(nonatomic, readonly, nullable) NSString *imageUri;
+@property(nonatomic, readonly, nullable) NSString *iconUri;
+@property(nonatomic, strong, nullable) UIImage *cachedImage;
+@property(nonatomic, strong, nullable) UIImage *cachedIcon;
 @property(nonatomic, weak, nullable) id<LuggMarkerViewDelegate> delegate;
 @property(nonatomic, strong, nullable) NSObject *marker;
 
