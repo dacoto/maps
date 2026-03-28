@@ -102,6 +102,16 @@ class LuggMarkerViewManager :
     view.setDraggable(value)
   }
 
+  @ReactProp(name = "image")
+  override fun setImage(view: LuggMarkerView, value: String?) {
+    view.setImageUri(value ?: "")
+  }
+
+  @ReactProp(name = "icon")
+  override fun setIcon(view: LuggMarkerView, value: String?) {
+    view.setIconUri(value ?: "")
+  }
+
   override fun showCallout(view: LuggMarkerView) {
     view.showCallout()
   }

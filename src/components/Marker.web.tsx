@@ -5,6 +5,7 @@ import React, {
   useCallback,
   useEffect,
   useImperativeHandle,
+  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -13,12 +14,14 @@ import {
   InfoWindow,
   useAdvancedMarkerRef,
 } from '@vis.gl/react-google-maps';
+import { Image } from 'react-native';
 import { useMapContext } from '../MapProvider.web';
 import type { MarkerProps, MarkerRef } from './Marker.types';
 
 const CALLOUT_ARROW_HEIGHT = 12;
 const UNBUBBLED_CLASS = 'rnm-callout-unbubbled';
 const UNBUBBLED_STYLE_ID = 'rnm-callout-unbubbled-style';
+const IMG_STYLE: React.CSSProperties = { display: 'block' };
 
 function injectUnbubbledStyle() {
   if (document.getElementById(UNBUBBLED_STYLE_ID)) return;
@@ -81,6 +84,8 @@ export const Marker = memo(
         callout,
         calloutOptions,
         children,
+        image,
+        icon,
       },
       ref
     ) => {
@@ -137,6 +142,17 @@ export const Marker = memo(
       if (rotate) transforms.push(`rotate(${rotate}deg)`);
       if (scale && scale !== 1) transforms.push(`scale(${scale})`);
 
+      const imageSource = icon ?? image;
+      const resolvedImageUri = useMemo(() => {
+        if (!imageSource) return null;
+        return Image.resolveAssetSource(imageSource)?.uri ?? null;
+      }, [imageSource]);
+
+      const markerContent = resolvedImageUri ? (
+        <img src={resolvedImageUri} alt="" style={IMG_STYLE} />
+      ) : (
+        children
+      );
       const handleClick = useCallback(
         (e: google.maps.MapMouseEvent) => {
           const pos = dragPositionRef.current;
@@ -226,7 +242,7 @@ export const Marker = memo(
                 : undefined
             }
           >
-            {children}
+            {markerContent}
           </AdvancedMarker>
           {calloutContent && infoWindowOpen && markerElement && (
             <InfoWindow

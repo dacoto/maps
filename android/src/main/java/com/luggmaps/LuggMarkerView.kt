@@ -65,6 +65,15 @@ class LuggMarkerView(context: Context) : ReactViewGroup(context) {
   var draggable: Boolean = false
     private set
 
+  var imageUri: String = ""
+    private set
+
+  var iconUri: String = ""
+    private set
+
+  var cachedImageBitmap: android.graphics.Bitmap? = null
+  var cachedIconBitmap: android.graphics.Bitmap? = null
+
   var isDragging: Boolean = false
 
   var didLayout: Boolean = false
@@ -72,6 +81,12 @@ class LuggMarkerView(context: Context) : ReactViewGroup(context) {
 
   val hasCustomView: Boolean
     get() = contentView.isNotEmpty()
+
+  val hasImageUri: Boolean
+    get() = imageUri.isNotEmpty()
+
+  val hasIconUri: Boolean
+    get() = iconUri.isNotEmpty()
 
   val contentView: ReactViewGroup = ReactViewGroup(context)
 
@@ -285,6 +300,20 @@ class LuggMarkerView(context: Context) : ReactViewGroup(context) {
     this.draggable = draggable
   }
 
+  fun setImageUri(uri: String) {
+    if (imageUri != uri) {
+      imageUri = uri
+      cachedImageBitmap = null
+    }
+  }
+
+  fun setIconUri(uri: String) {
+    if (iconUri != uri) {
+      iconUri = uri
+      cachedIconBitmap = null
+    }
+  }
+
   fun emitPressEvent(x: Float, y: Float) {
     dispatchEvent(MarkerPressEvent(this, latitude, longitude, x, y))
   }
@@ -324,6 +353,8 @@ class LuggMarkerView(context: Context) : ReactViewGroup(context) {
     didLayout = false
     calloutView = null
     delegate = null
+    cachedImageBitmap = null
+    cachedIconBitmap = null
     contentView.removeAllViews()
   }
 }

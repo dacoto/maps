@@ -41,6 +41,8 @@ import { MapView, Marker } from '@lugg/maps';
 | `rasterize` | `boolean` | `true` | Rasterize custom marker view to bitmap (iOS/Android only) |
 | `centerOnPress` | `boolean` | `true` | Whether the map centers on the marker when pressed |
 | `draggable` | `boolean` | `false` | Whether the marker can be dragged by the user |
+| `image` | `ImageSource` | - | A custom image to use as the marker icon. Only local image resources are allowed |
+| `icon` | `ImageSource` | - | Marker icon (equivalent to `icon` on `GMSMarker`). Only local image resources are allowed. Takes priority over `image` on Google Maps. **Google Maps only** |
 | `onPress` | `(event: MarkerPressEvent) => void` | - | Called when the marker is pressed. Event includes `coordinate` and `point` |
 | `onDragStart` | `(event: MarkerDragEvent) => void` | - | Called when marker drag starts. Event includes `coordinate` and `point` |
 | `onDragChange` | `(event: MarkerDragEvent) => void` | - | Called continuously as the marker is dragged. Event includes `coordinate` and `point` |
@@ -90,6 +92,29 @@ Set `draggable` to enable marker dragging. Use the drag event callbacks to track
   onDragEnd={(e) => setMarkerCoordinate(e.nativeEvent.coordinate)}
 />
 ```
+
+## Image Markers
+
+Use the `image` prop to display a local image as the marker icon instead of the default pin.
+
+```tsx
+<Marker
+  coordinate={{ latitude: 37.7749, longitude: -122.4194 }}
+  image={require('./assets/my-marker.png')}
+  anchor={{ x: 0.5, y: 1 }}
+/>
+```
+
+On Google Maps you can use `icon` instead, which maps directly to the native `GMSMarker.icon` property:
+
+```tsx
+<Marker
+  coordinate={{ latitude: 37.7749, longitude: -122.4194 }}
+  icon={require('./assets/my-marker.png')}
+/>
+```
+
+> **Note:** Only local image resources (via `require()`) are supported. Remote URLs are not allowed.
 
 ## Custom Markers
 
